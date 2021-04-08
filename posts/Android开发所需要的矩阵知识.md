@@ -377,7 +377,7 @@ $$
   >
   > 我们知道 $\begin{pmatrix}x \\ y \end{pmatrix} = x . \begin{pmatrix} \color{Green}1 \\ \color{Green}0 \end{pmatrix} + y . \begin{pmatrix} \color{Red}0 \\ \color{Red}1 \end{pmatrix}$，现在我们想像一下，如果我们应用一个变换到我们的平面上，那么我们的单位矢量也会随之变换吧？ 
   >
-  > 我们假设变换后 $\begin{pmatrix} \color{Green}1 \\ \color{Green}0 \end{pmatrix}$ 会坐落在 $\begin{pmatrix} \color{Green}a \\ \color{Green}c \end{pmatrix}$ 上，而$\begin{pmatrix} \color{Red}0 \\ \color{Red}1 \end{pmatrix}$ 会落在 $\begin{pmatrix} \color{Red}b \\ \color{Red}d \end{pmatrix}$ 上，那么我们的位置矢量 $\begin{pmatrix}x \\ y \end{pmatrix}$ 将会落在 $x. \begin{pmatrix} \color{Green}{a\\c} \end{pmatrix} + y. \begin{pmatrix} \color{Red}{b\\d} \end{pmatrix} = \begin{pmatrix} \color{Green}{a}.x + \color{Red}{b}.y \\ \color{Green}{c}.x +\color{Red}{d}.y\end{pmatrix}$
+  > 我们假设变换后 $\begin{pmatrix} \color{Green}1 \\ \color{Green}0 \end{pmatrix}$ 会坐落在 $\begin{pmatrix} \color{Green}a \\ \color{Green}c \end{pmatrix}$ 上，而$\begin{pmatrix} \color{Red}0 \\ \color{Red}1 \end{pmatrix}$ 会落在 $\begin{pmatrix} \color{Red}b \\ \color{Red}d \end{pmatrix}$ 上，那么我们的位置矢量 $\begin{pmatrix}x \\ y \end{pmatrix}$ 将会落在 $x.\begin{pmatrix} \color{Green}{a\\c} \end{pmatrix} + y.\begin{pmatrix} \color{Red}{b\\d} \end{pmatrix} = \begin{pmatrix}\color{Green}a.x + \color{Red}b.y \\ \color{Green}c.x + \color{Red}d.y  \end{pmatrix}$
 
 * 经过上面的矩阵变换，$\begin{pmatrix} x \\ y \end{pmatrix}$ 将会坐落于 $\begin{pmatrix} \color{Green}a.x + \color{Red}b.y \\ \color{Green}c.x + \color{Red}d.y \\ \end{pmatrix}$
 
