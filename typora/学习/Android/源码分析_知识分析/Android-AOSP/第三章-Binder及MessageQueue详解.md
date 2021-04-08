@@ -555,7 +555,7 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
    * `startBootstrapServices()` 调用 `ActivityManagerService.Lifecycle.startService` 来启动服务
    *  `ActivityManagerService.Lifecycle.startService` 则调用 `SystemServiceManager` 的 `startService` 方法通过反射来创建AMS服务的实例，然后将其加入到 `SystemServiceManager` 的 `mServices` 成员变量定义的列表中，再调用AMS服务实例的onStart回调函数。
 3. 之后再调用 `mActivityManagerService.setSystemProcess();` 来将其设置为系统进程。具体的 `addService` 逻辑即在此方法中。
-4. 关于  `addService` 我们则放到下一个步骤进行分析。
+4. 关于 `addService` 我们则放到下一个步骤进行分析。
 
 
 
