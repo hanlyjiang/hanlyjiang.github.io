@@ -1,0 +1,28 @@
+{
+  "config": {
+    "branch": "gh-pages",
+    "cname": "",
+    "domain": "https://hanlyjiang.github.io",
+    "email": "hanlyjiang@outlook.com",
+    "platform": "github",
+    "privateKey": "",
+    "repository": "hanlyjiang.github.io",
+    "token": "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",
+    "username": "hanlyjiang"
+  },
+  "comment": {
+    "commentPlatform": "gitalk",
+    "disqusSetting": {
+      "api": "",
+      "apikey": "",
+      "shortname": ""
+    },
+    "gitalkSetting": {
+      "clientId": "",
+      "clientSecret": "",
+      "owner": "",
+      "repository": ""
+    },
+    "showComment": false
+  }
+}
