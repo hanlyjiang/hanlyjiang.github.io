@@ -1,10 +1,11 @@
 ---
-title: Hello Gridea
-date: 2018-12-12
+title: 'Hello Gridea'
+date: 2018-12-12 00:00:00
 tags: [Gridea]
 published: true
-hideInList: false
+hideInList: true
 feature: /post-images/hello-gridea.png
+isTop: false
 ---
 👏  欢迎使用 **Gridea** ！  
 ✍️  **Gridea** 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ... 

@@ -292,6 +292,10 @@ intent.putExtras(bundle);
 
 # Android Binder和AIDL
 
+## 何时使用多进程？
+
+* 场景： WebView/大内存/保活/定位
+
 ## Android进程通信的几种方式？
 
 1. 广播；

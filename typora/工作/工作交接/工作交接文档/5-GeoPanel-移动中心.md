@@ -873,9 +873,100 @@ APP的版本号不与任何项目进行关联，打包时不论针对哪个项�
 
 ### 打包配置修改
 
+#### 不同项目的包配置区分
+
 链动提供的版本中，包名为链动的包名，而我们需要将一个包应用到不同的项目之中，故需要对包名进行区分，同时还有对应的百度地图及三方推送等的账号也需要进行区分，故提取了一套配置方式，为了减少对链动原有代码文件的修改，我们的配置主要位于如下新增加的文件及目录中：
 
 ```shell
-
+android
+├── dist-config  -  不同项目的打包配置定义
+│   └── moa-moa-geo-third-share.gradle
+│   ├── hongshan_sgt_debug_wuhan.gradle
+│   ├── hongshan_sgt_release.gradle
+│   ├── jiujiang_egt_debug_wuhan.gradle
+│   ├── jiujiang_egt_official.gradle
+│   ├── ld_test.gradle
+│   ├── luohu_kst_official.gradle
+│   ├── moa_jiujiang_wuhan_fixed.gradle
+│   ├── moa_wxtest_wuhan_195.gradle
+│   ├── mobile_center_aliyun.gradle
+│   ├── nskst_official.gradle
+│   ├── nskst_official_demonstration.gradle
+│   ├── nskst_official_pre_release.gradle
+│   ├── nskst_test_internet_shenzhen.gradle
+│   ├── nskst_test_shenzhen.gradle
+│   ├── nskst_test_wuhan_fixed.gradle
+│   ├── nskst_test_wuhan_jianghang.gradle
+│   ├── nskst_test_wuhan_open.gradle
+│   ├── nskst_test_wuhan_private.gradle
+│   ├── nskst_test_wuhan_sr.gradle
+│   ├── nskst_test_wuhan_wsr.gradle
+│   ├── rongjiang_kst_official.gradle
+│   ├── shenzhen_shi_official.gradle
+│   └── template.gradle
+├── dist-config.gradle - 定义配置dist-config目录中配置的加载逻辑 
 ```
 
+* 引入dist-config.gradle：(platforms/android/app/build.gradle)
+
+  ```groovy
+  apply from: '../dist-config.gradle'
+  ```
+
+
+
+#### 签名配置
+
+* 设置debug和release相同签名: (platforms/android/app/build.gradle)
+
+  ```groovy
+   buildTypes {
+          release {
+              minifyEnabled true
+              zipAlignEnabled true  //压缩优化
+              shrinkResources true  //移出无用资源
+              proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+              signingConfig signingConfigs.moasign
+          }
+          debug {
+              signingConfig signingConfigs.moasign
+          }
+  }
+  ```
+
+* 签名信息替换：(platforms/android/gradle.properties)(链动未提供其签名信息，所以我们自己生成了签名并替换链动的配置)
+
+  ```groovy
+  # keyAlias
+  MOA_RELEASE_KEY_ALIAS=geostar-moa
+  #keyPassword
+  MOA_RELEASE_KEY_PASSWORD=a7cbf71f1019635fc794df0e1abc3e79
+  #storeFile
+  MOA_RELEASE_STORE_FILE=../geostar.moa.jks
+  #storePassword
+  MOA_RELEASE_STORE_PASSWORD=9b1d0e07ee4bdb03e2249bf57f6974a4
+  ```
+
+  
+
+#### 迁移到AndroidX
+
+google最初发布了support库（如：v4，v7，design），之前很多控件都是位于这些库中的（如：RecyclerView，CardView等），后统一为androidx的库，旧的support库不再维护，为了能够避免后续开发功能时引入的某些库无法使用，故将项目其迁移到androidx。
+
+迁移androidx的修改可以查看Gitlab上的提交：[migrate： 迁移到AndroidX (adc773ca) · 提交 · GeoPanel / 移动中心 / 移动平台-Android端 · GitLab](http://172.17.0.205/GeoPanel/MobileCenter/geopanel-android/-/commit/adc773ca06c807ec0cb271fb900e72bff48ae5ee)
+
+
+
+#### UI界面样式调整
+
+在MOA最初应用到南山项目时，按照南山的UI界面进行了一波界面调整。主要包括：
+
+* 登录界面替换；
+* 所有native页面的顶部样式；
+* 基础小应用的顶部样式及界面样式；
+
+
+
+#### 其他说明
+
+由于最初并
