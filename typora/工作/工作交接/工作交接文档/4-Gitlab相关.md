@@ -290,7 +290,7 @@ gitlab-runner可以使用docker方式运行，也可以在主机上运行其二�
 
 使用docker方式安装的，需先在主机上安装docker环境，可参考 Docker 官方安装文档。以下操作假设主机上已正确安装并配置了docker运行环境；
 
->我们使用alpine的镜像来减小大小
+>提示：可以使用基于alpine的镜像来减小大小
 
 ```shell
 # 建立配置挂载目录

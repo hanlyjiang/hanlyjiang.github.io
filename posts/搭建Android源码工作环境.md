@@ -9,8 +9,6 @@ isTop: true
 ---
 
 
-本章主要内容：
-
 * 简单介绍系统架构、编译环境的搭建
 * 简单介绍利用 AndroidStudio 调试 system_process 进程的方法及编译更新部分系统模块的方式
 

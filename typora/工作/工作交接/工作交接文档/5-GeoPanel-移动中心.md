@@ -913,7 +913,7 @@ android
   apply from: '../dist-config.gradle'
   ```
 
-
+> 具体的每个地方的配置，由于已经有接触并配置过，不再赘述
 
 #### 签名配置
 
@@ -949,15 +949,15 @@ android
 
   
 
-#### 迁移到AndroidX
+### 迁移到AndroidX
 
 google最初发布了support库（如：v4，v7，design），之前很多控件都是位于这些库中的（如：RecyclerView，CardView等），后统一为androidx的库，旧的support库不再维护，为了能够避免后续开发功能时引入的某些库无法使用，故将项目其迁移到androidx。
 
 迁移androidx的修改可以查看Gitlab上的提交：[migrate： 迁移到AndroidX (adc773ca) · 提交 · GeoPanel / 移动中心 / 移动平台-Android端 · GitLab](http://172.17.0.205/GeoPanel/MobileCenter/geopanel-android/-/commit/adc773ca06c807ec0cb271fb900e72bff48ae5ee)
 
+迁移使用androidstudio提供的迁移命令，会自动将项目中的原先使用support库的部分替换为对应的androidx库的用法，同时在编译时也会对依赖库中jar里面使用的support库进行处理。
 
-
-#### UI界面样式调整
+### UI界面样式调整
 
 在MOA最初应用到南山项目时，按照南山的UI界面进行了一波界面调整。主要包括：
 
@@ -967,6 +967,190 @@ google最初发布了support库（如：v4，v7，design），之前很多控件
 
 
 
-#### 其他说明
+### 扩展cordova插件
 
-由于最初并
+APP整体的架构如下：
+
+<svg width="423px" height="345px" viewBox="0 0 423 345" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="移动中心APP架构" transform="translate(-219.000000, -162.000000)">
+            <g id="架构图/带标题栏框" transform="translate(219.000000, 429.000000)">
+                <g id="分组">
+                    <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="422" height="77"></rect>
+                    <rect id="标题栏" fill="#FF9500" x="0" y="0" width="423" height="26"></rect>
+                </g>
+                <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="16" font-weight="normal" letter-spacing="0.0959999995" fill="#FFFFFF">
+                    <tspan x="179.034036" y="17">系统能力</tspan>
+                </text>
+            </g>
+            <g id="架构图/带标题栏框备份" transform="translate(219.000000, 340.000000)">
+                <g id="分组">
+                    <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="422" height="77"></rect>
+                    <rect id="标题栏" fill="#FF9500" x="0" y="0" width="423" height="26"></rect>
+                </g>
+                <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="16" font-weight="normal" letter-spacing="0.0959999995" fill="#FFFFFF">
+                    <tspan x="179.458036" y="17">APP能力</tspan>
+                </text>
+            </g>
+            <g id="架构图/带标题栏框备份-2" transform="translate(219.000000, 251.000000)">
+                <g id="分组">
+                    <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="422" height="77"></rect>
+                    <rect id="标题栏" fill="#FF9500" x="0" y="0" width="423" height="26"></rect>
+                </g>
+                <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="16" font-weight="normal" letter-spacing="0.0959999995" fill="#FFFFFF">
+                    <tspan x="149.010036" y="17">cordova插件框架</tspan>
+                </text>
+            </g>
+            <g id="架构图/带标题栏框备份-3" transform="translate(219.000000, 162.000000)">
+                <g id="分组">
+                    <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="422" height="77"></rect>
+                    <rect id="标题栏" fill="#FF9500" x="0" y="0" width="423" height="26"></rect>
+                </g>
+                <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="16" font-weight="normal" letter-spacing="0.0959999995" fill="#FFFFFF">
+                    <tspan x="176.426036" y="17">H5小应用</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块" transform="translate(228.000000, 468.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="15.9717835" y="12">相机</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-6" transform="translate(228.000000, 379.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="10.4112835" y="12">通讯录</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-6" transform="translate(228.000000, 201.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="10.4112835" y="12">通讯录</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-16" transform="translate(294.000000, 201.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="15.9717835" y="12">日程</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-17" transform="translate(360.000000, 201.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="15.9717835" y="12">任务</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-18" transform="translate(426.000000, 201.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="10.4112835" y="12">工作台</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-12" transform="translate(228.000000, 290.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="402.608247" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="66.7353762" y="12">将系统能力及APP能力以JS接口的方式暴露给H5小应用</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-7" transform="translate(294.000000, 379.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="15.9717835" y="12">消息</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-14" transform="translate(491.000000, 201.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="4.8507835" y="12">应用市场</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-8" transform="translate(360.000000, 379.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="4.8507835" y="12">镜像管理</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-15" transform="translate(558.000000, 201.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="73.742268" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="9.82636597" y="12">其他小应用</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-9" transform="translate(426.000000, 379.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="69.7560137" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="7.81949312" y="12">数据库存储</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-10" transform="translate(509.000000, 379.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="69.7560137" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="13.3799931" y="12">文件存储</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-11" transform="translate(592.000000, 379.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="39.8591065" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="9.44944673" y="12">其他</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份" transform="translate(294.000000, 468.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="15.9717835" y="12">文件</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-2" transform="translate(360.000000, 468.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="69.7560137" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="7.81949312" y="12">方向传感器</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-3" transform="translate(443.000000, 468.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="52.814433" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="15.5702835" y="12">GPS</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-4" transform="translate(509.000000, 468.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="60.7869416" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="8.8645292" y="12">网络请求</tspan>
+                </text>
+            </g>
+            <g id="架构图/单个模块备份-5" transform="translate(583.000000, 468.000000)">
+                <rect id="矩形" stroke="#C0C0C0" fill="#EEEEEE" x="0.5" y="0.5" width="48.8281787" height="23"></rect>
+                <text id="模块名称" font-family="PingFangSC-Semibold, PingFang SC" font-size="11" font-weight="500" letter-spacing="0.121000004" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="13.9649106" y="12">其他</tspan>
+                </text>
+            </g>
+        </g>
+    </g>
+</svg>
+
+业务的开发主要以H5开发为主，为此APP需要将原生的能力提供为JS的API，链动提供了很多API接口，不过后续发现部分接口有BUG，或者项目上有新的需求，为此我们对cordova插件做了一些修改及扩展，主要包括如下内容：
+
+* [二维码扫描](http://172.17.0.208:12345/moa-doc/api/barcode.html)功能扩展，支持更多自定义选项
+* [设置](http://172.17.0.208:12345/moa-doc/api/private-settings.html)功能扩展，添加若干设置项API，包括清除IM消息，打开消息设置界面等
+* [拍摄视频限制时长，视频选择添加时长及大小限制](http://172.17.0.208:12345/moa-doc/api/media.html#app-video-getvideo)
+* [拍照支持添加水印](http://172.17.0.208:12345/moa-doc/api/photo.html#app-picture-camera)
+* [增加附件查看接口](http://172.17.0.208:12345/moa-doc/api/filebrowser.html#文件浏览器)
+* [添加手势密码保护相关设置](http://172.17.0.208:12345/moa-doc/api/private-settings.html#app-settings-opengestureunlocksetting-打开内置的手势解锁设置页面)
+* [添加第三方分享接口](http://172.17.0.208:12345/moa-doc/api/third-share.html#分享接口-app-share)
+* [添加打开微信小程序接口](http://172.17.0.208:12345/moa-doc/api/third-share.html#打开微信小程序-app-weixin-openminiprogram)
+* [添加启用引导页面的接口](http://172.17.0.208:12345/moa-doc/api/private-settings.html#)
+
+我方添加的接口都在 `cd plugins_dev/repo/cordova-plugin-moa-geo-app ` 目录中，具体细节也可以在git log中筛选 “H5”，或者针对此目录相关的文件查看历史修改记录，定位具体的commit进行了解。
+
+
+
+关于插件开发的方式，之前已有接触，不在赘述，仅整理一些文档：
+
+* https://shimo.im/docs/XRkgJOPwzmtrFbqM/ 《Cordova相关-README》，可复制链接后用石墨文档 App 或小程序打开
+* https://shimo.im/docs/ne3VVlGLWQf8FB3b/ 《MOA中的Cordova插件开发 - 工作流程篇》，可复制链接后用石墨文档 App 或小程序打开
+* [Gitlab-插件JS合并readme](http://172.17.0.205/GeoPanel/MobileCenter/geopanel-android/-/blob/geo-client-android/master/plugins_dev/jsMerge/README.md)
+
+## 其他说明
+
+由于最初规划是链动开发基础版本，后续由公司自行维护，故前期部分修改并未特别严格的考虑同链动的代码后续的合并。且我方代码只有非常少的部分同步到了链动，故后续合并代码时应该特别注意。==建议合并代码后再与合并前的代码进行对比，确认合并所产生的差异==。
+

@@ -30,10 +30,6 @@ isTop: true
 
 
 
-## 目录
-
-[toc]
-
 ## 技术挑战
 
 为了让攀爬路线的图层能够跟随用户的手势操作，我发现我不得不重载Android ImageView，在Canvas上绘制并处理手指手势。 作为一名优秀的工程师：我搜索了Stack Overflow😅 我发现需要`android.graphics.Matrix`类进行2D转换。 
@@ -203,7 +199,7 @@ $$
 
 另外一种矩阵乘法就是 [矩阵乘以矩阵](https://www.khanacademy.org/math/algebra-home/alg-matrices/alg-multiplying-matrices-by-matrices/a/multiplying-matrices) ，矩阵乘法运算起来稍微有点复杂，因为我们并不能简单的对应的entry进行乘法运算，具体计算规则我们直接看维基百科的说明：
 
-> 如果 $\mathbf{A}$ 是一个 $m \times n$ 的 矩阵，$\mathbf{B}$ 是一个 $n \times p$ 的matrix, 那么它们的矩阵乘积 $\mathbf{AB}$ 是一个 $m \times p \$的矩阵, 
+> 如果 $\mathbf{A}$ 是一个 $m \times n$ 的 矩阵，$\mathbf{B}$ 是一个 $n \times p$ 的matrix, 那么它们的矩阵乘积 $\mathbf{AB}$ 是一个 $m \times p $的矩阵, 
 >
 > 其中矩阵 $\mathbf{A}$ 行中的 $n$ 个条目与矩阵 $\mathbf{B}$ 列中的 $n$ 个条目 相乘并求和 得出矩阵 $\mathbf{AB}$ 的条目。
 
@@ -242,45 +238,6 @@ $$
 >
 > 为了定义矩阵乘法，==第一个矩阵中的列数==必须等于==第二个矩阵中的行数==。
 
->Matlab运算：
->
->`>>`A = [4 3 ; 0 -5; 2 1 ; -6 8]
->
->A =
->
->     4     3
->     0    -5
->     2     1
->    -6     8
->
->`>>`B = [7 1 3 ; -2 4 1]
->
->B =
->
->     7     1     3
->    -2     4     1
->
->`>>`A*B
->
->ans =
->
->    22    16    15
->    10   -20    -5
->    12     6     7
->   -58    26   -10
->
->`>>`B*A
->
-><p style="color:red">错误使用  * <br/>
->
-><p style="color:red">用于矩阵乘法的维度不正确。请检查并确保第一个矩阵中的列数与第二个矩阵中
->的行数匹配。要执行按元素相乘，请使用 '.*'。</p>
->
->
->
->`>>`A+B
->
-><p style="color:red">矩阵维度必须一致。</p>
 
 **了解更多：**
 
@@ -377,7 +334,7 @@ $$
   >
   > 我们知道 $\begin{pmatrix}x \\ y \end{pmatrix} = x . \begin{pmatrix} \color{Green}1 \\ \color{Green}0 \end{pmatrix} + y . \begin{pmatrix} \color{Red}0 \\ \color{Red}1 \end{pmatrix}$，现在我们想像一下，如果我们应用一个变换到我们的平面上，那么我们的单位矢量也会随之变换吧？ 
   >
-  > 我们假设变换后 $\begin{pmatrix} \color{Green}1 \\ \color{Green}0 \end{pmatrix}$ 会坐落在 $\begin{pmatrix} \color{Green}a \\ \color{Green}c \end{pmatrix}$ 上，而$\begin{pmatrix} \color{Red}0 \\ \color{Red}1 \end{pmatrix}$ 会落在 $\begin{pmatrix} \color{Red}b \\ \color{Red}d \end{pmatrix}$ 上，那么我们的位置矢量 $\begin{pmatrix}x \\ y \end{pmatrix}$ 将会落在 $x.\begin{pmatrix} \color{Green}{a\\c} \end{pmatrix} + y.\begin{pmatrix} \color{Red}{b\\d} \end{pmatrix} = \begin{pmatrix}\color{Green}a.x + \color{Red}b.y \\ \color{Green}c.x + \color{Red}d.y  \end{pmatrix}$
+  > 我们假设变换后 $\begin{pmatrix} \color{Green}1 \\ \color{Green}0 \end{pmatrix}$ 会坐落在 $\begin{pmatrix} \color{Green}a \\ \color{Green}c \end{pmatrix}$ 上，而$\begin{pmatrix} \color{Red}0 \\ \color{Red}1 \end{pmatrix}$ 会落在 $\begin{pmatrix} \color{Red}b \\ \color{Red}d \end{pmatrix}$ 上，那么我们的位置矢量 $\begin{pmatrix}x \\ y \end{pmatrix}$  将会落在 $x.\begin{pmatrix}\color{Green} a \\ c \end{pmatrix} + y.\begin{pmatrix} \color{Red} b\\d  \end{pmatrix} = \begin{pmatrix}\color{Green}a.x + \color{Red}b.y \\ {\color{Green}c.x + \color{Red}d.y}  \end{pmatrix}$
 
 * 经过上面的矩阵变换，$\begin{pmatrix} x \\ y \end{pmatrix}$ 将会坐落于 $\begin{pmatrix} \color{Green}a.x + \color{Red}b.y \\ \color{Green}c.x + \color{Red}d.y \\ \end{pmatrix}$
 
@@ -912,7 +869,13 @@ $$
 
 ### [2D Transformations with Android and Java](https://i-rant.arnaudbos.com/2d-transformations-android-java/)
 
-### android 矩阵：
+
+<br/>
+--- 
+<br/>
+
+### 译者补充 
+#### android 矩阵：
 
 $$
 \begin{bmatrix}
@@ -929,4 +892,43 @@ $$
 | `MTRANS_X`，`MTRANS_Y`               | 控制X方向和Y方向的线性平移                   |
 | `MPERSP_0` , `MPERSP_1` , `MPERSP_2` | MPERSP_0、MPERSP_1和MPERSP_2是关于透视的控制 |
 
+#### matlab 矩阵运算 
 
+>
+>`>>`A = [4 3 ; 0 -5; 2 1 ; -6 8]
+>
+>A =
+>
+>     4     3
+>     0    -5
+>     2     1
+>    -6     8
+>
+>`>>`B = [7 1 3 ; -2 4 1]
+>
+>B =
+>
+>     7     1     3
+>    -2     4     1
+>
+>`>>`A*B
+>
+>ans =
+>
+>    22    16    15
+>    10   -20    -5
+>    12     6     7
+>   -58    26   -10
+>
+>`>>`B*A
+>
+><p style="color:red">错误使用  * <br/>
+>
+><p style="color:red">用于矩阵乘法的维度不正确。请检查并确保第一个矩阵中的列数与第二个矩阵中
+>的行数匹配。要执行按元素相乘，请使用 '.*'。</p>
+>
+>
+>
+>`>>`A+B
+>
+><p style="color:red">矩阵维度必须一致。</p>
