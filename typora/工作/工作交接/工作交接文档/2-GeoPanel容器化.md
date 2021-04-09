@@ -126,11 +126,11 @@ Docker version 19.03.12, build 48a6621
 
 实际上很多镜像都有构建arm版本，对于直接使用的镜像，或者作为Dockerfile中FROM的镜像，如果有对应的arm版本，则可以直接使用，省略构建过程。以[postgres](https://hub.docker.com/_/postgres?fileGuid=0l3NVKX0BgflYN3R)为例，在dockerhub上可以看到
 
-![图片](https://uploader.shimo.im/f/mEUtglSoqQESjJXs.png!thumbnail?fileGuid=0l3NVKX0BgflYN3R)
+![图片](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210408172741.png!thumbnail)
 
 在具体的tag中也可以看到版本的镜像是否支持arm架构
 
-![图片](https://uploader.shimo.im/f/nUbvEcHQlUFCmAkl.png!thumbnail?fileGuid=0l3NVKX0BgflYN3R)
+![图片](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210408172750.png!thumbnail)
 
 但需要使用的镜像不是我们自己编译的时候，可以通过这种方式来确认该镜像是否有对应的arm版本。
 
@@ -312,15 +312,13 @@ docker buildx build --platform=linux/arm64,linux/amd64 -t xxxx:tag . --push
 
 
 
-
-
 # GeoPanel容器化-PGspider镜像构建
 
 ## 概览
 
 postgreSQL是一个开源的对象-关系型数据库管理系统，本身提供了x86及arm版本的镜像，那么我们为什么要自己构建对应呢？
 
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210319141649.png" alt="image-20210319141649673" style="zoom: 50%;" />
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210408172802.png" alt="image-20210319141649673" style="zoom: 50%;" />
 
 因为我们需要使用[pgspider](https://github.com/pgspider/pgspider)，它是给予pg11.6的代码补丁包，所以我们无法直接复用官方的镜像作为基础镜像；
 
