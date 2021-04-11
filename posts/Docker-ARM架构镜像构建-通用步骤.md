@@ -1,5 +1,5 @@
 ---
-title: 'Arm架构Docker镜像构建'
+title: 'Docker构建Arm架构镜像-通用步骤'
 date: 2020-08-19 17:20:59
 tags: [Docker]
 published: true

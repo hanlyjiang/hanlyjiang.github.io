@@ -1,3 +1,17 @@
+---
+title: 'JNI简要介绍'
+date: 2021-03-20 10:18:50
+tags: [Android,Gradle]
+published: true
+hideInList: false
+feature: 
+isTop: false
+---
+
+
+
+
+
 # 第二章-JNI简要介绍
 
 本章将简单介绍JNI，及其中的基础概念，类型映射，签名，最后还介绍了Android中常用的JNI包装函数。

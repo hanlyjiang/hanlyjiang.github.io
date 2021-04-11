@@ -1,6 +1,6 @@
 ---
 title: 'Gitlab升级记录（12.10.0-13.0.6）'
-date: 2020-06-21 16:50:41
+date: 2020-05-21 16:50:41
 tags: [Gitlab]
 published: true
 hideInList: false

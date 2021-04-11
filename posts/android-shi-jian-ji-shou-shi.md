@@ -1,37 +1,15 @@
-# Android 触摸手势学习-图片缩放查看
+---
+title: 'Android事件及手势'
+date: 2018-02-20 10:13:24
+tags: [Android]
+published: true
+hideInList: false
+feature: 
+isTop: false
+---
+android事件基础及手势，主要关注各种手势的使用及其计算原理 。  
 
-## 概述
-
-通过实现一个支持缩放滑动的图片查看片段来学习Android的触摸手势；
-
-目前需要实现的功能分析：
-
-* 图片查看
-* 图片缩放
-* 图片缩放之后支持滑动
-* 双击缩放图片
-
-### 对应功能涉及到的相关知识
-
-通过查看Google 官方文档及示例，还有粗略的查看第三方库的源码，可以总结我们需要如下相关知识：
-
-* Android事件&触摸手势基础
-* `Matrix`：用于实现图片变换，包括缩放和平移
-* `ScaleGestureDetector`：缩放手势检测
-* `GestureDetector`: 双击手势，拖动手势，滑动手势检测
-* `Scroller`: 处理滚动（图片缩放后平移滚动）
-* `VelocityTracker`: 速度跟踪器，处理滚动
-
-要想能够实现一个图片缩放查看器，我们需要组装这么多处理单元，要能对这些处理单元进行自由组装，首先我们需要能了解清楚其中单一单元的用法；
-
-如何学习以上知识，可以先从 [使用触摸手势-官方文档](https://developer.android.google.cn/training/gestures) 开始。
-
-### 相关仓库及文档
-
-* [Baseflow/PhotoView-Github](https://github.com/Baseflow/PhotoView/blob/master/photoview/src/main/java/com/github/chrisbanes/photoview/PhotoView.java)
-* [bm-x/PhotoView](https://github.com/bm-x/PhotoView/blob/master/library/src/main/java/com/bm/library/PhotoView.java)
-* [Android官方指南-触摸和事件-概览](https://developer.android.google.cn/guide/input)
-
+<!-- more -->
 
 
 ## Android事件基础
@@ -603,4 +581,5 @@ contact方法接受一个Matrix对象，可以将参数中的矩阵预连接到c
 ### android手势
 
 * [手势类型- Material.io](https://material.io/design/interaction/gestures.html#types-of-gestures)
+
 

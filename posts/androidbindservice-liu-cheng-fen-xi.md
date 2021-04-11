@@ -1,4 +1,13 @@
 ---
+title: '[Android]bindService流程分析'
+date: 2021-04-10 20:23:53
+tags: []
+published: true
+hideInList: false
+feature: 
+isTop: false
+---
+---
 
 title: 'Android bindService流程'
 date: 2020-03-20 10:18:50
@@ -251,290 +260,23 @@ isTop: false
 
 上面的流程只要我们一路跟踪可以得出此序列，不过这里我们有一些==问题==需要解答：
 
-1. bindServiceCommon到IActivityManager的调用中，是如何获取到ActivityManagerService的？
-2. AMS如何获取到ApplicatoinThread的？
-   * ApplicatoinThread的用途？ApplicationThread运行的进程是哪个？
-3. 进程何时创建？
-4. ServiceConnection 的回调方法何时使用？
+<svg width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g id="Android源码分析" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="bindService流程分析备份" transform="translate(-98.000000, -222.000000)">
+            <g id="序号" transform="translate(98.000000, 222.000000)">
+                <circle id="椭圆形" stroke="#888888" fill-opacity="0.5" fill="#E4E4E4" cx="10" cy="10" r="9.5"></circle>
+                <text id="1" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="10" font-weight="800" letter-spacing="0.110000004" fill="#020202" fill-opacity="0.88378138">
+                    <tspan x="6.9" y="14">1</tspan>
+                </text>
+            </g>
+        </g>
+    </g>
+</svg> bindServiceCommon到IActivityManager的调用中，是如何获取到ActivityManagerService的？
 
-
-
-## 问题解答
-
-### APP进程中如何获取AMS？
-
-> 说明：
->
-> * 第一次先逐项查看各个小节，最后再看此处的总结；
->
-> * 后续直接查看总结来快速获取结论；
-
-==总结：==
-
-* APP进程中通过 `ServiceManager.getService(Context.ACTIVITY_SERVICE)` 获取的ActivityManagerService的客户端操作代理对象（Proxy）。
-* 该对象位于APP进程中，可以使用此对象（通过Binder进程间通信）来要求（位于system_process中）的ActivityManagerService进行对应的服务操作； 
-
-具体查看如下代码：
-
-#### ContextImpl.bindServiceCommon
-
-我们看 `ContextImpl.bindServiceCommon` 方法的实现，可以看到是调用了 ActivityManager.getService() 获取的；
-
-`frameworks/base/core/java/android/app/ContextImpl.java`: 
-
-```java
-private boolean bindServiceCommon(Intent service, ServiceConnection conn, int flags,
-            String instanceName, Handler handler, Executor executor, UserHandle user) {
-        // Keep this in sync with DevicePolicyManager.bindDeviceAdminServiceAsUser.
-        IServiceConnection sd;
-        
-        if (executor != null) {
-            sd = mPackageInfo.getServiceDispatcher(conn, getOuterContext(), executor, flags);
-        } else {
-            sd = mPackageInfo.getServiceDispatcher(conn, getOuterContext(), handler, flags);
-        }
-	    //
-        int res = ActivityManager.getService().bindIsolatedService(
-            mMainThread.getApplicationThread(), getActivityToken(), service,
-            service.resolveTypeIfNeeded(getContentResolver()),
-            sd, flags, instanceName, getOpPackageName(), user.getIdentifier());
-
-}
-```
-
-#### `ActivityManager.getService()`
-
-如下代码，getService实际上是从ServiceManager获取一个ActivityService的Binder远程服务接口对象，并且这个会被设置为单例模式；
-
-`frameworks/base/core/java/android/app/ActivityManager.java`:
-
-```java
-private static final Singleton<IActivityManager> IActivityManagerSingleton =
-    new Singleton<IActivityManager>() {
-    @Override
-    protected IActivityManager create() {
-        // 直接通过 ServiceManager.getService 获取一个IBinder对象
-        final IBinder b = ServiceManager.getService(Context.ACTIVITY_SERVICE);
-        final IActivityManager am = IActivityManager.Stub.asInterface(b);
-        return am;
-    }
-};
-
-public static IActivityManager getService() {
-    // 直接从IActivityManagerSingleton获取实例
-    return IActivityManagerSingleton.get();
-}
-```
-
-### AMS如何获取到ApplicatoinThread？
-
-首先，AMS实际上位于系统进程（system_process)，而ApplicationThread则位于我们的APP进程，那么为什么需要这个跨进程的操作呢？
-
-* Service的创建需要经过系统的管理，比方说鉴权及其他管理需要；
-* 而开发者定义的Service的实例的创建逻辑也还是需要开发者来实现，Service对应的类也应该只加载在开发者自己的进程之中，Service使用方实际上还是开发者自己，所以服务的真实实例的创建过程要在应用的进程中；
-
-那么，系统进程（中的AMS）如何获取ApplicationThread呢？
-
-首先我们需要了解ApplicationThread是什么？
-
-#### 总结
-
-* 启动服务的时候，如果服务没有创建，则执行 com.android.server.am.ActiveServices#bindServiceLocked 来创建服务；
-* 创建服务的时候，如果对应的进程不存在，则通过AMS来创建一个进程，然后将其记录到AMS中；
-
-#### requestServiceBindingLocked 中的 ServiceRecord
-
-下面的方法中，我们可以看到
-
-```java
-// frameworks/base/services/core/java/com/android/server/am/ActiveServices.java
-// com.android.server.am.ActiveServices#requestServiceBindingLocked
-private final boolean requestServiceBindingLocked(ServiceRecord r, IntentBindRecord i,
-            boolean execInFg, boolean rebind) throws TransactionTooLargeException {
-        if (r.app == null || r.app.thread == null) {
-            // If service is not currently running, can't yet bind.
-            return false;
-        }
-        r.app.thread.scheduleBindService(r, i.intent.getIntent(), rebind,
-                                         r.app.getReportedProcState());
-        return true;
-    }
-
-// frameworks/base/services/core/java/com/android/server/am/ServiceRecord.java
-ProcessRecord app;          // where this service is running or null.
-
-// frameworks/base/services/core/java/com/android/server/am/ProcessRecord.java
-IApplicationThread thread;  // the actual proc...  may be null only if
-                            // 'persistent' is true (in which case we
-                            // are in the process of launching the app)
-```
-
-其中 `ServiceRecord.app` 的类型为 `ProcessRecord` ，  `ServiceRecord.app.thread` 的类型为 `IApplicationThread`。
-
-现在我们看下 ServiceRecord是何时构造的
-
-首先，根据方法的调用层次，我们可以看到：
-
-* `ActiveServices.bindServiceLocked` 方法中，参数中没有ServiceRecord，有的是IApplicationThread及一个IBinder。
-* `ActiveServices.requestServiceBindingLocked` 方法中，则变成了ServiceRecord类型。
-
-所以，我们先看下 `ActiveServices.requestServiceBindingLocked` 方法如何构造。
-
-![image-20210410215833909](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210410215833.png)
-
-> 提示：上述调用层次可以在IDEA中选中`ActiveServices.requestServiceBindingLocked`方法，然后通过“**Navigate｜Call Hierarchy**”（快捷键为==ctrl+opt+H==）弹出。
-
-#### ActiveServices.requestServiceBindingLocked : 获取 ServiceRecord
-
-```java
-    int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
-            String resolvedType, final IServiceConnection connection, int flags,
-            String instanceName, String callingPackage, final int userId)
-            throws TransactionTooLargeException {
-        final int callingPid = Binder.getCallingPid();
-        final int callingUid = Binder.getCallingUid();
-        // 这里构造了ProcessRecord
-        final ProcessRecord callerApp = mAm.getRecordForAppLocked(caller);
-
-        final boolean callerFg = callerApp.setSchedGroup != ProcessList.SCHED_GROUP_BACKGROUND;
-        final boolean isBindExternal = (flags & Context.BIND_EXTERNAL_SERVICE) != 0;
-        final boolean allowInstant = (flags & Context.BIND_ALLOW_INSTANT) != 0;
-
-        // 将IApplicationThread及IBinder放入到ServiceRecord中的过程在retrieveServiceLocked中
-        ServiceLookupResult res =
-            retrieveServiceLocked(service, instanceName, resolvedType, callingPackage,
-                    callingPid, callingUid, userId, true,
-                    callerFg, isBindExternal, allowInstant);
-        // 此处获取ServiceRecord，故在上面
-        ServiceRecord s = res.record;
-        if (s.app != null && b.intent.received) {
-            requestServiceBindingLocked(s, b.intent, callerFg, true);
-        } else if (!b.intent.requested) {
-            requestServiceBindingLocked(s, b.intent, callerFg, false);
-        }
-        return 1;
-    }
-```
-
-到这里，我们可以发现ServiceRecord是通过`retrieveServiceLocked`方法获取到的`ServiceLookupResult`获取到的。
-
-==粗略看了下这个`retrieveServiceLocked`方法，其中逻辑比较多，我们这里转换下思路，直接查找 `ServiceRecord.app` 的赋值操作==。
-
-#### `ServiceRecord.app` 的赋值
-
-我们可以找到ServiceRecord.app（ProcessRecord）的赋值操作的调用方法为：`com.android.server.am.ActiveServices#realStartServiceLocked`
-
-```java
-private final void realStartServiceLocked(ServiceRecord r,
-            ProcessRecord app, boolean execInFg) throws RemoteException {
-        if (app.thread == null) {
-            throw new RemoteException();
-        }
-    	// 在此处赋值
-        r.setProcess(app);
-	    // ...
-}
-```
-
-查看 realStartServiceLocked 的调用序列：
-
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210410224824.png" alt="image-20210410224824691" style="zoom:50%;" />
-
-也就是又回到了我们的 `bindServiceLocked` 方法，其中有一段逻辑是，如果需要创建服务，就执行`bringUpServiceLocked`方法。
-
-```java
-// com.android.server.am.ActiveServices#bindServiceLocked   
-int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
-            String resolvedType, final IServiceConnection connection, int flags,
-            String instanceName, String callingPackage, final int userId)
-            throws TransactionTooLargeException {   
-        // ... 
-			if ((flags&Context.BIND_AUTO_CREATE) != 0) {
-                s.lastActivity = SystemClock.uptimeMillis();
-                if (bringUpServiceLocked(s, service.getFlags(), callerFg, false,
-                        permissionsReviewRequired) != null) {
-                    return 0;
-                }
-            }
-        // ... 
-    }
-```
-
-
-
-> 提示：我们可以通过如下IDEA操作来查找赋值操作
->
-> 1. 选中成员（这里是 app）；
->
-> 2. ==Ctrl+B== 或者 ==Command+鼠标单击==，弹出使用列表弹窗；
->
-> 3. 然后在弹窗中设置仅查看write访问操作的；然后我们可以找到对应的赋值代码行；
->
->    <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210410223230.png" alt="image-20210410223230694" style="zoom:50%;" />
->
-> 4. 通过勾选其中的方法图标，我们可以显示赋值的代码行所在的方法（这里是setProcess）；
->
->    <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210410223820.png" alt="image-20210410223820657" style="zoom:50%;" />
->
-> 5. 然后我们继续在方法上执行上述操作，可以获取到更加上一步的赋值调用在哪；
->
->    <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210410224023.png" alt="image-20210410224023641" style="zoom:50%;" />
-
-#### ActiveServices#bringUpServiceLocked
-
-实际上，ProcessRecord 的初始化就是在这里，可以看到，根据不同的情况，有三种可能的赋值方式：
-
-* `app = mAm.getProcessRecordLocked(procName, r.appInfo.uid, false);`
-* `app = r.isolatedProc;`
-* `app=mAm.startProcessLocked(procName, r.appInfo, true, intentFlags,
-                      hostingRecord, ZYGOTE_POLICY_FLAG_EMPTY, false, isolated, false)`
-  * 生成之后如果是分开进程的service会赋值到：`r.isolatedProc = app`;
-
-所以真正的生成方法是：`mAm.startProcessLocked`，也就是调用了ActivityManagerService的方法来创建进程；
-
-```java
-// com.android.server.am.ActiveServices#bringUpServiceLocked
-// frameworks/base/services/core/java/com/android/server/am/ActiveServices.java
-private String bringUpServiceLocked(ServiceRecord r, int intentFlags, boolean execInFg,
-            boolean whileRestarting, boolean permissionsReviewRequired)
-            throws TransactionTooLargeException {
-
-        final boolean isolated = (r.serviceInfo.flags&ServiceInfo.FLAG_ISOLATED_PROCESS) != 0;
-        final String procName = r.processName;
-        HostingRecord hostingRecord = new HostingRecord("service", r.instanceName);
-        ProcessRecord app;
-		// 非独立的进程，则直接获取当前启动进程的进程信息
-        if (!isolated) {
-            app = mAm.getProcessRecordLocked(procName, r.appInfo.uid, false);
-        } else {
-            // 独立进程则先尝试使用之前保存的
-            app = r.isolatedProc;
-        }
-
-        // 之前没有启动对应的进程，则开始创建，启动了，则无需进行赋值操作，因为ServiceRecord中已经有了
-        if (app == null && !permissionsReviewRequired) {
-            if ((app=mAm.startProcessLocked(procName, r.appInfo, true, intentFlags,
-                    hostingRecord, ZYGOTE_POLICY_FLAG_EMPTY, false, isolated, false)) == null) {
-                String msg = "Unable to launch app "
-                        + r.appInfo.packageName + "/"
-                        + r.appInfo.uid + " for service "
-                        + r.intent.getIntent() + ": process is bad";
-                Slog.w(TAG, msg);
-                bringDownServiceLocked(r);
-                // 进程启动失败，返回错误消息
-                return msg;
-            }
-            if (isolated) {
-                // 独立进程，缓存进程信息到传入的ServiceRecord参数中，以便后续直接使用
-                r.isolatedProc = app;
-            }
-        }
-	    // 创建成功或者之前已经又了缓存，则返回null
-        return null;
-    }
-```
-
-
+1. ApplicatoinThread的用途？ApplicationThread运行的进程是哪个？
+2. AMS如何获取ApplicationThread的引用？
+3. ServiceConnection 的回调方法何时使用？
+4. 
 
 ## 详细流程分析
 
@@ -1063,4 +805,5 @@ BBinder 何时创建，如何设置到parcel的数据结构中？
   ```
 
   
+
 

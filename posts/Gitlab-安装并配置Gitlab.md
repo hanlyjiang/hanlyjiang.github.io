@@ -1,6 +1,6 @@
 ---
 title: 'Gitlab安装配置'
-date: 2020-04-08 11:54:06
+date: 2020-04-06 11:54:06
 tags: [Gitlab,工具]
 published: true
 hideInList: false

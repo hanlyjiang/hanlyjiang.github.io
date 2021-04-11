@@ -1,6 +1,6 @@
 ---
-title: '安装并注册Gitlab-Runner '
-date: 2021-04-08 16:11:58
+title: 'Gitlab-Runner安装并注册 '
+date: 2020-06-11 16:11:58
 tags: [Gitlab,工具]
 published: true
 hideInList: false
