@@ -9,14 +9,23 @@ feature:
 isTop: false
 ---
 
-## 整体流程预览
-
-在Activity中调用bindService，实际上是 Context.bindService ，所以我们的开始的地方是Context.bindService，调用序列如下：
-
-> 每个大的方框中上面的是调用的方法，下面的是源码所在的文件，部分文件的路径从frameworks开始，部分由于路径太长做了省略，实际上大部分在frameworks中。
 
 
+本文分析bindService的流程，首先我们通过阅读源码获取一个主线的调用地图，然后提出若干问题，包括：APP进程中如何获取AMS，AMS如何启动APP-service的进程，AMS中如何获取ApplicationThread并与之通讯，Service的启动及绑定流程；然后再通过源码一一解答。最后再整体总结梳理一下整体流程；
 
+<!-- more -->
+
+
+
+**预先知识：**
+
+* Binder通信机制
+
+## 整体分析与总结
+
+### 主线地图与问题提出
+
+我们从bindService一路跟踪，初步绘制了如下的调用序列图，我们可以以下面的图作为一个主线地图，避免走失，然后根据具体问题进行细节分析。
 
 <svg width="625px" height="425px" viewBox="0 0 625 425" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <g id="Android源码分析" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -248,18 +257,44 @@ isTop: false
 </svg>
 
 
-
-上面的流程只要我们一路跟踪可以得出此序列，不过这里我们有一些==问题==需要解答：
+从上图中，我们提出如下问题：
 
 1. bindServiceCommon到IActivityManager的调用中，是如何获取到ActivityManagerService的？
-2. AMS如何获取到ApplicatoinThread的？
+2. AMS中如何获取ApplicationThread并与之通讯？
    * ApplicatoinThread的用途？ApplicationThread运行的进程是哪个？
-3. 进程何时创建？
-4. ServiceConnection 的回调方法何时使用？
+3. 进程如何启动-即AMS如何创建APP:server进程？
+4. Service如何启动？
+5. Service如何绑定？
+   * ServiceConnection 的回调方法何时使用？
+
+### 问题解答汇总
+
+我们将相关问题的结论提前到此小节，便于后续从比较抽象的层次上来进行复习及预览；
+
+#### APP进程如何获取AMS？
+
+* APP进程中通过 `ServiceManager.getService(Context.ACTIVITY_SERVICE)` 获取的ActivityManagerService的客户端操作代理对象（Proxy）。
+
+  > 该对象位于APP进程中，可以使用此对象（通过Binder进程间通信）来要求（位于system_process中）的ActivityManagerService进行对应的服务操作； 
+
+#### AMS如何获取ApplicationThread？
+
+* APP进程在binderSerice时，将自己进程中的ApplicationThread取出，通过Binde机制传递给AMS进程；
+
+  ```java
+  ActivityManager.getService().bindIsolatedService(
+              mMainThread.getApplicationThread(), getActivityToken(), service,
+              service.resolveTypeIfNeeded(getContentResolver()),
+              sd, flags, instanceName, getOpPackageName(), user.getIdentifier());
+  ```
+
+#### 服务如何绑定？服务如何启动？进程如何启动？
 
 
 
-## 总结
+### 整体流程总结
+
+## 详细分析解答问题
 
 ### APP进程中如何获取AMS？
 
@@ -326,7 +361,7 @@ public static IActivityManager getService() {
 }
 ```
 
-### AMS如何获取到ApplicatoinThread？
+### AMS如何获取到 ApplicatoinThread？
 
 首先，AMS实际上位于系统进程（system_process)，而ApplicationThread则位于我们的APP进程，那么为什么需要这个跨进程的操作呢？
 
@@ -335,16 +370,51 @@ public static IActivityManager getService() {
 
 那么，系统进程（中的AMS）如何获取ApplicationThread呢？
 
-首先我们需要了解ApplicationThread是什么？
+查看 **ContextImpl.bindServiceCommon** 的代码，可以看到，是在调用AMS的bindService方法时，将自己进程中的ApplicationThread及ActivityToken取出传递给了AMS服务；
+
+```java
+// frameworks/base/core/java/android/app/ContextImpl.java
+final @NonNull ActivityThread mMainThread;
+private final @Nullable IBinder mToken;
+
+public IBinder getActivityToken() {
+    return mToken;
+}
+
+private boolean bindServiceCommon(Intent service, ServiceConnection conn, int flags,
+            String instanceName, Handler handler, Executor executor, UserHandle user) {
+        // Keep this in sync with DevicePolicyManager.bindDeviceAdminServiceAsUser.
+        IServiceConnection sd;
+        try {
+            service.prepareToLeaveProcess(this);
+            // 调用时传递了ApplicationThread和IBinder
+            int res = ActivityManager.getService().bindIsolatedService(
+                mMainThread.getApplicationThread(), getActivityToken(), service,
+                service.resolveTypeIfNeeded(getContentResolver()),
+                sd, flags, instanceName, getOpPackageName(), user.getIdentifier());
+            if (res < 0) {
+                throw new SecurityException(
+                        "Not allowed to bind to service " + service);
+            }
+            return res != 0;
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+```
+
+> 这里我们暂不考虑ApplicationThread由何处而来，每个进程中都对应一个ActivityThread，ActivityThread中有一个ApplicationThread对象。
+
+### 服务如何绑定？服务如何启动？进程如何启动？
 
 #### 总结
 
 * 启动服务的时候，如果服务没有创建，则执行 com.android.server.am.ActiveServices#bindServiceLocked 来创建服务；
 * 创建服务的时候，如果对应的进程不存在，则通过AMS来创建一个进程，然后将其记录到AMS中；
 
-#### requestServiceBindingLocked 中的 ServiceRecord
+#### ApplicationThread的构造
 
-下面的方法中，我们可以看到
+我们发现，最终是使用 `ApplicationThread`的 `requestServiceBindingLocked` 方法来绑定服务的。不过这里使用的时候是经过了几次成员变量操作符（`r.app.thread.scheduleBindService`），我们先梳理一下ServiceRecord类同ApplicationThread的关系；
 
 ```java
 // frameworks/base/services/core/java/com/android/server/am/ActiveServices.java
@@ -355,6 +425,7 @@ private final boolean requestServiceBindingLocked(ServiceRecord r, IntentBindRec
             // If service is not currently running, can't yet bind.
             return false;
         }
+	    // 调用ApplicationThread的绑定方法来进行绑定
         r.app.thread.scheduleBindService(r, i.intent.getIntent(), rebind,
                                          r.app.getReportedProcState());
         return true;
@@ -369,11 +440,154 @@ IApplicationThread thread;  // the actual proc...  may be null only if
                             // are in the process of launching the app)
 ```
 
-其中 `ServiceRecord.app` 的类型为 `ProcessRecord` ，  `ServiceRecord.app.thread` 的类型为 `IApplicationThread`。
+其中 `ServiceRecord.app` 的类型为 `ProcessRecord` ，`ServiceRecord.app.thread` 的类型为 `IApplicationThread`，我们梳理下对应的几个类的关系，如下图：
 
-现在我们看下 ServiceRecord是何时构造的
 
-首先，根据方法的调用层次，我们可以看到：
+<svg width="730px" height="473px" viewBox="0 0 730 473" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g id="Android源码分析" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="ServiceRecord类图" transform="translate(-38.000000, -20.000000)">
+            <g id="类" transform="translate(41.000000, 22.000000)">
+                <g id="编组" transform="translate(0.663121, -1.869103)">
+                    <path d="M182.673759,0.5 C183.364115,0.5 183.989115,0.779822031 184.441526,1.23223305 C184.893937,1.68464406 185.173759,2.30964406 185.173759,3 L185.173759,3 L185.173759,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
+                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="41.574" y="16.3255814">ServiceRecord</tspan>
+                    </text>
+                </g>
+                <g id="属性" transform="translate(0.663121, 22.288571)">
+                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="184.756391" height="46.2285714"></rect>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="9.36631979" y="14.7457143">app:ProcessRecord </tspan>
+                        <tspan x="9.36631979" y="32.7457143">isolatedProc: ProcessRecord </tspan>
+                    </text>
+                </g>
+                <g id="方法" transform="translate(0.663121, 67.942857)">
+                    <path d="M185.256391,0.5 L185.256391,43.2285714 C185.256391,44.1950697 184.86464,45.0700697 184.231264,45.7034452 C183.597889,46.3368206 182.722889,46.7285714 181.756391,46.7285714 L181.756391,46.7285714 L4,46.7285714 C3.03350169,46.7285714 2.15850169,46.3368206 1.52512627,45.7034452 C0.891750844,45.0700697 0.5,44.1950697 0.5,43.2285714 L0.5,43.2285714 L0.5,0.5 L185.256391,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="9.36631979" y="15.74">+ setProcess(ProcessRecord) </tspan>
+                    </text>
+                </g>
+            </g>
+            <g id="类备份" transform="translate(41.000000, 193.000000)">
+                <g id="编组" transform="translate(0.663121, -1.869103)">
+                    <path d="M182.673759,0.5 C183.364115,0.5 183.989115,0.779822031 184.441526,1.23223305 C184.893937,1.68464406 185.173759,2.30964406 185.173759,3 L185.173759,3 L185.173759,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
+                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="40.426" y="16.3255814">ProcessRecord</tspan>
+                    </text>
+                </g>
+                <g id="属性" transform="translate(0.663121, 22.288571)">
+                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="184.756391" height="46.2285714"></rect>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="9.36631979" y="14.7457143">thread:IApplicationThread </tspan>
+                        <tspan x="9.36631979" y="32.7457143">pid: int  </tspan>
+                    </text>
+                </g>
+                <g id="方法" transform="translate(0.663121, 67.942857)">
+                    <path d="M185.256391,0.5 L185.256391,43.2285714 C185.256391,44.1950697 184.86464,45.0700697 184.231264,45.7034452 C183.597889,46.3368206 182.722889,46.7285714 181.756391,46.7285714 L181.756391,46.7285714 L4,46.7285714 C3.03350169,46.7285714 2.15850169,46.3368206 1.52512627,45.7034452 C0.891750844,45.0700697 0.5,44.1950697 0.5,43.2285714 L0.5,43.2285714 L0.5,0.5 L185.256391,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
+                </g>
+            </g>
+            <g id="类备份-2" transform="translate(326.000000, 84.000000)">
+                <g id="编组" transform="translate(1.570922, 0.886379)">
+                    <path d="M436.858156,0.5 C437.548512,0.5 438.173512,0.779822031 438.625923,1.23223305 C439.078334,1.68464406 439.358156,2.30964406 439.358156,3 L439.358156,3 L439.358156,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
+                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="152.123" y="16.3255814">IApplicationThread</tspan>
+                    </text>
+                </g>
+                <g id="属性" transform="translate(1.570922, 27.284286)">
+                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="439.05391" height="56.8142857"></rect>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="22.1886613" y="14.9128571">thread:IApplicationThread </tspan>
+                        <tspan x="22.1886613" y="32.9128571">pid: int  </tspan>
+                    </text>
+                </g>
+                <g id="方法" transform="translate(1.570922, 83.171429)">
+                    <path d="M439.55391,0.5 L439.55391,53.8142857 C439.55391,54.780784 439.162159,55.655784 438.528783,56.2891594 C437.895408,56.9225349 437.020408,57.3142857 436.05391,57.3142857 L436.05391,57.3142857 L4,57.3142857 C3.03350169,57.3142857 2.15850169,56.9225349 1.52512627,56.2891594 C0.891750844,55.655784 0.5,54.780784 0.5,53.8142857 L0.5,53.8142857 L0.5,0.5 L439.55391,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="22.1886613" y="16.13">+ scheduleBindService(IBinder, Intent, boolean rebind, int processState)</tspan>
+                        <tspan x="22.1886613" y="34.13">+ scheduleCreateService(IBinder, ServiceInfo info,… )</tspan>
+                        <tspan x="22.1886613" y="52.13">+ bindApplication(…)</tspan>
+                    </text>
+                </g>
+            </g>
+            <g id="IApplicationThread.Stub" transform="translate(326.000000, 402.000000)">
+                <g id="编组" transform="translate(0.946809, -4.518605)">
+                    <path d="M262.106383,0.5 C262.796739,0.5 263.421739,0.779822031 263.87415,1.23223305 C264.326561,1.68464406 264.606383,2.30964406 264.606383,3 L264.606383,3 L264.606383,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
+                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="66.65" y="16.3255814">ApplicationThread</tspan>
+                    </text>
+                </g>
+                <g id="属性" transform="translate(0.946809, 17.485000)">
+                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="264.224365" height="36.05"></rect>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
+                </g>
+                <g id="方法" transform="translate(0.946809, 53.300000)">
+                    <path d="M264.724365,0.5 L264.724365,33.05 C264.724365,34.0164983 264.332615,34.8914983 263.699239,35.5248737 C263.065864,36.1582492 262.190864,36.55 261.224365,36.55 L261.224365,36.55 L4,36.55 C3.03350169,36.55 2.15850169,36.1582492 1.52512627,35.5248737 C0.891750844,34.8914983 0.5,34.0164983 0.5,33.05 L0.5,33.05 L0.5,0.5 L264.724365,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
+                </g>
+            </g>
+            <g id="IApplicationThread.Stub备份-2" transform="translate(38.000000, 375.000000)">
+                <g id="编组" transform="translate(0.673759, -4.518605)">
+                    <path d="M185.652482,0.5 C186.342838,0.5 186.967838,0.779822031 187.420249,1.23223305 C187.87266,1.68464406 188.152482,2.30964406 188.152482,3 L188.152482,3 L188.152482,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
+                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="41.408" y="16.3255814">ActivityThread</tspan>
+                    </text>
+                </g>
+                <g id="属性" transform="translate(0.673759, 17.485000)">
+                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="187.73644" height="36.05"></rect>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="9.5165816" y="14.585">mAppThread:ApplicationThread </tspan>
+                    </text>
+                </g>
+                <g id="方法" transform="translate(0.673759, 53.300000)">
+                    <path d="M188.23644,0.5 L188.23644,33.05 C188.23644,34.0164983 187.844689,34.8914983 187.211313,35.5248737 C186.577938,36.1582492 185.702938,36.55 184.73644,36.55 L184.73644,36.55 L4,36.55 C3.03350169,36.55 2.15850169,36.1582492 1.52512627,35.5248737 C0.891750844,34.8914983 0.5,34.0164983 0.5,33.05 L0.5,33.05 L0.5,0.5 L188.23644,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
+                </g>
+            </g>
+            <g id="IApplicationThread.Stub备份" transform="translate(326.000000, 268.000000)">
+                <g id="编组" transform="translate(0.946809, -4.094684)">
+                    <path d="M262.106383,0.5 C262.796739,0.5 263.421739,0.779822031 263.87415,1.23223305 C264.326561,1.68464406 264.606383,2.30964406 264.606383,3 L264.606383,3 L264.606383,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
+                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="44.7399999" y="16.3255814">IApplicationThread.Stub</tspan>
+                    </text>
+                </g>
+                <g id="属性" transform="translate(0.946809, 18.253571)">
+                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="264.224365" height="37.6785714"></rect>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
+                </g>
+                <g id="方法" transform="translate(0.946809, 55.642857)">
+                    <path d="M264.724365,0.5 L264.724365,34.6785714 C264.724365,35.6450697 264.332615,36.5200697 263.699239,37.1534452 C263.065864,37.7868206 262.190864,38.1785714 261.224365,38.1785714 L261.224365,38.1785714 L4,38.1785714 C3.03350169,38.1785714 2.15850169,37.7868206 1.52512627,37.1534452 C0.891750844,36.5200697 0.5,35.6450697 0.5,34.6785714 L0.5,34.6785714 L0.5,0.5 L264.724365,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
+                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
+                </g>
+            </g>
+            <g id="UML/线条/实现" transform="translate(455.000000, 225.500000)" stroke="#979797">
+                <line x1="2.5" y1="38.8055556" x2="2.5" y2="7.30555556" id="直线-24" stroke-linecap="square" stroke-dasharray="2"></line>
+                <path d="M2.5,-0.931966011 L5.69098301,5.45 L-0.690983006,5.45 L2.5,-0.931966011 Z" id="三角形"></path>
+            </g>
+            <g id="UML/线条/实现" transform="translate(455.000000, 363.000000)" stroke="#979797">
+                <line x1="4.5" y1="34.8333333" x2="4.5" y2="8" id="直线-24" stroke-linecap="square"></line>
+                <path d="M4.5,1.11803399 L7.69098301,7.5 L1.30901699,7.5 L4.5,1.11803399 Z" id="三角形"></path>
+            </g>
+            <g id="UML/线条/聚合" transform="translate(128.000000, 138.000000)">
+                <path id="直线-24" d="M6.50883555,9.81274647 L7.5086821,9.83026412 L7.49992328,10.3301874 L6.85324563,47.2403042 L6.746,53.315 L10.4214873,47.041539 L10.6742143,46.6101122 L11.5370678,47.1155662 L11.2843409,47.546993 L6.64489019,55.466936 L6.19559777,56.2339169 L5.77344839,55.451668 L1.41428008,47.3740662 L1.17682105,46.9340512 L2.05685107,46.4591331 L2.2943101,46.8991481 L5.747,53.297 L5.85339907,47.2227865 L6.50007672,10.3126697 L6.50883555,9.81274647 Z" fill="#979797" fill-rule="nonzero"></path>
+                <path d="M7.04493542,0.824414956 L10.6703645,5.5 L7.04493542,10.175585 L3.53698783,5.5 L7.04493542,0.824414956 Z" id="多边形" stroke="#979797"></path>
+            </g>
+            <g id="编组" transform="translate(272.810486, 148.720337)" fill="#979797">
+                <g id="UML/线条/组合" transform="translate(4.500000, 49.000000) rotate(-90.000000) translate(-4.500000, -49.000000) ">
+                    <path id="直线-24" d="M4.00288801,10.1257 L5.00287142,10.1314594 L4.99999171,10.6314511 L4.54315542,89.9498322 L4.507,96.035 L8.10875237,89.7196752 L8.35638881,89.2853065 L9.22512627,89.7805794 L8.97748982,90.2149481 L4.43148901,98.188898 L3.99124645,98.9611091 L3.55992793,98.1838782 L-0.893921989,90.1580935 L-1.13653865,89.7209011 L-0.262153947,89.2356678 L-0.0195372819,89.6728601 L3.507,96.027 L3.54317201,89.9440727 L4.00000829,10.6256917 L4.00288801,10.1257 Z" fill-rule="nonzero"></path>
+                    <polygon id="多边形" stroke="#979797" points="4.5 0 8.76467693 5.5 4.5 11 0.373519229 5.5"></polygon>
+                </g>
+            </g>
+            <g id="编组" transform="translate(272.810486, 366.720337)" fill="#979797">
+                <g id="UML/线条/组合" transform="translate(4.500000, 49.000000) rotate(-90.000000) translate(-4.500000, -49.000000) ">
+                    <path id="直线-24" d="M4.00288801,10.1257 L5.00287142,10.1314594 L4.99999171,10.6314511 L4.54315542,89.9498322 L4.507,96.035 L8.10875237,89.7196752 L8.35638881,89.2853065 L9.22512627,89.7805794 L8.97748982,90.2149481 L4.43148901,98.188898 L3.99124645,98.9611091 L3.55992793,98.1838782 L-0.893921989,90.1580935 L-1.13653865,89.7209011 L-0.262153947,89.2356678 L-0.0195372819,89.6728601 L3.507,96.027 L3.54317201,89.9440727 L4.00000829,10.6256917 L4.00288801,10.1257 Z" fill-rule="nonzero"></path>
+                    <polygon id="多边形" stroke="#979797" points="4.5 0 8.76467693 5.5 4.5 11 0.373519229 5.5"></polygon>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
+
+现在我们看下 ServiceRecord 是何时构造的，首先，根据方法的调用层次，我们可以看到：
 
 * `ActiveServices.bindServiceLocked` 方法中，参数中没有ServiceRecord，有的是IApplicationThread及一个IBinder。
 * `ActiveServices.requestServiceBindingLocked` 方法中，则变成了ServiceRecord类型。
@@ -384,7 +598,7 @@ IApplicationThread thread;  // the actual proc...  may be null only if
 
 > 提示：上述调用层次可以在IDEA中选中`ActiveServices.requestServiceBindingLocked`方法，然后通过“**Navigate｜Call Hierarchy**”（快捷键为==ctrl+opt+H==）弹出。
 
-#### ActiveServices.requestServiceBindingLocked : 获取 ServiceRecord
+#### ActiveServices.requestServiceBindingLocked
 
 ```java
     int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
@@ -393,7 +607,7 @@ IApplicationThread thread;  // the actual proc...  may be null only if
             throws TransactionTooLargeException {
         final int callingPid = Binder.getCallingPid();
         final int callingUid = Binder.getCallingUid();
-        // 这里构造了ProcessRecord
+        // 这里构造了 ProcessRecord
         final ProcessRecord callerApp = mAm.getRecordForAppLocked(caller);
 
         final boolean callerFg = callerApp.setSchedGroup != ProcessList.SCHED_GROUP_BACKGROUND;
@@ -991,9 +1205,11 @@ private String bringUpServiceLocked(ServiceRecord r, int intentFlags, boolean ex
     }
 ```
 
-
-
 ### frameworks/base/core/java/android/app/ActivityThread.java
+
+
+
+
 
 # BBinder相关
 
