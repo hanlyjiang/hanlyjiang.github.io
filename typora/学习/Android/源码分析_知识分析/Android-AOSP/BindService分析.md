@@ -290,7 +290,12 @@ isTop: false
 
 #### 服务如何绑定？服务如何启动？进程如何启动？
 
-
+* 进程启动：
+  * 在系统进程中，通过AMS的`startProcessLocked`方法启动进程，
+* 服务启动：
+  * 
+* 服务绑定：
+  * 
 
 ### 整体流程总结
 
@@ -370,6 +375,8 @@ public static IActivityManager getService() {
 
 那么，系统进程（中的AMS）如何获取ApplicationThread呢？
 
+#### ApplicationThread的来源？
+
 查看 **ContextImpl.bindServiceCommon** 的代码，可以看到，是在调用AMS的bindService方法时，将自己进程中的ApplicationThread及ActivityToken取出传递给了AMS服务；
 
 ```java
@@ -405,14 +412,7 @@ private boolean bindServiceCommon(Intent service, ServiceConnection conn, int fl
 
 > 这里我们暂不考虑ApplicationThread由何处而来，每个进程中都对应一个ActivityThread，ActivityThread中有一个ApplicationThread对象。
 
-### 服务如何绑定？服务如何启动？进程如何启动？
-
-#### 总结
-
-* 启动服务的时候，如果服务没有创建，则执行 com.android.server.am.ActiveServices#bindServiceLocked 来创建服务；
-* 创建服务的时候，如果对应的进程不存在，则通过AMS来创建一个进程，然后将其记录到AMS中；
-
-#### ApplicationThread的构造
+#### ApplicationThread在bind流程中的使用
 
 我们发现，最终是使用 `ApplicationThread`的 `requestServiceBindingLocked` 方法来绑定服务的。不过这里使用的时候是经过了几次成员变量操作符（`r.app.thread.scheduleBindService`），我们先梳理一下ServiceRecord类同ApplicationThread的关系；
 
@@ -592,13 +592,15 @@ IApplicationThread thread;  // the actual proc...  may be null only if
 * `ActiveServices.bindServiceLocked` 方法中，参数中没有ServiceRecord，有的是IApplicationThread及一个IBinder。
 * `ActiveServices.requestServiceBindingLocked` 方法中，则变成了ServiceRecord类型。
 
-所以，我们先看下 `ActiveServices.requestServiceBindingLocked` 方法如何构造。
-
 ![image-20210410215833909](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210410215833.png)
 
 > 提示：上述调用层次可以在IDEA中选中`ActiveServices.requestServiceBindingLocked`方法，然后通过“**Navigate｜Call Hierarchy**”（快捷键为==ctrl+opt+H==）弹出。
 
-#### ActiveServices.requestServiceBindingLocked
+
+
+所以，接下来我们看下 `ActiveServices.bindServiceLocked` 方法如何将`ApplicationThread`存入到`ServiceRecord`对象中。
+
+##### ActiveServices.bindServiceLocked
 
 ```java
     int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
@@ -607,7 +609,7 @@ IApplicationThread thread;  // the actual proc...  may be null only if
             throws TransactionTooLargeException {
         final int callingPid = Binder.getCallingPid();
         final int callingUid = Binder.getCallingUid();
-        // 这里构造了 ProcessRecord
+        // 这里获取了 ProcessRecord
         final ProcessRecord callerApp = mAm.getRecordForAppLocked(caller);
 
         final boolean callerFg = callerApp.setSchedGroup != ProcessList.SCHED_GROUP_BACKGROUND;
@@ -634,7 +636,7 @@ IApplicationThread thread;  // the actual proc...  may be null only if
 
 ==粗略看了下这个`retrieveServiceLocked`方法，其中逻辑比较多，我们这里转换下思路，直接查找 `ServiceRecord.app` 的赋值操作==。
 
-#### `ServiceRecord.app` 的赋值
+##### `ServiceRecord.app` 的赋值
 
 我们可以找到ServiceRecord.app（ProcessRecord）的赋值操作的调用方法为：`com.android.server.am.ActiveServices#realStartServiceLocked`
 
@@ -650,11 +652,11 @@ private final void realStartServiceLocked(ServiceRecord r,
 }
 ```
 
-查看 realStartServiceLocked 的调用序列：
+查看 `realStartServiceLocked` 的调用序列：
 
 <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210410224824.png" alt="image-20210410224824691" style="zoom:50%;" />
 
-也就是又回到了我们的 `bindServiceLocked` 方法，其中有一段逻辑是，如果需要创建服务，就执行`bringUpServiceLocked`方法。
+也就是又回到了我们的 `bindServiceLocked` 方法，其中有一段逻辑是，如果需要创建服务，就执行 `bringUpServiceLocked` 方法。
 
 ```java
 // com.android.server.am.ActiveServices#bindServiceLocked   
@@ -674,7 +676,7 @@ int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
     }
 ```
 
-
+也就是说，在绑定服务的时候，如果服务没有创建，就先使用`bringUpServiceLocked`-`realStartServiceLocked` 进行创建，创建过程中会将ServiceRecord中的app赋值，然后存储起来；
 
 > 提示：我们可以通过如下IDEA操作来查找赋值操作
 >
@@ -694,9 +696,7 @@ int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
 >
 >    <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210410224023.png" alt="image-20210410224023641" style="zoom:50%;" />
 
-#### ActiveServices#bringUpServiceLocked
-
-##### **总结：**
+### 服务如何绑定？服务如何启动？进程如何启动？
 
 1. **bringUpServiceLocked(ServiceRecord r,...)** 第一个参数为ServiceRecord，其中的app属性可存储一个进程记录； 
 2. 如传入的ServiceRecord参数中表明服务已经启动过，`r.app(ProcessRecord)` 不为null，且`r.app.thread(IApplicationThread)`也不为null，则不创建，直接更新参数；
@@ -714,9 +714,9 @@ int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
 
 6. **单独进程服务启动：** 将待启动的服务加入到`mPendingServices(ArrayList<ServiceRecord>)`，在启动进程后再从此列表中读取需要启动的服务，然后启动；
 
-##### **问题结论：**
 
-来到这个方法时我们有两个问题：
+
+**总结：** 
 
 1. 进程记录如何获取？
 
@@ -728,11 +728,788 @@ int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
 
    * > `realStartServiceLocked` 中通过 `IApplicationThread` 执行 `scheduleCreateService` 来启动服务，最终调用 `android.app.ActivityThread.ApplicationThread#scheduleCreateService`来启动；
 
-     
+### 进程创建
 
-##### **具体代码：**
+> 问题：
+>
+> 1. 进程何时创建？- 已解决
+> 2. ApplicationThread对象何时设置到ProcessRecord中? - 已解决
+> 3. ActivityThread#main的入口点中，如何获取之前的结果？ - 已解决
 
-* bringUpServiceLocked方法分析：
+下面为创建进程的调用序列，注意如下序列中只是创建了一个ProcessRecord的对象，对应于Linux上的进程创建我们再起文章进行分析，对于我们的Service来说，拿到ProcessRecord对象即可供我们来创建服务；
+
+
+<svg width="526px" height="575px" viewBox="0 0 526 575" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g id="Android源码分析" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="bindService流程分析-加入启动流程" transform="translate(-736.000000, -169.000000)">
+            <g id="架构图/模块-源码备份-25" transform="translate(737.000000, 235.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="10.5542114" y="11">ActivityManagerService#startProcessLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="33.7957176" y="23.3877551">com/android/server/am/ActivityManagerService.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-37" transform="translate(990.000000, 235.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="10.5542114" y="11">ActivityManagerService#startProcessLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="28.3999017" y="23.3877551">startProcessLocked(hostingRecord, entryPoint) 带入口点</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-38" transform="translate(973.000000, 278.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="133.629108" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="8.68091383" y="11">ProcessList#startProcess</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="11.0735497" y="23.3877551">带入口类 android.app.ActivityThread</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-49" transform="translate(1120.000000, 278.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="140.661972" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="2.2157558" y="11">handleProcessStartedLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="22.5230361" y="23.3877551">记录ProcessRecord（通过PID）</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-39" transform="translate(990.000000, 321.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="17.0024123" y="11">android.os.ZygoteProcess#startViaZygote</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="58.7965544" y="23.3877551">带入口类 android.app.ActivityThread</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-40" transform="translate(990.000000, 364.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="8.41262146" y="11">ZygoteProcess#zygoteSendArgsAndGetResult</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="58.7965544" y="23.3877551">带入口类 android.app.ActivityThread</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-41" transform="translate(990.000000, 412.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFED99" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="99.5684373" y="11">zygote</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="84.7078515" y="23.3877551">zygote创建新的进程</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-42" transform="translate(990.000000, 455.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="62.0929562" y="11">ActivityThread#main()</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="77.8124541" y="23.3877551">进程创建后执行入口函数</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-44" transform="translate(990.000000, 497.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="62.7115336" y="11">ActivityThread#attach</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="103.107852" y="23.3877551">module</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-26" transform="translate(737.000000, 281.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="35.9721194" y="11">ProcessList#startProcessLocked()</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="52.1187301" y="23.3877551">com/android/server/am/ProcessList.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-11" transform="translate(736.000000, 323.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="24.3831654" y="11">ProcessList#newProcessRecordLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="52.1187301" y="23.3877551">com/android/server/am/ProcessList.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-27" transform="translate(736.000000, 362.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="24.3831654" y="11">ProcessList#newProcessRecordLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="53.5814917" y="23.3877551">new ProcessRecord(ams, info, proc, uid)</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-9" transform="translate(736.000000, 197.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="24.9173913" y="11">ActiveServices#bringUpServiceLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="47.5865126" y="23.3877551">com/android/server/am/ActiveServices.java</tspan>
+                </text>
+            </g>
+            <path id="直线-7备份" d="M851.834728,222.007377 L851.834,228.046 L855.17364,228.046784 L851.5,235.046784 L847.82636,228.046784 L851.165,228.046 L851.165272,222.007377 L851.834728,222.007377 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-8备份" d="M851.834728,259.998605 L851.834,273.055 L855.17364,273.055556 L851.5,280.055556 L847.82636,273.055556 L851.165,273.055 L851.165272,259.998605 L851.834728,259.998605 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-9备份" d="M851.834728,305.998605 L851.834,317.055 L855.17364,317.055556 L851.5,324.055556 L847.82636,317.055556 L851.165,317.055 L851.165272,305.998605 L851.834728,305.998605 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-10备份" d="M851.834728,349.007377 L851.834,355.046 L855.17364,355.046784 L851.5,362.046784 L847.82636,355.046784 L851.165,355.046 L851.165272,349.007377 L851.834728,349.007377 Z" fill="#979797" fill-rule="nonzero"></path>
+            <text id="创建进程" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                <tspan x="966.692" y="181">创建进程</tspan>
+            </text>
+            <line x1="966.5" y1="248.5" x2="990.5" y2="248.5" id="直线-23" stroke="#979797" stroke-linecap="square"></line>
+            <path id="直线-13" d="M1067,260 L1067,270 L1071,270 L1066.5,279 L1062,270 L1066,270 L1066,260 L1067,260 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-14" d="M1081,303 L1081,312 L1085,312 L1080.5,321 L1076,312 L1080,312 L1080,303 L1081,303 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-14备份" d="M1184,260 L1184,269 L1188,269 L1183.5,278 L1179,269 L1183,269 L1183,260 L1184,260 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-15" d="M1105,347 L1105,356 L1109,356 L1104.5,365 L1100,356 L1104,356 L1104,347 L1105,347 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-24" d="M1105,390 L1105,404 L1109,404 L1104.5,413 L1100,404 L1104,404 L1104,390 L1105,390 Z" fill="#979797" fill-rule="nonzero"></path>
+            <text id="socket" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="8" font-weight="300" letter-spacing="0.088000003" fill="#020202" fill-opacity="0.88378138">
+                <tspan x="1107.516" y="401">socket</tspan>
+            </text>
+            <path id="直线-25" d="M1105,438 L1105,447 L1109,447 L1104.5,456 L1100,447 L1104,447 L1104,438 L1105,438 Z" fill="#979797" fill-rule="nonzero"></path>
+            <line x1="1235.5" y1="301.5" x2="1235.5" y2="674.5" id="直线-26" stroke="#979797" stroke-linecap="square" stroke-dasharray="3"></line>
+            <g id="架构图/模块-源码备份-45" transform="translate(990.000000, 542.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="30.362747" y="11">IActivityManager#attachApplication</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="103.107852" y="23.3877551">module</tspan>
+                </text>
+            </g>
+            <path id="直线-27" d="M1105,480 L1105,489 L1109,489 L1104.5,498 L1100,489 L1104,489 L1104,480 L1105,480 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-28" d="M1105,523 L1105,534 L1109,534 L1104.5,543 L1100,534 L1104,534 L1104,523 L1105,523 Z" fill="#979797" fill-rule="nonzero"></path>
+            <g id="架构图/模块-源码备份-46" transform="translate(990.000000, 629.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="14.6686884" y="11">ActivityManagerService#attachApplication</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="103.107852" y="23.3877551">module</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-47" transform="translate(963.000000, 675.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="283.328638" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="25.0095075" y="11">ActivityManagerService#attachApplicationLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="87.6170389" y="23.3877551">获取之前缓存的ProcessRecord(app)</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-50" transform="translate(963.000000, 718.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="283.328638" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="77.3964531" y="11">ProcessRecord#makeActive</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="52.1793819" y="23.3877551">app.makeActive(thread, mProcessStats) ; thread = _thread;</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-36" transform="translate(990.000000, 583.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFED99" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="95.5148809" y="11">transact</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="104.925425" y="23.3877551">binder</tspan>
+                </text>
+            </g>
+            <path id="直线-29" d="M1105,567 L1105,575 L1109,575 L1104.5,584 L1100,575 L1104,575 L1104,567 L1105,567 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-30" d="M1105,609 L1105,621 L1109,621 L1104.5,630 L1100,621 L1104,621 L1104,609 L1105,609 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-31" d="M1105,655 L1105,667 L1109,667 L1104.5,676 L1100,667 L1104,667 L1104,655 L1105,655 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-32" d="M1105,701 L1105,710 L1109,710 L1104.5,719 L1100,710 L1104,710 L1104,701 L1105,701 Z" fill="#979797" fill-rule="nonzero"></path>
+        </g>
+    </g>
+</svg>
+
+
+* 进程创建的执行位于AMS所在的系统进程之中；
+* （AMS进程）首先，构建一个ProcessRecord记录，并将其记录到AMS中；
+* （AMS进程）AMS通过socket通信，通知zygote来创建一个新的进程，同时指定入口点为 `android.app.ActivityThread` ;
+* （APP进程）新的进程启动后，执行ActivityThread中的方法，执行通知AMS来attachApplication；
+* （AMS进程）AMS中，通过PID获取之前存储的ProcessRecord，然后将ApplicationThread赋值给ProcessRecord的成员变量thread；
+* 支持完成了关联；
+
+#### 构造ProcessRecord实例
+
+`com.android.server.am.ProcessList#startProcessLocked`，简化下来就两句：
+
+* 构造ProcessRecord对象： `app = newProcessRecordLocked(info, processName, isolated, isolatedUid, hostingRecord)`
+* 启动进程：`startProcessLocked(app, hostingRecord, zygotePolicyFlags, abiOverride)`
+
+```java
+// com.android.server.am.ProcessList#newProcessRecordLocked
+// frameworks/base/services/core/java/com/android/server/am/ProcessList.java
+final ProcessRecord startProcessLocked(String processName, ApplicationInfo info,
+            boolean knownToBeDead, int intentFlags, HostingRecord hostingRecord,
+            int zygotePolicyFlags, boolean allowWhileBooting, boolean isolated, int isolatedUid,
+            boolean keepIfLarge, String abiOverride, String entryPoint, String[] entryPointArgs,
+            Runnable crashHandler) {
+        long startTime = SystemClock.uptimeMillis();
+        ProcessRecord app;
+        if (app == null) {
+            // 构造ProcessRecord对象
+            app = newProcessRecordLocked(info, processName, isolated, isolatedUid, hostingRecord);
+            app.crashHandler = crashHandler;
+            app.isolatedEntryPoint = entryPoint;
+            app.isolatedEntryPointArgs = entryPointArgs;
+        } else {
+            // If this is a new package in the process, add the package to the list
+            app.addPackage(info.packageName, info.longVersionCode, mService.mProcessStats);
+        }
+	    // 启动进程
+        final boolean success =
+                startProcessLocked(app, hostingRecord, zygotePolicyFlags, abiOverride);
+        checkSlow(startTime, "startProcess: done starting proc!");
+        return success ? app : null;
+    }
+```
+
+#### 启动进程 
+
+`startProcessLocked`: 启动了一个进程，并指定了入口点为 ==android.app.ActivityThread==，也就是进程启动后将会执行 ==android.app.ActivityThread==的main方法。
+
+```java
+// frameworks/base/services/core/java/com/android/server/am/ProcessList.java
+// com.android.server.am.ProcessList#startProcessLocked(com.android.server.am.ProcessRecord, com.android.server.am.HostingRecord, int, boolean, boolean, boolean, java.lang.String)
+boolean startProcessLocked(ProcessRecord app, HostingRecord hostingRecord,
+            int zygotePolicyFlags, boolean disableHiddenApiChecks, boolean disableTestApiChecks,
+            boolean mountExtStorageFull, String abiOverride) {
+        if (app.pendingStart) {
+            return true;
+        }
+        long startTime = SystemClock.uptimeMillis();
+        try {
+            try {
+                final int userId = UserHandle.getUserId(app.uid);
+                AppGlobals.getPackageManager().checkPackageStartable(app.info.packageName, userId);
+            } catch (RemoteException e) {
+                throw e.rethrowAsRuntimeException();
+            }
+
+            int uid = app.uid;
+            int[] gids = null;
+            // ... 
+            
+            app.mountMode = mountExternal;
+            app.gids = gids;
+            app.setRequiredAbi(requiredAbi);
+            app.instructionSet = instructionSet;
+
+            final String seInfo = app.info.seInfo
+                    + (TextUtils.isEmpty(app.info.seInfoUser) ? "" : app.info.seInfoUser);
+            // Start the process.  It will either succeed and return a result containing
+            // the PID of the new process, or else throw a RuntimeException.
+            // 指定入口点为ActivityThread，启动进程
+            final String entryPoint = "android.app.ActivityThread";
+            return startProcessLocked(hostingRecord, entryPoint, app, uid, gids,
+                    runtimeFlags, zygotePolicyFlags, mountExternal, seInfo, requiredAbi,
+                    instructionSet, invokeWith, startTime);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+
+boolean startProcessLocked(HostingRecord hostingRecord, String entryPoint, ProcessRecord app,
+            int uid, int[] gids, int runtimeFlags, int zygotePolicyFlags, int mountExternal,
+            String seInfo, String requiredAbi, String instructionSet, String invokeWith,
+            long startTime) {
+        app.pendingStart = true;
+        app.killedByAm = false;
+        app.removed = false;
+        app.killed = false;
+        final long startSeq = app.startSeq = ++mProcStartSeqCounter;
+        app.setStartParams(uid, hostingRecord, seInfo, startTime);
+        app.setUsingWrapper(invokeWith != null
+                || Zygote.getWrapProperty(app.processName) != null);
+        mPendingStarts.put(startSeq, app);
+
+        if (mService.mConstants.FLAG_PROCESS_START_ASYNC) {
+            return true;
+        } else {
+            try {
+                // 启动进程，并传入entrypoint
+                final Process.ProcessStartResult startResult = startProcess(hostingRecord,
+                        entryPoint, app,
+                        uid, gids, runtimeFlags, zygotePolicyFlags, mountExternal, seInfo,
+                        requiredAbi, instructionSet, invokeWith, startTime);
+                // 做启动后的操作
+                handleProcessStartedLocked(app, startResult.pid, startResult.usingWrapper,
+                        startSeq, false);
+            } catch (RuntimeException e) {
+                
+            }
+            return app.pid > 0;
+        }
+    }
+```
+
+这里我们省略其他更加底层的步骤的分析，我们只需要知道到了这里之后，会启动一个进程，进程启动后会执行 ==android.app.ActivityThread#main== 方法；
+
+#### 记录进程记录到AMS
+
+`ProcessList#handleProcessStartedLocked(com.android.server.am.ProcessRecord, int, boolean, long, boolean)`
+
+==这个地方有个关键的代码将之前创建的进程记录存储到了AMS的进程记录表中。==
+
+```java
+// com.android.server.am.ProcessList#handleProcessStartedLocked(com.android.server.am.ProcessRecord, int, boolean, long, boolean)
+// frameworks/base/services/core/java/com/android/server/am/ProcessList.java
+ActivityManagerService mService = null;
+boolean handleProcessStartedLocked(ProcessRecord app, int pid, boolean usingWrapper,
+            long expectedStartSeq, boolean procAttached) {
+    // 将ProcessRecord 存储到AMS中
+    mService.addPidLocked(app);
+}
+  
+// frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java
+void addPidLocked(ProcessRecord app) {
+    synchronized (mPidsSelfLocked) {
+        // 将进程记录添加到一个记录表中
+        mPidsSelfLocked.doAddInternal(app);
+    }
+    synchronized (sActiveProcessInfoSelfLocked) {
+        if (app.processInfo != null) {
+            sActiveProcessInfoSelfLocked.put(app.pid, app.processInfo);
+        } else {
+            sActiveProcessInfoSelfLocked.remove(app.pid);
+        }
+    }
+    mAtmInternal.onProcessMapped(app.pid, app.getWindowProcessController());
+}
+```
+```java
+// 完整代码
+// com.android.server.am.ProcessList#handleProcessStartedLocked(com.android.server.am.ProcessRecord, int, boolean, long, boolean)
+// frameworks/base/services/core/java/com/android/server/am/ProcessList.java
+boolean handleProcessStartedLocked(ProcessRecord app, int pid, boolean usingWrapper,
+            long expectedStartSeq, boolean procAttached) {
+        mPendingStarts.remove(expectedStartSeq);
+        final String reason = isProcStartValidLocked(app, expectedStartSeq);
+        if (reason != null) {
+            Slog.w(TAG_PROCESSES, app + " start not valid, killing pid=" +
+                    pid
+                    + ", " + reason);
+            app.pendingStart = false;
+            killProcessQuiet(pid);
+            Process.killProcessGroup(app.uid, app.pid);
+            noteAppKill(app, ApplicationExitInfo.REASON_OTHER,
+                    ApplicationExitInfo.SUBREASON_INVALID_START, reason);
+            return false;
+        }
+        mService.mBatteryStatsService.noteProcessStart(app.processName, app.info.uid);
+        checkSlow(app.startTime, "startProcess: done updating battery stats");
+
+        EventLog.writeEvent(EventLogTags.AM_PROC_START,
+                UserHandle.getUserId(app.startUid), pid, app.startUid,
+                app.processName, app.hostingRecord.getType(),
+                app.hostingRecord.getName() != null ? app.hostingRecord.getName() : "");
+
+        try {
+            AppGlobals.getPackageManager().logAppProcessStartIfNeeded(app.processName, app.uid,
+                    app.seInfo, app.info.sourceDir, pid);
+        } catch (RemoteException ex) {
+            // Ignore
+        }
+
+        Watchdog.getInstance().processStarted(app.processName, pid);
+
+        checkSlow(app.startTime, "startProcess: building log message");
+        StringBuilder buf = mStringBuilder;
+        buf.setLength(0);
+        buf.append("Start proc ");
+        buf.append(pid);
+        buf.append(':');
+        buf.append(app.processName);
+        buf.append('/');
+        UserHandle.formatUid(buf, app.startUid);
+        if (app.isolatedEntryPoint != null) {
+            buf.append(" [");
+            buf.append(app.isolatedEntryPoint);
+            buf.append("]");
+        }
+        buf.append(" for ");
+        buf.append(app.hostingRecord.getType());
+        if (app.hostingRecord.getName() != null) {
+            buf.append(" ");
+            buf.append(app.hostingRecord.getName());
+        }
+        mService.reportUidInfoMessageLocked(TAG, buf.toString(), app.startUid);
+        app.setPid(pid);
+        app.setUsingWrapper(usingWrapper);
+        app.pendingStart = false;
+        checkSlow(app.startTime, "startProcess: starting to update pids map");
+        ProcessRecord oldApp;
+        synchronized (mService.mPidsSelfLocked) {
+            oldApp = mService.mPidsSelfLocked.get(pid);
+        }
+        // If there is already an app occupying that pid that hasn't been cleaned up
+        if (oldApp != null && !app.isolated) {
+            // Clean up anything relating to this pid first
+            Slog.wtf(TAG, "handleProcessStartedLocked process:" + app.processName
+                    + " startSeq:" + app.startSeq
+                    + " pid:" + pid
+                    + " belongs to another existing app:" + oldApp.processName
+                    + " startSeq:" + oldApp.startSeq);
+            mService.cleanUpApplicationRecordLocked(oldApp, false, false, -1,
+                    true /*replacingPid*/);
+        }
+    // 注意这里 
+        mService.addPidLocked(app);
+        synchronized (mService.mPidsSelfLocked) {
+            if (!procAttached) {
+                Message msg = mService.mHandler.obtainMessage(PROC_START_TIMEOUT_MSG);
+                msg.obj = app;
+                mService.mHandler.sendMessageDelayed(msg, usingWrapper
+                        ? PROC_START_TIMEOUT_WITH_WRAPPER : PROC_START_TIMEOUT);
+            }
+        }
+        checkSlow(app.startTime, "startProcess: done updating pids map");
+        return true;
+    }
+```
+
+#### 写入thread值到ProcessRecord
+
+从上面的流程中，我们发现构造出来的ProcessRecord的thread（ApplicationThread）成员变量还是没有被赋值，那么这个thread何时被赋值呢？
+
+> 查找`ProcessRecord`中`thread`赋值的入口：
+>
+> 1. 通过查找`thread`成员的赋值写入方法，可以确定起始点是，`com.android.server.am.ProcessRecord#makeActive` ，接下来查看调用这个方法的列表：
+> 2. ![image-20210411172323572](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210411172323.png)
+>
+> 3. 这里我们显然选择 `com.android.server.am.ActivityManagerService#attachApplicationLocked`
+>
+> 4. `android.app.ActivityThread#attach`
+>
+> 5. 这里我们遇到两个选择：
+>
+>    <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210411172524.png" alt="image-20210411172524831" style="zoom:50%;" />
+>
+> 6. 显然，应该选择第二个：`android.app.ActivityThread#main`
+>
+> 7. 这里我们却无法直接通过IDEA的调用层次功能找到任何调用方法，说明可能是通过反射来调用的，所以直接通过全局字符串搜索==android.app.ActivityThread==，可以找到在 `ProcessList.startProcessLocked` 中调用的。
+
+通过上面的分析，这里我们从ActivityThread的main函数开始。
+
+#####  ActivityThread#main
+
+```java
+    public static void main(String[] args) {
+        Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "ActivityThreadMain");
+
+        // Install selective syscall interception
+        AndroidOs.install();
+
+        // CloseGuard defaults to true and can be quite spammy.  We
+        // disable it here, but selectively enable it later (via
+        // StrictMode) on debug builds, but using DropBox, not logs.
+        CloseGuard.setEnabled(false);
+
+        Environment.initForCurrentUser();
+
+        // Make sure TrustedCertificateStore looks in the right place for CA certificates
+        final File configDir = Environment.getUserConfigDirectory(UserHandle.myUserId());
+        TrustedCertificateStore.setDefaultUserDirectory(configDir);
+
+        // Call per-process mainline module initialization.
+        initializeMainlineModules();
+
+        Process.setArgV0("<pre-initialized>");
+
+        Looper.prepareMainLooper();
+
+        // Find the value for {@link #PROC_START_SEQ_IDENT} if provided on the command line.
+        // It will be in the format "seq=114"
+        long startSeq = 0;
+        if (args != null) {
+            for (int i = args.length - 1; i >= 0; --i) {
+                if (args[i] != null && args[i].startsWith(PROC_START_SEQ_IDENT)) {
+                    startSeq = Long.parseLong(
+                            args[i].substring(PROC_START_SEQ_IDENT.length()));
+                }
+            }
+        }
+        // 直接构造一个ActivityThread对象
+        ActivityThread thread = new ActivityThread();
+        // 执行attach方法
+        thread.attach(false, startSeq);
+
+        if (sMainThreadHandler == null) {
+            sMainThreadHandler = thread.getHandler();
+        }
+
+        if (false) {
+            Looper.myLooper().setMessageLogging(new
+                    LogPrinter(Log.DEBUG, "ActivityThread"));
+        }
+
+        // End of event ActivityThreadMain.
+        Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
+        Looper.loop();
+
+        throw new RuntimeException("Main thread loop unexpectedly exited");
+    }
+```
+
+##### ActivityThread#attach
+
+```java
+ private void attach(boolean system, long startSeq) {
+        sCurrentActivityThread = this;
+        mSystemThread = system;
+        if (!system) {
+            android.ddm.DdmHandleAppName.setAppName("<pre-initialized>",
+                                                    UserHandle.myUserId());
+            // 将当前ApplicationThread的Binder对象保存为一个静态成员
+            RuntimeInit.setApplicationObject(mAppThread.asBinder());
+            // 获取AMS
+            final IActivityManager mgr = ActivityManager.getService();
+            try {
+                // 通知AMS来 attachApplication
+                mgr.attachApplication(mAppThread, startSeq);
+            } catch (RemoteException ex) {
+                throw ex.rethrowFromSystemServer();
+            }
+        } else {
+            
+        }
+}
+```
+
+##### **ActivityManagerService#attachApplication** & attachApplicationLocked
+
+```java
+    @Override
+    public final void attachApplication(IApplicationThread thread, long startSeq) {
+        if (thread == null) {
+            throw new SecurityException("Invalid application interface");
+        }
+        synchronized (this) {
+            int callingPid = Binder.getCallingPid();
+            final int callingUid = Binder.getCallingUid();
+            final long origId = Binder.clearCallingIdentity();
+            attachApplicationLocked(thread, callingPid, callingUid, startSeq);
+            Binder.restoreCallingIdentity(origId);
+        }
+    }
+
+```
+上面的方法只是调用了 attachApplicationLocked：
+
+==有个关键的步骤是，从 AMS的进程记录表中根据PID取出一个 ProcessRecord: `app = mPidsSelfLocked.get(pid)`==
+
+```java
+private boolean attachApplicationLocked(@NonNull IApplicationThread thread,
+            int pid, int callingUid, long startSeq) {
+        // Find the application record that is being attached...  either via
+        // the pid if we are running in multiple processes, or just pull the
+        // next app record if we are emulating process with anonymous threads.
+        ProcessRecord app;
+        long startTime = SystemClock.uptimeMillis();
+        long bindApplicationTimeMillis;
+        if (pid != MY_PID && pid >= 0) {
+            synchronized (mPidsSelfLocked) {
+                // 从进程记录中获取
+                app = mPidsSelfLocked.get(pid);
+            }
+        }
+        // Make app active after binding application or client may be running requests (e.g
+        // starting activities) before it is ready.
+        // 关联thread到app（ProcessRecord）
+        app.makeActive(thread, mProcessStats);
+        return true;
+    }
+```
+
+经过上面的步骤，即完成了ProcessRecord到进程的ApplicationThread的关联。
+
+### 启动服务
+
+从AMS中调用ApplicationThread的方法来在Service自己应该所属的进程中创建Service对象的实例。
+
+
+<svg width="557px" height="390px" viewBox="0 0 557 390" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g id="Android源码分析" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="bindService流程分析-加入启动流程" transform="translate(-1415.000000, -205.000000)">
+            <g id="架构图/模块-源码备份-52" transform="translate(1714.000000, 280.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="62.0929562" y="11">ActivityThread#main()</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="77.8124541" y="23.3877551">进程创建后执行入口函数</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-57" transform="translate(1714.000000, 235.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="74.0568056" y="11">独立进程的Service</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="101.501157" y="23.3877551">启动进程</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-53" transform="translate(1714.000000, 322.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="62.7115336" y="11">ActivityThread#attach</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="113.886094" y="23.3877551">-</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-28" transform="translate(1416.000000, 316.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="13.5486884" y="11">IApplicationThread#scheduleCreateService</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="57.7019938" y="23.3877551">android/app/IApplicationThread.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-29" transform="translate(1416.000000, 362.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFED99" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="95.5148809" y="11">transact</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="104.925425" y="23.3877551">binder</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-29" transform="translate(1415.000000, 527.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFED99" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="95.5148809" y="11">transact</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="104.925425" y="23.3877551">binder</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-30" transform="translate(1415.000000, 404.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="15.14668" y="11">ApplicationThread#scheduleCreateService</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="65.1496925" y="23.3877551">android/app/ActivityThread.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-31" transform="translate(1415.000000, 443.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="28.8631654" y="11">ActivityThread#handleCreateService</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="65.1496925" y="23.3877551">android/app/ActivityThread.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-33" transform="translate(1416.000000, 485.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="20.3389813" y="11">IActivityManager#serviceDoneExecuting</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="65.1496925" y="23.3877551">android/app/ActivityThread.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-34" transform="translate(1415.000000, 569.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="4.64492271" y="11">ActivityManagerService#serviceDoneExecuting</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="65.1496925" y="23.3877551">android/app/ActivityThread.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-32" transform="translate(1416.000000, 237.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="24.9173913" y="11">ActiveServices#bringUpServiceLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="47.5865126" y="23.3877551">com/android/server/am/ActiveServices.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-43" transform="translate(1415.000000, 275.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="23.3147135" y="11">ActiveServices#realStartServiceLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="47.5865126" y="23.3877551">com/android/server/am/ActiveServices.java</tspan>
+                </text>
+            </g>
+            <path id="直线-7备份-2" d="M1531.83473,262.007377 L1531.834,268.046 L1535.17364,268.046784 L1531.5,275.046784 L1527.82636,268.046784 L1531.165,268.046 L1531.16527,262.007377 L1531.83473,262.007377 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-8备份-2" d="M1530.83473,340.998605 L1530.834,354.055 L1534.17364,354.055556 L1530.5,361.055556 L1526.82636,354.055556 L1530.165,354.055 L1530.16527,340.998605 L1530.83473,340.998605 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-9备份-2" d="M1530.83473,386.998605 L1530.834,398.055 L1534.17364,398.055556 L1530.5,405.055556 L1526.82636,398.055556 L1530.165,398.055 L1530.16527,386.998605 L1530.83473,386.998605 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-10备份-2" d="M1530.83473,430.007377 L1530.834,436.046 L1534.17364,436.046784 L1530.5,443.046784 L1526.82636,436.046784 L1530.165,436.046 L1530.16527,430.007377 L1530.83473,430.007377 Z" fill="#979797" fill-rule="nonzero"></path>
+            <text id="启动服务" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                <tspan x="1503.692" y="217">启动服务</tspan>
+            </text>
+            <path id="直线-22" d="M1530,469 L1530,477 L1534,477 L1529.5,486 L1525,477 L1529,477 L1529,469 L1530,469 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-22备份" d="M1530,511 L1530,519 L1534,519 L1529.5,528 L1525,519 L1529,519 L1529,511 L1530,511 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-22备份-2" d="M1530,553 L1530,561 L1534,561 L1529.5,570 L1525,561 L1529,561 L1529,553 L1530,553 Z" fill="#979797" fill-rule="nonzero"></path>
+            <g id="架构图/模块-源码备份-54" transform="translate(1714.000000, 367.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="30.362747" y="11">IActivityManager#attachApplication</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="113.886094" y="23.3877551">-</tspan>
+                </text>
+            </g>
+            <path id="直线-27备份" d="M1829,305 L1829,314 L1833,314 L1828.5,323 L1824,314 L1828,314 L1828,305 L1829,305 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-28备份" d="M1829,348 L1829,359 L1833,359 L1828.5,368 L1824,359 L1828,359 L1828,348 L1829,348 Z" fill="#979797" fill-rule="nonzero"></path>
+            <g id="架构图/模块-源码备份-55" transform="translate(1714.000000, 454.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="14.6686884" y="11">ActivityManagerService#attachApplication</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="113.886094" y="23.3877551">-</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-48" transform="translate(1687.000000, 497.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="283.328638" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="25.0095075" y="11">ActivityManagerService#attachApplicationLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="59.3894238" y="23.3877551">获取之前存储的 mPendingServices - 待启动的服务列表</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-29" transform="translate(1714.000000, 408.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFED99" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="95.5148809" y="11">transact</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="104.925425" y="23.3877551">binder</tspan>
+                </text>
+            </g>
+            <path id="直线-29备份" d="M1829,392 L1829,400 L1833,400 L1828.5,409 L1824,400 L1828,400 L1828,392 L1829,392 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-30备份" d="M1829,434 L1829,446 L1833,446 L1828.5,455 L1824,446 L1828,446 L1828,434 L1829,434 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-33" d="M1532,300 L1532,308 L1536,308 L1531.5,317 L1527,308 L1531,308 L1531,300 L1532,300 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-34" d="M1829,480 L1829,488 L1833,488 L1828.5,497 L1824,488 L1828,488 L1828,480 L1829,480 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-35" d="M1653.5,292.5 L1644.5,288 L1653.5,283.5 L1653.5,287.5 L1674.56431,287.5 L1674.564,509.5 L1687,509.5 L1687,510.5 L1673.56431,510.5 L1673.564,288.5 L1653.5,288.5 L1653.5,292.5 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-36" d="M1829,260 L1829,271 L1833,271 L1828.5,280 L1824,271 L1828,271 L1828,260 L1829,260 Z" fill="#979797" fill-rule="nonzero"></path>
+        </g>
+    </g>
+</svg>
+
+#### ActiveServices#bringUpServiceLocked
 
 ```java
 // com.android.server.am.ActiveServices#bringUpServiceLocked
@@ -800,9 +1577,9 @@ private String bringUpServiceLocked(ServiceRecord r, int intentFlags, boolean ex
     }
 ```
 
-* 独立进程何时启动服务？
+#### 独立进程何时启动服务？
 
-  一般来说，封装较好的代码会保证入口统一，如果非独立进程情况下服务的启动使用的是 `realStartServiceLocked` 方法来启动服务，那么独立进程情况下，服务的启动也应该使用此方法，所以我们查看 `realStartServiceLocked` 方法的调用层次，如下：
+* 一般来说，封装较好的代码会保证入口统一，如果非独立进程情况下服务的启动使用的是 `realStartServiceLocked` 方法来启动服务，那么独立进程情况下，服务的启动也应该使用此方法，所以我们查看 `realStartServiceLocked` 方法的调用层次，如下：
 
   **图片版本:**
 
@@ -827,6 +1604,8 @@ private String bringUpServiceLocked(ServiceRecord r, int intentFlags, boolean ex
   我们再看`attachApplicationLocked` 的逻辑，可以发现，会检查`mPendingServices`中是否有待启动的服务，然后逐一处理，如果有需要启动的服务，则会调用`realStartServiceLocked(sr, proc, sr.createdFromFg)`来启动服务。
 
   ```java
+  // com.android.server.am.ActiveServices#attachApplicationLocked
+  // frameworks/base/services/core/java/com/android/server/am/ActiveServices.java
   boolean attachApplicationLocked(ProcessRecord proc, String processName)
               throws RemoteException {
           boolean didSomething = false;
@@ -857,6 +1636,165 @@ private String bringUpServiceLocked(ServiceRecord r, int intentFlags, boolean ex
           }
   }
   ```
+
+#### ActivityThread#handleCreateService
+
+在下方的`android.app.ActivityThread#handleCreateService`方法中：
+
+1. 通过ClassLoader加载并实例化了对应的Service对象；
+2. 将Service存储到ActivityThread中的一个ArrayMap中；
+
+```java
+// android/app/ActivityThread.java
+// android.app.ActivityThread#handleCreateService
+
+final ArrayMap<IBinder, Service> mServices = new ArrayMap<>();
+private void handleCreateService(CreateServiceData data) {
+        // If we are getting ready to gc after going to the background, well
+        // we are back active so skip it.
+        unscheduleGcIdler();
+
+        LoadedApk packageInfo = getPackageInfoNoCheck(
+                data.info.applicationInfo, data.compatInfo);
+        Service service = null;
+        try {
+            if (localLOGV) Slog.v(TAG, "Creating service " + data.info.name);
+
+            ContextImpl context = ContextImpl.createAppContext(this, packageInfo);
+            Application app = packageInfo.makeApplication(false, mInstrumentation);
+            java.lang.ClassLoader cl = packageInfo.getClassLoader();
+            // 创建对应的Service实例
+            service = packageInfo.getAppFactory()
+                    .instantiateService(cl, data.info.name, data.intent);
+            // Service resources must be initialized with the same loaders as the application
+            // context.
+            context.getResources().addLoaders(
+                    app.getResources().getLoaders().toArray(new ResourcesLoader[0]));
+
+            context.setOuterContext(service);
+            service.attach(context, this, data.info.name, data.token, app,
+                    ActivityManager.getService());
+            service.onCreate();
+            mServices.put(data.token, service);
+            try {
+                ActivityManager.getService().serviceDoneExecuting(
+                        data.token, SERVICE_DONE_EXECUTING_ANON, 0, 0);
+            } catch (RemoteException e) {
+                throw e.rethrowFromSystemServer();
+            }
+        } catch (Exception e) {
+            if (!mInstrumentation.onException(service, e)) {
+                throw new RuntimeException(
+                    "Unable to create service " + data.info.name
+                    + ": " + e.toString(), e);
+            }
+        }
+    }
+```
+
+
+
+### 绑定服务
+
+
+<svg width="232px" height="344px" viewBox="0 0 232 344" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g id="Android源码分析" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="bindService流程分析-加入启动流程" transform="translate(-427.000000, -124.000000)">
+            <g id="架构图/模块-源码备份-4" transform="translate(428.000000, 124.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="10.835383" y="11">ActivityManagerService.bindIsolatedService</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="33.7957176" y="23.3877551">com/android/server/am/ActivityManagerService.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-5" transform="translate(428.000000, 162.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="34.6552993" y="11">ActiveServices.bindServiceLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="47.5865126" y="23.3877551">com/android/server/am/ActiveServices.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-16" transform="translate(428.000000, 239.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="19.1486884" y="11">IApplicationThread.scheduleBindService</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="57.7019938" y="23.3877551">android/app/IApplicationThread.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-17" transform="translate(428.000000, 285.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFED99" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="78.9632491" y="11">Binder.transact</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="104.925425" y="23.3877551">binder</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-10" transform="translate(427.000000, 327.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="20.74668" y="11">ApplicationThread.scheduleBindService</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="21.4409058" y="23.3877551">frameworks/base/core/java/android/app/ActivityThread.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-12" transform="translate(427.000000, 366.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="33.2260106" y="11">ActivityThread#handleBindService</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="21.4409058" y="23.3877551">frameworks/base/core/java/android/app/ActivityThread.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-19" transform="translate(427.000000, 404.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="48.4748809" y="11">IBinder = Service.onBinder()</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="80.1254248" y="23.3877551">自定义的Service实现类</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-20" transform="translate(427.000000, 442.000000)">
+                <rect id="矩形" stroke="#979797" fill="#FFBBA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="37.3498599" y="11">IActivityManager#publishService</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="61.7354666" y="23.3877551">android/app/IActivityManager.java</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-8" transform="translate(428.000000, 201.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="229.075117" height="25" rx="5.35564854"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="9.37238494" font-weight="bold" letter-spacing="0.103096234" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="9.12492271" y="11">ActiveServices.requestServiceBindingLocked</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="6.69456067" font-weight="300" letter-spacing="0.073640172" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="47.5865126" y="23.3877551">com/android/server/am/ActiveServices.java</tspan>
+                </text>
+            </g>
+            <path id="直线-5" d="M542.834728,150.007377 L542.834,156.046 L546.17364,156.046784 L542.5,163.046784 L538.82636,156.046784 L542.165,156.046 L542.165272,150.007377 L542.834728,150.007377 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-6" d="M542.834728,188.007377 L542.834,194.046 L546.17364,194.046784 L542.5,201.046784 L538.82636,194.046784 L542.165,194.046 L542.165272,188.007377 L542.834728,188.007377 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-7" d="M542.834728,226.007377 L542.834,232.046 L546.17364,232.046784 L542.5,239.046784 L538.82636,232.046784 L542.165,232.046 L542.165272,226.007377 L542.834728,226.007377 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-8" d="M542.834728,263.998605 L542.834,277.055 L546.17364,277.055556 L542.5,284.055556 L538.82636,277.055556 L542.165,277.055 L542.165272,263.998605 L542.834728,263.998605 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-9" d="M542.834728,309.998605 L542.834,321.055 L546.17364,321.055556 L542.5,328.055556 L538.82636,321.055556 L542.165,321.055 L542.165272,309.998605 L542.834728,309.998605 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-10" d="M542.834728,353.007377 L542.834,359.046 L546.17364,359.046784 L542.5,366.046784 L538.82636,359.046784 L542.165,359.046 L542.165272,353.007377 L542.834728,353.007377 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-18" d="M542.834728,392.007377 L542.834,398.046 L546.17364,398.046784 L542.5,405.046784 L538.82636,398.046784 L542.165,398.046 L542.165272,392.007377 L542.834728,392.007377 Z" fill="#979797" fill-rule="nonzero"></path>
+            <path id="直线-11" d="M542.834728,430.007377 L542.834,436.046 L546.17364,436.046784 L542.5,443.046784 L538.82636,436.046784 L542.165,436.046 L542.165272,430.007377 L542.834728,430.007377 Z" fill="#979797" fill-rule="nonzero"></path>
+        </g>
+    </g>
+</svg>
+
+
+
 
 ## 详细流程分析
 
@@ -1205,186 +2143,6 @@ private String bringUpServiceLocked(ServiceRecord r, int intentFlags, boolean ex
     }
 ```
 
-### frameworks/base/core/java/android/app/ActivityThread.java
 
 
-
-
-
-# BBinder相关
-
-BBinder 何时创建，如何设置到parcel的数据结构中？
-
-## BBinder
-
-* BBinder : `frameworks/native/include/binder/Binder.h`
-
-  ```cpp
-  class BBinder : public IBinder
-  {
-  public:
-                          BBinder();
-  
-      virtual const String16& getInterfaceDescriptor() const;
-      virtual bool        isBinderAlive() const;
-      virtual status_t    pingBinder();
-      virtual status_t    dump(int fd, const Vector<String16>& args);
-  
-      // NOLINTNEXTLINE(google-default-arguments)
-      virtual status_t    transact(   uint32_t code,
-                                      const Parcel& data,
-                                      Parcel* reply,
-                                      uint32_t flags = 0) final;
-      virtual BBinder*    localBinder();
-      
-  }
-  ```
-
-## JavaBBinder
-
-* JavaBBinder : `frameworks/base/core/jni/android_util_Binder.cpp`
-
-  ```cpp
-  class JavaBBinderHolder;
-  
-  class JavaBBinder : public BBinder
-  {
-  public:
-      JavaBBinder(JNIEnv* env, jobject /* Java Binder */ object)
-          : mVM(jnienv_to_javavm(env)), mObject(env->NewGlobalRef(object))
-      {
-          ALOGV("Creating JavaBBinder %p\n", this);
-          gNumLocalRefsCreated.fetch_add(1, std::memory_order_relaxed);
-          gcIfManyNewRefs(env);
-      }
-  
-      bool    checkSubclass(const void* subclassID) const
-      {
-          return subclassID == &gBinderOffsets;
-      }
-  
-      jobject object() const
-      {
-          return mObject;
-      }
-  ```
-
-## JavaBBinderHolder
-
-* JavaBBinderHolder :`frameworks/base/core/jni/android_util_Binder.cpp`
-
-  ```cpp
-  class JavaBBinderHolder
-  {
-  public:
-      sp<JavaBBinder> get(JNIEnv* env, jobject obj)
-      {
-          AutoMutex _l(mLock);
-          sp<JavaBBinder> b = mBinder.promote();
-          if (b == NULL) {
-              // 注意这里构造的 JavaBBinder
-              b = new JavaBBinder(env, obj);
-              if (mVintf) {
-                  ::android::internal::Stability::markVintf(b.get());
-              }
-              if (mExtension != nullptr) {
-                  b.get()->setExtension(mExtension);
-              }
-              mBinder = b;
-              ALOGV("Creating JavaBinder %p (refs %p) for Object %p, weakCount=%" PRId32 "\n",
-                   b.get(), b->getWeakRefs(), obj, b->getWeakRefs()->getWeakCount());
-          }
-  
-          return b;
-      }
-  
-  }
-  ```
-
-## JavaBBinderHolder 的初始化
-
-* frameworks/base/core/jni/android_util_Binder.cpp
-
-  ```java
-  static const JNINativeMethod gBinderMethods[] = {
-      { "getNativeBBinderHolder", "()J", (void*)android_os_Binder_getNativeBBinderHolder },
-  };
-  
-  
-  static jlong android_os_Binder_getNativeBBinderHolder(JNIEnv* env, jobject clazz)
-  {
-      JavaBBinderHolder* jbh = new JavaBBinderHolder();
-      return (jlong) jbh;
-  }
-  ```
-
-* Binder.java 构造函数: (`frameworks/base/core/java/android/os/Binder.java`)
-
-  ```java
-     /**
-       * Constructor for creating a raw Binder object (token) along with a descriptor.
-       *
-       * The descriptor of binder objects usually specifies the interface they are implementing.
-       * In case of binder tokens, no interface is implemented, and the descriptor can be used
-       * as a sort of tag to help identify the binder token. This will help identify remote
-       * references to these objects more easily when debugging.
-       *
-       * @param descriptor Used to identify the creator of this token, for example the class name.
-       * Instead of creating multiple tokens with the same descriptor, consider adding a suffix to
-       * help identify them.
-       */
-      public Binder(@Nullable String descriptor)  {
-          // 获取Native的BBinder对象的指针
-          mObject = getNativeBBinderHolder();
-          NoImagePreloadHolder.sRegistry.registerNativeAllocation(this, mObject);
-          // ...
-          mDescriptor = descriptor;
-      }
-  
-  
-      private static native long getNativeBBinderHolder();
-  ```
-
-* 实际上，CPP中使用的 `gBinderOffsets.mObject` 就是上面分配的 `NativeBBinderHolder`
-
-  ```java
-  // (frameworks/base/core/jni/android_util_Binder.cpp)
-  static struct bindernative_offsets_t
-  {
-      // Class state.
-      jclass mClass;
-      jmethodID mExecTransact;
-      jmethodID mGetInterfaceDescriptor;
-  
-      // Object state.
-      jfieldID mObject;
-  
-  } gBinderOffsets;
-  ```
-
-* 发现一个函数 ibinderForJavaObject ：(frameworks/base/core/jni/android_util_Binder.cpp)
-
-  ```cpp
-  sp<IBinder> ibinderForJavaObject(JNIEnv* env, jobject obj)
-  {
-      if (obj == NULL) return NULL;
-  
-      // Instance of Binder?
-      if (env->IsInstanceOf(obj, gBinderOffsets.mClass)) {
-          JavaBBinderHolder* jbh = (JavaBBinderHolder*)
-              env->GetLongField(obj, gBinderOffsets.mObject);
-          return jbh->get(env, obj);
-      }
-  
-      // Instance of BinderProxy?
-      if (env->IsInstanceOf(obj, gBinderProxyOffsets.mClass)) {
-          return getBPNativeData(env, obj)->mObject;
-      }
-  
-      ALOGW("ibinderForJavaObject: %p is not a Binder object", obj);
-      return NULL;
-  }
-  ```
-
-  
 
