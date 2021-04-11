@@ -259,7 +259,7 @@ isTop: false
 
 
 
-## 问题解答
+## 总结
 
 ### APP进程中如何获取AMS？
 
@@ -482,15 +482,43 @@ int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
 
 #### ActiveServices#bringUpServiceLocked
 
-实际上，ProcessRecord 的初始化就是在这里，可以看到，根据不同的情况，有三种可能的赋值方式：
+##### **总结：**
 
-* `app = mAm.getProcessRecordLocked(procName, r.appInfo.uid, false);`
-* `app = r.isolatedProc;`
-* `app=mAm.startProcessLocked(procName, r.appInfo, true, intentFlags,
-                      hostingRecord, ZYGOTE_POLICY_FLAG_EMPTY, false, isolated, false)`
-  * 生成之后如果是分开进程的service会赋值到：`r.isolatedProc = app`;
+1. **bringUpServiceLocked(ServiceRecord r,...)** 第一个参数为ServiceRecord，其中的app属性可存储一个进程记录； 
+2. 如传入的ServiceRecord参数中表明服务已经启动过，`r.app(ProcessRecord)` 不为null，且`r.app.thread(IApplicationThread)`也不为null，则不创建，直接更新参数；
+3. 结下来，则分为两种情况，1）服务为声明单独的进程，则可直接在当前进程中启动；2）服务声明了单独的进程，则需要先启动进程，然后再启动服务；
+4. **非单独进程**：
+   * 进程记录获取：通过AMS直接查询，并未创建，因为进程已经存在了，具体代码为 `app = mAm.getProcessRecordLocked(procName, r.appInfo.uid, false)`
+   * 服务启动：使用 `realStartServiceLocked(r, app, execInFg);` 方法启动
+5. **单独进程**：
+   * 进程记录获取： 通过AMS.mAm.startProcessLocked 方法启动一个新的进程； 
+     * `app=mAm.startProcessLocked(procName, r.appInfo, true, intentFlags,
+                           hostingRecord, ZYGOTE_POLICY_FLAG_EMPTY, false, isolated, false)`
+   * 服务启动：未在此方法中直接调用 `realStartServiceLocked`
 
-所以真正的生成方法是：`mAm.startProcessLocked`，也就是调用了ActivityManagerService的方法来创建进程；
+这里我们可以看到，在**单独进程**的服务启动流程中，并没有即时调用`realStartServiceLocked`来启动服务，那么这里就又个问题，独立进程情况下服务何时启动？
+
+6. **单独进程服务启动：** 将待启动的服务加入到`mPendingServices(ArrayList<ServiceRecord>)`，在启动进程后再从此列表中读取需要启动的服务，然后启动；
+
+##### **问题结论：**
+
+来到这个方法时我们有两个问题：
+
+1. 进程记录如何获取？
+
+   * 通过AMS的 `startProcessLocked` 方法创建（非独立进程的也应该是通过此方法创建，只是创建时机不是这里）
+
+2. 服务如何启动？
+
+   * 通过 `realStartServiceLocked` 方法启动（独立进程的应该也是此方法启动，会等到进程启动之后再启动）
+
+   * > `realStartServiceLocked` 中通过 `IApplicationThread` 执行 `scheduleCreateService` 来启动服务，最终调用 `android.app.ActivityThread.ApplicationThread#scheduleCreateService`来启动；
+
+     
+
+##### **具体代码：**
+
+* bringUpServiceLocked方法分析：
 
 ```java
 // com.android.server.am.ActiveServices#bringUpServiceLocked
@@ -498,7 +526,11 @@ int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
 private String bringUpServiceLocked(ServiceRecord r, int intentFlags, boolean execInFg,
             boolean whileRestarting, boolean permissionsReviewRequired)
             throws TransactionTooLargeException {
-
+        // 已经存在进程记录，并且进程记录中的IApplicationThread已经存在，则不创建服务，仅发送参数
+        if (r.app != null && r.app.thread != null) {
+            sendServiceArgsLocked(r, execInFg, false);
+            return null;
+        }
         final boolean isolated = (r.serviceInfo.flags&ServiceInfo.FLAG_ISOLATED_PROCESS) != 0;
         final String procName = r.processName;
         HostingRecord hostingRecord = new HostingRecord("service", r.instanceName);
@@ -506,6 +538,22 @@ private String bringUpServiceLocked(ServiceRecord r, int intentFlags, boolean ex
 		// 非独立的进程，则直接获取当前启动进程的进程信息
         if (!isolated) {
             app = mAm.getProcessRecordLocked(procName, r.appInfo.uid, false);
+             if (app != null && app.thread != null) {
+                try {
+                    app.addPackage(r.appInfo.packageName, r.appInfo.longVersionCode, mAm.mProcessStats);
+                    // 非独立进程中，直接启动服务
+                    realStartServiceLocked(r, app, execInFg);
+                    // 调用启动方法后直接返回
+                    return null;
+                } catch (TransactionTooLargeException e) {
+                    throw e;
+                } catch (RemoteException e) {
+                    Slog.w(TAG, "Exception when starting service " + r.shortInstanceName, e);
+                }
+
+                // If a dead object exception was thrown -- fall through to
+                // restart the application.
+            }
         } else {
             // 独立进程则先尝试使用之前保存的
             app = r.isolatedProc;
@@ -529,12 +577,72 @@ private String bringUpServiceLocked(ServiceRecord r, int intentFlags, boolean ex
                 r.isolatedProc = app;
             }
         }
+        // 将服务记录加入的mPendingServices中，由于非独立进程创建后已经直接返回，所以这里适用于独立进程的
+        if (!mPendingServices.contains(r)) {
+            mPendingServices.add(r);
+        }
 	    // 创建成功或者之前已经又了缓存，则返回null
         return null;
     }
 ```
 
+* 独立进程何时启动服务？
 
+  一般来说，封装较好的代码会保证入口统一，如果非独立进程情况下服务的启动使用的是 `realStartServiceLocked` 方法来启动服务，那么独立进程情况下，服务的启动也应该使用此方法，所以我们查看 `realStartServiceLocked` 方法的调用层次，如下：
+
+  **图片版本:**
+
+  ![image-20210411112439961](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210411112440.png)
+
+  **详细调用序列:**
+
+  * `ActiveServices.attachApplicationLocked`(ProcessRecord, String)  (com.android.server.am)
+    * ActivityManagerService.attachApplicationLocked(IApplicationThread, int, int, long)  (com.android.server.am)
+      * ActivityManagerService.attachApplication(IApplicationThread, long)  (com.android.server.am)
+  * `ActiveServices.bringUpServiceLocked`(ServiceRecord, int, boolean, boolean, boolean)  (com.android.server.am)
+    * ActiveServices.startServiceInnerLocked(ServiceMap, Intent, ServiceRecord, boolean, boolean)  (com.android.server.am)
+    * ActiveServices.bindServiceLocked(IApplicationThread, IBinder, Intent, String, IServiceConnection, int, String, ...)  (com.android.server.am)
+    * ActiveServices.performServiceRestartLocked(ServiceRecord)  (com.android.server.am)
+
+  也就是调用了 `ActiveServices.attachApplicationLocked` ,最终是通过AMS的`ActivityManagerService.attachApplication`来触发的;也就是只要找到`mAm.startProcessLocked`到`ActivityManagerService.attachApplication`的调用序列即可证明此猜想;
+
+  我们可以找到如下调用序列，即最终实际上是从ActivityThread的main函数进入的，所以做出以下猜想：**进程启动后，创建ActivityThread时，如果有需要创建的服务，就启动服务；**
+
+  <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210411114715.png" alt="image-20210411114715216" style="zoom:50%;" />
+
+  我们再看`attachApplicationLocked` 的逻辑，可以发现，会检查`mPendingServices`中是否有待启动的服务，然后逐一处理，如果有需要启动的服务，则会调用`realStartServiceLocked(sr, proc, sr.createdFromFg)`来启动服务。
+
+  ```java
+  boolean attachApplicationLocked(ProcessRecord proc, String processName)
+              throws RemoteException {
+          boolean didSomething = false;
+          // Collect any services that are waiting for this process to come up.
+          if (mPendingServices.size() > 0) {
+              ServiceRecord sr = null;
+              try {
+                  for (int i=0; i<mPendingServices.size(); i++) {
+                      sr = mPendingServices.get(i);
+                      // 排除非独立Service
+                      if (proc != sr.isolatedProc && (proc.uid != sr.appInfo.uid
+                              || !processName.equals(sr.processName))) {
+                          continue;
+                      }
+  
+                      mPendingServices.remove(i);
+                      i--;
+                      proc.addPackage(sr.appInfo.packageName, sr.appInfo.longVersionCode,
+                              mAm.mProcessStats);
+                      // 启动服务
+                      realStartServiceLocked(sr, proc, sr.createdFromFg);
+                  }
+              } catch (RemoteException e) {
+                  Slog.w(TAG, "Exception in new application when starting service "
+                          + sr.shortInstanceName, e);
+                  throw e;
+              }
+          }
+  }
+  ```
 
 ## 详细流程分析
 
