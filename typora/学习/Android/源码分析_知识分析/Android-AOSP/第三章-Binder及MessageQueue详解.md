@@ -404,27 +404,14 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
   }
   ```
 
-## addService实例分析
-
-下面我们通过一个例子来分析Java层Binder的工作流程。这个例子源自 ActivityManagerService（AMS），我们通过它揭示Java层的Binder的工作原理。
-
-分析步骤如下：
-
-* 首先分析 AMS 如何将自己注册到 ServiceManager；
-* 然后分析 AMS 如何响应客户端的Binder调用请求；
-
-
-
-首先我们看AMS是何时被构建的，一路跟踪，可以找到最终是在`SystemServer`的main()函数中中被初始化的。
-
-### SystemServer启动流程简介
+## SystemServer启动流程简介
 
 我们可能对SystemServer如何启动的感到好奇，下面简单介绍了SystemServer的main是如何被执行的。
 
-这里我们对init的来源不在追究，init时android中内核启动的第一个进程，通过下面的源码调用流程可以发现：
+这里我们对init的来源先不追究，init是android中内核启动的第一个进程，通过下面的源码调用流程可以发现：
 
 1. init进程启动了zygote进程；
-2. zygote 则启动了system_server进程，需要说明的是，ZygoteInit中调用forkSystemServer方法时指定了SystemServer的类路径，并一路作为参数传递了下去；
+2. zygote则启动了system_server进程，需要说明的是，ZygoteInit中调用forkSystemServer方法时指定了SystemServer的类路径，并一路作为参数传递了下去；
 3. 在system_server进程中，则找到了 SystemServer.java 的main入口，并执行main函数。
 
 
@@ -541,14 +528,653 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
     </g>
 </svg>
 
+我们直接查看 `SystemServer.main()` 方法；
 
-### ActivityManagerService 的初始化及启动
+### SystemServer#main()
+
+1. 增加system_server进程中的binder线程数量（31）；
+2. 初始化Looper: ` Looper.prepareMainLooper()`；
+3. 初始化native服务：`System.loadLibrary("android_servers")`
+4. 创建系统Context；
+5. 启动各种所需的服务
+   * 启动SystemServiceManager
+   * 启动引导服务
+   * 启动核心服务
+   * 启动其他各种服务
+6. 线程进入循环等待状态:`Looper.loop()`；
+
+这里我们希望了解的是，SystemServer 如何初始化ServiceManager-即服务管理的上下文；
+
+```java
+// frameworks/base/services/java/com/android/server/SystemServer.java
+	
+	/**
+     * The main entry point from zygote.
+     */
+    public static void main(String[] args) {
+        new SystemServer().run();
+    }
+
+	// 构造函数中没有做实际的动作，都在run函数中
+    public SystemServer() {
+        // Check for factory test mode.
+        mFactoryTestMode = FactoryTest.getMode();
+
+        // Record process start information.
+        // Note SYSPROP_START_COUNT will increment by *2* on a FDE device when it fully boots;
+        // one for the password screen, second for the actual boot.
+        mStartCount = SystemProperties.getInt(SYSPROP_START_COUNT, 0) + 1;
+        mRuntimeStartElapsedTime = SystemClock.elapsedRealtime();
+        mRuntimeStartUptime = SystemClock.uptimeMillis();
+        Process.setStartTimes(mRuntimeStartElapsedTime, mRuntimeStartUptime);
+
+        // Remember if it's runtime restart(when sys.boot_completed is already set) or reboot
+        // We don't use "mStartCount > 1" here because it'll be wrong on a FDE device.
+        // TODO: mRuntimeRestart will *not* be set to true if the proccess crashes before
+        // sys.boot_completed is set. Fix it.
+        mRuntimeRestart = "1".equals(SystemProperties.get("sys.boot_completed"));
+    }
+
+    private void run() {
+        TimingsTraceAndSlog t = new TimingsTraceAndSlog();
+        try {
+            t.traceBegin("InitBeforeStartServices");
+
+            // The system server should never make non-oneway calls
+            Binder.setWarnOnBlocking(true);
+            // The system server should always load safe labels
+            PackageItemInfo.forceSafeLabels();
+
+            // Here we go!
+            Slog.i(TAG, "Entered the Android system server!");
+
+            // Within the system server, when parceling exceptions, include the stack trace
+            Parcel.setStackTraceParceling(true);
+
+            // Ensure binder calls into the system always run at foreground priority.
+            BinderInternal.disableBackgroundScheduling(true);
+
+            // Increase the number of binder threads in system_server
+            // 增加system_server中的binder线程数量为 20
+            BinderInternal.setMaxThreads(sMaxBinderThreads);
+
+            // Prepare the main looper thread (this thread).
+            android.os.Process.setThreadPriority(
+                    android.os.Process.THREAD_PRIORITY_FOREGROUND);
+            android.os.Process.setCanSelfBackground(false);
+            // 准备线程循环
+            Looper.prepareMainLooper();
+            Looper.getMainLooper().setSlowLogThresholdMs(
+                    SLOW_DISPATCH_THRESHOLD_MS, SLOW_DELIVERY_THRESHOLD_MS);
+
+            SystemServiceRegistry.sEnableServiceNotFoundWtf = true;
+
+            // 初始化native服务
+            System.loadLibrary("android_servers");
+
+            // 初始化系统Context对象
+            createSystemContext();
+
+            // Call per-process mainline module initialization.
+            ActivityThread.initializeMainlineModules();
+
+            // 创建系统服务管理器对象（也就是我们的服务管理器）
+            mSystemServiceManager = new SystemServiceManager(mSystemContext);
+            mSystemServiceManager.setStartInfo(mRuntimeRestart,
+                    mRuntimeStartElapsedTime, mRuntimeStartUptime);
+            // 记录到服务列表中
+            LocalServices.addService(SystemServiceManager.class, mSystemServiceManager);
+            // 创建一个同处理器数量相等的固定数量的线程池 （newFixedThreadPool）
+            SystemServerInitThreadPool.start();
+        } finally {
+            t.traceEnd();  // InitBeforeStartServices
+        }
+
+        // 开始启动服务
+        try {
+            t.traceBegin("StartServices");
+            // 启动引导服务 
+            // 包括： ActivityTaskManagerService，ActivityManagerService，PowerManagerService，RecoverySystemService，LightsService
+            // DisplayManagerService，PackageManagerService，UserManagerService，OverlayManagerService，SensorPrivacyService
+            startBootstrapServices(t);
+            // 启动核心服务
+            // 包括： SystemConfigService，BatteryService，UsageStatsService，WebViewUpdateService，CachedDeviceStateService，
+            // BinderCallsStatsService，LooperStatsService，BugreportManagerService，GpuService
+            startCoreServices(t);
+            // 启动其他服务，超级多，各种各样的
+            // 包括： KeyAttestationApplicationIdProviderService，KeyChainSystemService，SchedulingPolicyService，TelecomLoaderService
+            // TelephonyRegistry，VibratorService，DynamicSystemService，ConsumerIrService，AlarmManagerService，InputManagerService
+            // WindowManagerService，BluetoothService，IpConnectivityMetrics，NetworkWatchlistService，PinnerService，IorapForwardingService
+            // AppIntegrityManagerService，StatusBarManagerService，InputMethodManagerService
+            // INotificationManager，CountryDetectorService，ILockSettings，MediaRouterService，UiModeManagerService，NetworkManagementService
+            // IpSecService，TextServicesManagerService，TextClassificationManagerService，NetworkScoreService，NetworkStatsService，
+            // NetworkPolicyManagerService，WIFI_SERVICE_CLASS，WIFI_SCANNING_SERVICE_CLASS，WIFI_RTT_SERVICE_CLASS，WIFI_AWARE_SERVICE_CLASS，
+            // WIFI_P2P_SERVICE_CLASS，ETHERNET_SERVICE_CLASS，ConnectivityService，SystemUpdateManagerService，UpdateLockService，
+            // NOTIFICATION_SERVICE，LocationManagerService，DeviceStorageMonitorService，CountryDetectorService，TIME_DETECTOR_SERVICE_CLASS
+            // TIME_ZONE_DETECTOR_SERVICE_CLASS，SEARCH_MANAGER_SERVICE_CLASS，WALLPAPER_SERVICE_CLASS，AudioService，BroadcastRadioService，
+            // DockObserver，ADB_SERVICE_CLASS，USB_SERVICE_CLASS，SERIAL_SERVICE，HardwarePropertiesManagerService，ColorDisplayService
+            // TrustManagerService，APPWIDGET_SERVICE_CLASS，GestureLauncherService，SensorNotificationService，ContextHubSystemService，
+            // DiskStatsService，RuntimeService，NetworkTimeUpdateService，EmergencyAffordanceService，FingerprintService，BiometricService
+            // AuthService，ShortcutService，LauncherAppsService，ClipboardService，PermissionPolicyService，
+            startOtherServices(t);
+        } catch (Throwable ex) {
+            Slog.e("System", "******************************************");
+            Slog.e("System", "************ Failure starting system services", ex);
+            throw ex;
+        } finally {
+            t.traceEnd(); // StartServices
+        }
+
+        // Diagnostic to ensure that the system is in a base healthy state. Done here as a common
+        // non-zygote process.
+        if (!VMRuntime.hasBootImageSpaces()) {
+            Slog.wtf(TAG, "Runtime is not running with a boot image!");
+        }
+
+        // 进入循环
+        Looper.loop();
+        throw new RuntimeException("Main thread loop unexpectedly exited");
+    }
+
+```
+
+#### SystemServer#createSystemContext
+
+构造ActivityThread对象，加载系统context对象及SystemUI的Context对象；
+
+```java
+    private void createSystemContext() {
+        ActivityThread activityThread = ActivityThread.systemMain();
+        mSystemContext = activityThread.getSystemContext();
+        mSystemContext.setTheme(DEFAULT_SYSTEM_THEME);
+
+        final Context systemUiContext = activityThread.getSystemUiContext();
+        systemUiContext.setTheme(DEFAULT_SYSTEM_THEME);
+    }
+```
+
+### SystemServiceManager分析
+
+管理 `com.android.server.SystemService` 的创建，启动及其他生命周期；
+
+1. 总体上来说就是提供了一系列`startService`的方法；
+2. 提供了和用户相关的事件（锁定/切换/停止等），用于通知这里注册的SystemService对应的变化；
+
+我们看下几个`startService`方法的不同变体：
+
+```java
+// 直接使用默认的类加载器从className加载类，并构建服务示例
+public SystemService startService(String className)
+// 从jar中加载并启动
+public SystemService startServiceFromJar(String className, String path)
+// 从已经加载好的类加载并启动
+public <T extends SystemService> T startService(Class<T> serviceClass)
+// 从已经实例化好的对象启动
+public void startService(@NonNull final SystemService service)
+```
+
+启动时做了什么？
+
+1. 加入到一个服务列表中记录下来；
+2. 调用service的onStart方法通知其执行自身的启动逻辑；
+
+```java
+public void startService(@NonNull final SystemService service) {
+        // Register it.
+        mServices.add(service);
+        // Start it.
+        long time = SystemClock.elapsedRealtime();
+        try {
+            service.onStart();
+        } catch (RuntimeException ex) {
+            throw new RuntimeException("Failed to start service " + service.getClass().getName()
+                    + ": onStart threw an exception", ex);
+        }
+        warnIfTooLong(SystemClock.elapsedRealtime() - time, service, "onStart");
+}
+```
+
+
+
+整个类的代码也不是很多，我们直接贴出来：
+
+```java
+// frameworks/base/services/core/java/com/android/server/SystemServiceManager.java
+public class SystemServiceManager {
+    private static final String TAG = "SystemServiceManager";
+    private static final boolean DEBUG = false;
+    private static final int SERVICE_CALL_WARN_TIME_MS = 50;
+
+    // Constants used on onUser(...)
+    private static final String START = "Start";
+    private static final String UNLOCKING = "Unlocking";
+    private static final String UNLOCKED = "Unlocked";
+    private static final String SWITCH = "Switch";
+    private static final String STOP = "Stop";
+    private static final String CLEANUP = "Cleanup";
+
+    private static File sSystemDir;
+    private final Context mContext;
+    private boolean mSafeMode;
+    private boolean mRuntimeRestarted;
+    private long mRuntimeStartElapsedTime;
+    private long mRuntimeStartUptime;
+
+    // Services that should receive lifecycle events.
+    private final ArrayList<SystemService> mServices = new ArrayList<SystemService>();
+
+    // Map of paths to PathClassLoader, so we don't load the same path multiple times.
+    private final ArrayMap<String, PathClassLoader> mLoadedPaths = new ArrayMap<>();
+
+    private int mCurrentPhase = -1;
+
+    private UserManagerInternal mUserManagerInternal;
+
+    SystemServiceManager(Context context) {
+        mContext = context;
+    }
+
+    /**
+     * Starts a service by class name.
+     *
+     * @return The service instance.
+     */
+    public SystemService startService(String className) {
+        final Class<SystemService> serviceClass = loadClassFromLoader(className,
+                this.getClass().getClassLoader());
+        return startService(serviceClass);
+    }
+
+    /**
+     * Starts a service by class name and a path that specifies the jar where the service lives.
+     *
+     * @return The service instance.
+     */
+    public SystemService startServiceFromJar(String className, String path) {
+        PathClassLoader pathClassLoader = mLoadedPaths.get(path);
+        if (pathClassLoader == null) {
+            // NB: the parent class loader should always be the system server class loader.
+            // Changing it has implications that require discussion with the mainline team.
+            pathClassLoader = new PathClassLoader(path, this.getClass().getClassLoader());
+            mLoadedPaths.put(path, pathClassLoader);
+        }
+        final Class<SystemService> serviceClass = loadClassFromLoader(className, pathClassLoader);
+        return startService(serviceClass);
+    }
+
+    /*
+     * Loads and initializes a class from the given classLoader. Returns the class.
+     */
+    @SuppressWarnings("unchecked")
+    private static Class<SystemService> loadClassFromLoader(String className,
+            ClassLoader classLoader) {
+        try {
+            return (Class<SystemService>) Class.forName(className, true, classLoader);
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException("Failed to create service " + className
+                    + " from class loader " + classLoader.toString() + ": service class not "
+                    + "found, usually indicates that the caller should "
+                    + "have called PackageManager.hasSystemFeature() to check whether the "
+                    + "feature is available on this device before trying to start the "
+                    + "services that implement it. Also ensure that the correct path for the "
+                    + "classloader is supplied, if applicable.", ex);
+        }
+    }
+
+    /**
+     * Creates and starts a system service. The class must be a subclass of
+     * {@link com.android.server.SystemService}.
+     *
+     * @param serviceClass A Java class that implements the SystemService interface.
+     * @return The service instance, never null.
+     * @throws RuntimeException if the service fails to start.
+     */
+    public <T extends SystemService> T startService(Class<T> serviceClass) {
+        try {
+            final String name = serviceClass.getName();
+            Slog.i(TAG, "Starting " + name);
+            Trace.traceBegin(Trace.TRACE_TAG_SYSTEM_SERVER, "StartService " + name);
+
+            // Create the service.
+            if (!SystemService.class.isAssignableFrom(serviceClass)) {
+                throw new RuntimeException("Failed to create " + name
+                        + ": service must extend " + SystemService.class.getName());
+            }
+            final T service;
+            try {
+                Constructor<T> constructor = serviceClass.getConstructor(Context.class);
+                service = constructor.newInstance(mContext);
+            } catch (InstantiationException ex) {
+                throw new RuntimeException("Failed to create service " + name
+                        + ": service could not be instantiated", ex);
+            } catch (IllegalAccessException ex) {
+                throw new RuntimeException("Failed to create service " + name
+                        + ": service must have a public constructor with a Context argument", ex);
+            } catch (NoSuchMethodException ex) {
+                throw new RuntimeException("Failed to create service " + name
+                        + ": service must have a public constructor with a Context argument", ex);
+            } catch (InvocationTargetException ex) {
+                throw new RuntimeException("Failed to create service " + name
+                        + ": service constructor threw an exception", ex);
+            }
+
+            startService(service);
+            return service;
+        } finally {
+            Trace.traceEnd(Trace.TRACE_TAG_SYSTEM_SERVER);
+        }
+    }
+
+    public void startService(@NonNull final SystemService service) {
+        // Register it.
+        mServices.add(service);
+        // Start it.
+        long time = SystemClock.elapsedRealtime();
+        try {
+            service.onStart();
+        } catch (RuntimeException ex) {
+            throw new RuntimeException("Failed to start service " + service.getClass().getName()
+                    + ": onStart threw an exception", ex);
+        }
+        warnIfTooLong(SystemClock.elapsedRealtime() - time, service, "onStart");
+    }
+
+    /**
+     * Starts the specified boot phase for all system services that have been started up to
+     * this point.
+     *
+     * @param t trace logger
+     * @param phase The boot phase to start.
+     */
+    public void startBootPhase(@NonNull TimingsTraceAndSlog t, int phase) {
+        if (phase <= mCurrentPhase) {
+            throw new IllegalArgumentException("Next phase must be larger than previous");
+        }
+        mCurrentPhase = phase;
+
+        Slog.i(TAG, "Starting phase " + mCurrentPhase);
+        try {
+            t.traceBegin("OnBootPhase_" + phase);
+            final int serviceLen = mServices.size();
+            for (int i = 0; i < serviceLen; i++) {
+                final SystemService service = mServices.get(i);
+                long time = SystemClock.elapsedRealtime();
+                t.traceBegin("OnBootPhase_" + phase + "_" + service.getClass().getName());
+                try {
+                    service.onBootPhase(mCurrentPhase);
+                } catch (Exception ex) {
+                    throw new RuntimeException("Failed to boot service "
+                            + service.getClass().getName()
+                            + ": onBootPhase threw an exception during phase "
+                            + mCurrentPhase, ex);
+                }
+                warnIfTooLong(SystemClock.elapsedRealtime() - time, service, "onBootPhase");
+                t.traceEnd();
+            }
+        } finally {
+            t.traceEnd();
+        }
+
+        if (phase == SystemService.PHASE_BOOT_COMPLETED) {
+            final long totalBootTime = SystemClock.uptimeMillis() - mRuntimeStartUptime;
+            t.logDuration("TotalBootTime", totalBootTime);
+            SystemServerInitThreadPool.shutdown();
+        }
+    }
+
+    /**
+     * @return true if system has completed the boot; false otherwise.
+     */
+    public boolean isBootCompleted() {
+        return mCurrentPhase >= SystemService.PHASE_BOOT_COMPLETED;
+    }
+
+    /**
+     * Called at the beginning of {@code ActivityManagerService.systemReady()}.
+     */
+    public void preSystemReady() {
+        mUserManagerInternal = LocalServices.getService(UserManagerInternal.class);
+    }
+
+    private @NonNull UserInfo getUserInfo(@UserIdInt int userHandle) {
+        if (mUserManagerInternal == null) {
+            throw new IllegalStateException("mUserManagerInternal not set yet");
+        }
+        final UserInfo userInfo = mUserManagerInternal.getUserInfo(userHandle);
+        if (userInfo == null) {
+            throw new IllegalStateException("No UserInfo for " + userHandle);
+        }
+        return userInfo;
+    }
+
+    /**
+     * Starts the given user.
+     */
+    public void startUser(final @NonNull TimingsTraceAndSlog t, final @UserIdInt int userHandle) {
+        onUser(t, START, userHandle);
+    }
+
+    /**
+     * Unlocks the given user.
+     */
+    public void unlockUser(final @UserIdInt int userHandle) {
+        onUser(UNLOCKING, userHandle);
+    }
+
+    /**
+     * Called after the user was unlocked.
+     */
+    public void onUserUnlocked(final @UserIdInt int userHandle) {
+        onUser(UNLOCKED, userHandle);
+    }
+
+    /**
+     * Switches to the given user.
+     */
+    public void switchUser(final @UserIdInt int from, final @UserIdInt int to) {
+        onUser(TimingsTraceAndSlog.newAsyncLog(), SWITCH, to, from);
+    }
+
+    /**
+     * Stops the given user.
+     */
+    public void stopUser(final @UserIdInt int userHandle) {
+        onUser(STOP, userHandle);
+    }
+
+    /**
+     * Cleans up the given user.
+     */
+    public void cleanupUser(final @UserIdInt int userHandle) {
+        onUser(CLEANUP, userHandle);
+    }
+
+    private void onUser(@NonNull String onWhat, @UserIdInt int userHandle) {
+        onUser(TimingsTraceAndSlog.newAsyncLog(), onWhat, userHandle);
+    }
+
+    private void onUser(@NonNull TimingsTraceAndSlog t, @NonNull String onWhat,
+            @UserIdInt int userHandle) {
+        onUser(t, onWhat, userHandle, UserHandle.USER_NULL);
+    }
+
+    private void onUser(@NonNull TimingsTraceAndSlog t, @NonNull String onWhat,
+            @UserIdInt int curUserId, @UserIdInt int prevUserId) {
+        t.traceBegin("ssm." + onWhat + "User-" + curUserId);
+        Slog.i(TAG, "Calling on" + onWhat + "User " + curUserId);
+        final TargetUser curUser = new TargetUser(getUserInfo(curUserId));
+        final TargetUser prevUser = prevUserId == UserHandle.USER_NULL ? null
+                : new TargetUser(getUserInfo(prevUserId));
+        final int serviceLen = mServices.size();
+        for (int i = 0; i < serviceLen; i++) {
+            final SystemService service = mServices.get(i);
+            final String serviceName = service.getClass().getName();
+            boolean supported = service.isUserSupported(curUser);
+
+            // Must check if either curUser or prevUser is supported (for example, if switching from
+            // unsupported to supported, we still need to notify the services)
+            if (!supported && prevUser != null) {
+                supported = service.isUserSupported(prevUser);
+            }
+
+            if (!supported) {
+                if (DEBUG) {
+                    Slog.d(TAG, "Skipping " + onWhat + "User-" + curUserId + " on service "
+                            + serviceName + " because it's not supported (curUser: "
+                            + curUser + ", prevUser:" + prevUser + ")");
+                } else {
+                    Slog.i(TAG,  "Skipping " + onWhat + "User-" + curUserId + " on "
+                            + serviceName);
+                }
+                continue;
+            }
+            t.traceBegin("ssm.on" + onWhat + "User-" + curUserId + "_" + serviceName);
+            long time = SystemClock.elapsedRealtime();
+            try {
+                switch (onWhat) {
+                    case SWITCH:
+                        service.onUserSwitching(prevUser, curUser);
+                        break;
+                    case START:
+                        service.onUserStarting(curUser);
+                        break;
+                    case UNLOCKING:
+                        service.onUserUnlocking(curUser);
+                        break;
+                    case UNLOCKED:
+                        service.onUserUnlocked(curUser);
+                        break;
+                    case STOP:
+                        service.onUserStopping(curUser);
+                        break;
+                    case CLEANUP:
+                        service.onUserStopped(curUser);
+                        break;
+                    default:
+                        throw new IllegalArgumentException(onWhat + " what?");
+                }
+            } catch (Exception ex) {
+                Slog.wtf(TAG, "Failure reporting " + onWhat + " of user " + curUser
+                        + " to service " + serviceName, ex);
+            }
+            warnIfTooLong(SystemClock.elapsedRealtime() - time, service,
+                    "on" + onWhat + "User-" + curUserId);
+            t.traceEnd(); // what on service
+        }
+        t.traceEnd(); // main entry
+    }
+
+    /** Sets the safe mode flag for services to query. */
+    void setSafeMode(boolean safeMode) {
+        mSafeMode = safeMode;
+    }
+
+    /**
+     * Returns whether we are booting into safe mode.
+     * @return safe mode flag
+     */
+    public boolean isSafeMode() {
+        return mSafeMode;
+    }
+
+    /**
+     * @return true if runtime was restarted, false if it's normal boot
+     */
+    public boolean isRuntimeRestarted() {
+        return mRuntimeRestarted;
+    }
+
+    /**
+     * @return Time when SystemServer was started, in elapsed realtime.
+     */
+    public long getRuntimeStartElapsedTime() {
+        return mRuntimeStartElapsedTime;
+    }
+
+    /**
+     * @return Time when SystemServer was started, in uptime.
+     */
+    public long getRuntimeStartUptime() {
+        return mRuntimeStartUptime;
+    }
+
+    void setStartInfo(boolean runtimeRestarted,
+            long runtimeStartElapsedTime, long runtimeStartUptime) {
+        mRuntimeRestarted = runtimeRestarted;
+        mRuntimeStartElapsedTime = runtimeStartElapsedTime;
+        mRuntimeStartUptime = runtimeStartUptime;
+    }
+
+    private void warnIfTooLong(long duration, SystemService service, String operation) {
+        if (duration > SERVICE_CALL_WARN_TIME_MS) {
+            Slog.w(TAG, "Service " + service.getClass().getName() + " took " + duration + " ms in "
+                    + operation);
+        }
+    }
+
+    /**
+     * Ensures that the system directory exist creating one if needed.
+     * @deprecated Use {@link Environment#getDataSystemCeDirectory()}
+     * or {@link Environment#getDataSystemDeDirectory()} instead.
+     * @return The system directory.
+     */
+    @Deprecated
+    public static File ensureSystemDir() {
+        if (sSystemDir == null) {
+            File dataDir = Environment.getDataDirectory();
+            sSystemDir = new File(dataDir, "system");
+            sSystemDir.mkdirs();
+        }
+        return sSystemDir;
+    }
+
+    /**
+     * Outputs the state of this manager to the System log.
+     */
+    public void dump() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Current phase: ").append(mCurrentPhase).append("\n");
+        builder.append("Services:\n");
+        final int startedLen = mServices.size();
+        for (int i = 0; i < startedLen; i++) {
+            final SystemService service = mServices.get(i);
+            builder.append("\t")
+                    .append(service.getClass().getSimpleName())
+                    .append("\n");
+        }
+
+        Slog.e(TAG, builder.toString());
+    }
+}
+```
+
+### 小结
+
+SystemServer启动时：
+
+1. 初始化Context，ActivityThread；
+2. 启动了SystemServiceManager用于记录及管理所有启动的服务；
+3. 启动所有需要的各种服务；
+4. 进入消息循环，等待事件；
+
+## ActivityManagerService 启动及注册
+
+下面我们通过一个例子来分析Java层Binder的工作流程。这个例子源自 ActivityManagerService（AMS），我们通过它揭示Java层的Binder的工作原理。
+
+分析步骤如下：
+
+* 首先分析 AMS 如何将自己注册到 ServiceManager；
+* 然后分析 AMS 如何响应客户端的Binder调用请求；
+
+首先我们看AMS是何时被构建的，一路跟踪，可以找到最终是在`SystemServer`的main()函数中被初始化的。
+
+### ActivityManagerService的构造及启动
 
 #### 概览
 
-通过上面对SystemServer的启动流程的简单介绍，现在我们了解了SystemServer是如何被启动的，在SystemServer启动后，我们来到了其main函数；所以我们以SystemServer.java 作为我们分析的起点。
+通过上面对SystemServer的启动流程的简单介绍，现在我们了解了SystemServer是如何被启动的，在SystemServer启动后，我们来到了其main函数；所以我们以`SystemServer.java`作为我们分析的起点。
 
-1. 启动时启动main函数，在其中构造SystemServer对象，并执行其run方法；
+1. 启动时执行main函数，在其中构造SystemServer对象，并执行其run方法；
 3. run() 中执行了其核心逻辑：
 
    * 构造了 `SystemServiceManager` 的实例；
@@ -580,36 +1206,22 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
           new SystemServer().run();
       }
       
-       public SystemServer() {
+      public SystemServer() {
          // ...
       }
       
       private void run() {
-          TimingsTraceAndSlog t = new TimingsTraceAndSlog();
-          try {
-              t.traceBegin("InitBeforeStartServices");
-              // Create the system service manager.
-              mSystemServiceManager = new SystemServiceManager(mSystemContext);
-              mSystemServiceManager.setStartInfo(mRuntimeRestart,
-                      mRuntimeStartElapsedTime, mRuntimeStartUptime);
-              LocalServices.addService(SystemServiceManager.class, mSystemServiceManager);
-          } finally {
-              t.traceEnd();  // InitBeforeStartServices
-          }
-           // Start services.
-          try {
-              t.traceBegin("StartServices");
-              // 在这里启动了AMS
-              startBootstrapServices(t);
-              startCoreServices(t);
-              startOtherServices(t);
-          } catch (Throwable ex) {
-              Slog.e("System", "******************************************");
-              Slog.e("System", "************ Failure starting system services", ex);
-              throw ex;
-          } finally {
-              t.traceEnd(); // StartServices
-          }
+          // Create the system service manager.
+          mSystemServiceManager = new SystemServiceManager(mSystemContext);
+          mSystemServiceManager.setStartInfo(mRuntimeRestart,
+                                             mRuntimeStartElapsedTime, mRuntimeStartUptime);
+          LocalServices.addService(SystemServiceManager.class, mSystemServiceManager);
+  
+  
+          // 在这里启动了AMS
+          startBootstrapServices(t);
+          startCoreServices(t);
+          startOtherServices(t);
       }
   ```
 
@@ -632,30 +1244,20 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
                   mSystemServiceManager, atm);
           mActivityManagerService.setSystemServiceManager(mSystemServiceManager);
           mActivityManagerService.setInstaller(installer);
-         
-          t.traceEnd();
   
-          // Now that the power manager has been started, let the activity manager
-          // initialize power management features.
-          t.traceBegin("InitPowerManagement");
           mActivityManagerService.initPowerManagement();
-          t.traceEnd();
-  
-          // Set up the Application instance for the system process and get started.
-          t.traceBegin("SetSystemProcess");
+  		// 设置为系统进程
           mActivityManagerService.setSystemProcess();
-          t.traceEnd();
   
-          // Complete the watchdog setup with an ActivityManager instance and listen for reboots
-          // Do this only after the ActivityManagerService is properly started as a system process
-          t.traceBegin("InitWatchdog");
           watchdog.init(mSystemContext, mActivityManagerService);
-          t.traceEnd();
   
       }
   ```
 
 #### SystemServiceManager.startService & AMS.startService
+
+1. 启动服务时通过反射构造了一个Service的实例；
+2. 然后将服务加入到SystemServiceManager对象的服务列表中，再调用Service的onStart()回调方法。
 
 * `SystemServiceManager.startService`: (`frameworks/base/services/core/java/com/android/server/SystemServiceManager.java`)
 
@@ -715,7 +1317,9 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
       }
   ```
 
-### 添加到服务列表源码分析
+### AMS注册到ServiceManager
+
+从前面的步骤可以得知，ActivityServiceManager的对象实例的创建过程是由 `SystemServiceManager`通过startService方法来完成的。那么这里的这个ServiceManager又是什么了？
 
 #### 概览
 
@@ -723,24 +1327,50 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
 
 1. 创建了AMS服务对应的实例；
 2. 并且将其添加到了`SystemServiceManager`的成员变量`mServices`中；
-3. 调用了AMS的`onStart`回调
+3. 调用了AMS的`onStart`回调；
 
-现在正在调用  `mActivityManagerService.setSystemProcess()` ，我们看这个方法的源码：
+这里SystemServiceManager会调用ActivityServiceManager的onStart方法，不过我们并没有看到这个方法中有什么我们关心的代码。现在我们回到SystemServer中，仅留下于ActivityManagerService相关的代码：
 
-* 第一行就调用了 `ServiceManager.addService` 将自己添加到服务管理器中。
-* 之后又陆续添加了其他的服务，其他服务我们暂时不关注
+以下为这些过程的源码，我们可以看到比较重要的方法调用应该是 `mActivityManagerService.setSystemProcess();`
 
-  
+```java
 
-以下为以上过程的源码：
+    private void startBootstrapServices(@NonNull TimingsTraceAndSlog t) {
+        // Activity manager runs the show.
+        t.traceBegin("StartActivityManager");
+        // TODO: Might need to move after migration to WM.
+        ActivityTaskManagerService atm = mSystemServiceManager.startService(
+                ActivityTaskManagerService.Lifecycle.class).getService();
+        mActivityManagerService = ActivityManagerService.Lifecycle.startService(
+                mSystemServiceManager, atm);
+        Installer installer = mSystemServiceManager.startService(Installer.class);
+        // 记录SystemServiceManager
+        mActivityManagerService.setSystemServiceManager(mSystemServiceManager);
+        mActivityManagerService.setInstaller(installer);
+        
+        mActivityManagerService.initPowerManagement();
 
-#### ActivityManagerService.setSystemProcess
+        // Set up the Application instance for the system process and get started.
+        mActivityManagerService.setSystemProcess();
+
+        watchdog.init(mSystemContext, mActivityManagerService);
+
+        if (SystemProperties.getInt("persist.sys.displayinset.top", 0) > 0) {
+            // DisplayManager needs the overlay immediately.
+            mActivityManagerService.updateSystemUiContext();
+            LocalServices.getService(DisplayManagerInternal.class).onOverlayChanged();
+        }
+    }
+```
+
+#### ActivityManagerService#setSystemProcess
 
 * `ActivityManagerService.setSystemProcess()` : (`frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java`)
 
   ```java
   public void setSystemProcess() {
           try {
+              // 注册AMS服务到ServiceManager
               ServiceManager.addService(Context.ACTIVITY_SERVICE, this, /* allowIsolated= */ true,
                       DUMP_FLAG_PRIORITY_CRITICAL | DUMP_FLAG_PRIORITY_NORMAL | DUMP_FLAG_PROTO);
               ServiceManager.addService(ProcessStats.SERVICE_NAME, mProcessStats);
@@ -755,7 +1385,7 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
 
   * 可以到，注册需要一个名称，这里AMS被设置为`Context.ACTIVITY_SERVICE`;
   * 还需要一个IBinder的服务对象，这里使用的 `ActivityManagerService` 的实例对象；
-  * 然后通过Binder调用`ServiceManager`的Binder服务的addService来添加AMS到ServiceManager。
+  * 然后通过Binder调用`ServiceManager`的Binder服务的`addService`来添加AMS到ServiceManager。
 
   ```java
       public static void addService(String name, IBinder service, boolean allowIsolated,
@@ -780,37 +1410,211 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
   
   ```
 
-#### ServiceManagerNative & ServiceManagerProxy
+到这里我们先忽略获取ServiceManager的细节，可以认为在AMS的setSystemProcess中，将AMS自身注册到了ServiceManager中；
 
-* `ServiceManagerNative` : (`frameworks/base/core/java/android/os/ServiceManagerNative.java`)
 
-  * 这里可以看到，addService实际上最终是通过 `ServiceManagerProxy` 作为代理来调用 remote 服务的。
-  * remote服务对象的来源是： `BinderInternal.getContextObject()`
-  
-  ```java
-  public final class ServiceManagerNative {
-      private ServiceManagerNative() {}
-  
-      /**
-       * Cast a Binder object into a service manager interface, generating
-       * a proxy if needed.
-       *
-       * TODO: delete this method and have clients use
-       *     IServiceManager.Stub.asInterface instead
-       */
-      @UnsupportedAppUsage
-      public static IServiceManager asInterface(IBinder obj) {
-          if (obj == null) {
-              return null;
-          }
-  
-          // ServiceManager is never local
-          return new ServiceManagerProxy(obj);
+
+### ServiceManager注册的细节
+
+上面的分析，我们知道我们会获取一个ServiceManager的接口对象，然后将我们的Service（ActivityManagerService）注册到其中，这一小节，我们将分析其中具体的注册过程；
+
+我们的目标是了解如下几个点：
+
+1. IServiceManager 的获取？
+2. IServiceManager addService做了些什么？
+
+
+
+首先，从我们上一步的源码开始：
+
+```java
+// 注册我们的服务，是通过一个IServiceManager
+getIServiceManager().addService(name, service, allowIsolated, dumpPriority);
+// getIServiceManager()来源于：
+sServiceManager = ServiceManagerNative
+                .asInterface(Binder.allowBlocking(BinderInternal.getContextObject()));
+```
+
+我们将上面的代码分为三个重要的点：
+
+1. ServiceManagerNative.asInterface(). 
+2. Binder.allowBlocking(BinderInternal.getContextObject()). 
+3. IServiceManager.addService().  
+
+#### ServiceManagerNative.asInterface()
+
+从这里可见：
+
+1. asInterface()仅仅是将一个IBinder塞入到`ServiceManagerProxy`中；
+2. 而 `ServiceManagerProxy` 则仅仅只是一个代理对象，它实现了`IServiceManager`的接口，但是所有的实现都是调用`mServiceManager`的同名方法来处理；
+3. 而 `mServiceManager`的来源是： ` mServiceManager = IServiceManager.Stub.asInterface(remote);` 也就是将我们的`asInterface`中传入的IBdiner参数调用一个Stub的asInterface再次转换了一番；
+
+也就是说：`getIServiceManager()  = IServiceManager.Stub.Proxy(Binder.allowBlocking(BinderInternal.getContextObject()))`,具体的等价过程如下：
+
+```java
+getIServiceManager() 
+    =
+ServiceManagerNative.asInterface(Binder.allowBlocking(BinderInternal.getContextObject()))
+    =
+IServiceManager.Stub.asInterface(Binder.allowBlocking(BinderInternal.getContextObject()))
+    =
+IServiceManager.Stub.Proxy(Binder.allowBlocking(BinderInternal.getContextObject()))
+```
+
+
+
+对应的类的源码：ServiceManagerNative，ServiceManagerProxy
+
+```java
+// frameworks/base/core/java/android/os/ServiceManagerNative.java
+public final class ServiceManagerNative {
+    private ServiceManagerNative() {}
+
+    /**
+     * Cast a Binder object into a service manager interface, generating
+     * a proxy if needed.
+     *
+     * TODO: delete this method and have clients use
+     *     IServiceManager.Stub.asInterface instead
+     */
+    @UnsupportedAppUsage
+    public static IServiceManager asInterface(IBinder obj) {
+        if (obj == null) {
+            return null;
+        }
+
+        // ServiceManager is never local
+        return new ServiceManagerProxy(obj);
     }
-  }
-  ```
+}
 
-#### 获取ServiceManager ContextObject
+class ServiceManagerProxy implements IServiceManager {
+    public ServiceManagerProxy(IBinder remote) {
+        mRemote = remote;
+        mServiceManager = IServiceManager.Stub.asInterface(remote);
+    }
+
+    public IBinder asBinder() {
+        return mRemote;
+    }
+
+    @UnsupportedAppUsage
+    public IBinder getService(String name) throws RemoteException {
+        // Same as checkService (old versions of servicemanager had both methods).
+        return mServiceManager.checkService(name);
+    }
+
+    public IBinder checkService(String name) throws RemoteException {
+        return mServiceManager.checkService(name);
+    }
+
+    public void addService(String name, IBinder service, boolean allowIsolated, int dumpPriority)
+            throws RemoteException {
+        mServiceManager.addService(name, service, allowIsolated, dumpPriority);
+    }
+
+    public String[] listServices(int dumpPriority) throws RemoteException {
+        return mServiceManager.listServices(dumpPriority);
+    }
+
+    public void registerForNotifications(String name, IServiceCallback cb)
+            throws RemoteException {
+        throw new RemoteException();
+    }
+
+    public void unregisterForNotifications(String name, IServiceCallback cb)
+            throws RemoteException {
+        throw new RemoteException();
+    }
+
+    public boolean isDeclared(String name) throws RemoteException {
+        return mServiceManager.isDeclared(name);
+    }
+
+    public void registerClientCallback(String name, IBinder service, IClientCallback cb)
+            throws RemoteException {
+        throw new RemoteException();
+    }
+
+    public void tryUnregisterService(String name, IBinder service) throws RemoteException {
+        throw new RemoteException();
+    }
+
+    /**
+     * Same as mServiceManager but used by apps.
+     *
+     * Once this can be removed, ServiceManagerProxy should be removed entirely.
+     */
+    @UnsupportedAppUsage
+    private IBinder mRemote;
+
+    private IServiceManager mServiceManager;
+}
+```
+
+`IServiceManager.Stub.asInterface(remote)`转换过程：
+
+```java
+// android.os.IServiceManager.Stub
+// android/os/IServiceManager.java
+public static abstract class Stub extends android.os.Binder implements android.os.IServiceManager
+  {
+    private static final java.lang.String DESCRIPTOR = "android.os.IServiceManager";
+    /** Construct the stub at attach it to the interface. */
+    public Stub()
+    {
+      this.attachInterface(this, DESCRIPTOR);
+    }
+    /**
+     * Cast an IBinder object into an android.os.IServiceManager interface,
+     * generating a proxy if needed.
+     */
+    public static android.os.IServiceManager asInterface(android.os.IBinder obj)
+    {
+      if ((obj==null)) {
+        return null;
+      }
+      android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
+      if (((iin!=null)&&(iin instanceof android.os.IServiceManager))) {
+        return ((android.os.IServiceManager)iin);
+      }
+      return new android.os.IServiceManager.Stub.Proxy(obj);
+    }
+}
+```
+
+#### 
+
+```java
+    /**
+     * Allow blocking calls on the given interface, overriding the requested
+     * value of {@link #setWarnOnBlocking(boolean)}.
+     * <p>
+     * This should only be rarely called when you are <em>absolutely sure</em>
+     * the remote interface is a built-in system component that can never be
+     * upgraded. In particular, this <em>must never</em> be called for
+     * interfaces hosted by package that could be upgraded or replaced,
+     * otherwise you risk system instability if that remote interface wedges.
+     *
+     * @hide
+     */
+    public static IBinder allowBlocking(IBinder binder) {
+        try {
+            if (binder instanceof BinderProxy) {
+                ((BinderProxy) binder).mWarnOnBlocking = false;
+            } else if (binder != null && binder.getInterfaceDescriptor() != null
+                    && binder.queryLocalInterface(binder.getInterfaceDescriptor()) == null) {
+                Log.w(TAG, "Unable to allow blocking on interface " + binder);
+            }
+        } catch (RemoteException ignored) {
+        }
+        return binder;
+    }
+```
+
+
+
+#### 获取ServiceManager ContextObject-上下文对象
 
 * `BinderInternal.getContextObject()`: (`frameworks/base/core/java/com/android/internal/os/BinderInternal.java`)
 
@@ -1024,7 +1828,7 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
 
 * `IServiceManager.Stub.addService()` : `android/os/IServiceManager.java` AIDL生成的默认实现 
 
-  * 实际上是调用`mRemote.transact`实现，这里的mRemote就是ServiceManagerProxy构造时传入的，也就是我们之前获取的 `ServiceManagerProxy(BinderProxy(nativeServiceManager))`，也就是说，最终会调用到ServiceManager的Binder服务侧实现的方法，即`BinderProxy.transact` -> `BinderProxy.transactNative` (将下小节源码)
+  * 实际上是调用`mRemote.transact`实现，这里的mRemote就是ServiceManagerProxy构造时传入的，也就是我们之前获取的 `ServiceManagerProxy(BinderProxy(nativeServiceManager))`，也就是说，最终会调用到ServiceManager的Binder服务侧实现的方法，即`BinderProxy.transact` -> `BinderProxy.transactNative` (见下小节源码)
 
   ```java
   		/**
@@ -1395,6 +2199,12 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
 </svg>
 
 
+### Binder.transactNative()
+
+```cpp
+
+```
+
 
 
 
@@ -1414,8 +2224,6 @@ Java世界创建之前，系统会提前注册一些JNI函数，其中有一个�
 
 * [Java 原生接口规范](http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/jniTOC.html)
 * [GoogleAndroid开发文档-JNI提示](https://developer.android.google.cn/training/articles/perf-jni?hl=zh-cn)
-
-
 
 
 

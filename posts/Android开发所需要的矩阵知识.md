@@ -5,7 +5,7 @@ tags: [Android]
 published: true
 hideInList: false
 feature: 
-isTop: true
+isTop: false
 ---
 翻译国外文章，该文章介绍了Android开发中矩阵相关的数学知识，包括矩阵是什么？矩阵加法及乘法运算，2x2矩阵的变换，最后演进为Android中使用的3x3矩阵。文中图片及动图比较多，相对好懂。
 <!-- more -->

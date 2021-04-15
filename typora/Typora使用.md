@@ -297,25 +297,5 @@ classDiagram
 
 
 
-```html
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="191px" height="126px" viewBox="0 0 191 126" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>编组 2</title>
-    <defs>
-        <filter id="filter-1">
-            <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0.795503 0 0 0 0 0.177545 0 0 0 0 0.177545 0 0 0 1.000000 0"></feColorMatrix>
-        </filter>
-    </defs>
-    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="编组-2" transform="translate(-442.000000, -849.000000)" filter="url(#filter-1)">
-            <g transform="translate(442.000000, 849.000000)">
-                <rect id="矩形备份" stroke="#62FF51" stroke-width="2" x="1" y="1" width="189" height="124"></rect>
-                <rect id="矩形" fill="#41FF6B" x="0" y="0" width="191" height="35"></rect>
-            </g>
-        </g>
-    </g>
-</svg>
-```
-
 
 

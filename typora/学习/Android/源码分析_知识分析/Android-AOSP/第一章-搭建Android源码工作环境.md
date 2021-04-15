@@ -348,6 +348,8 @@ emulator
 
 本小节介绍如何使用AS来调试Android Java Framework的核心进程 system_process。
 
+> 关于系统进程的名称的说明：系统进程启动早期名称为system_server，在附加ActivityThread之后更改为system_process
+
 ### 下载安装AndroidStudio
 
 从[AndroidStudio官方页面](https://developer.android.google.cn/studio)下载安装运行即可

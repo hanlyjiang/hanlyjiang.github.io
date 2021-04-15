@@ -1,8 +1,8 @@
 ---
 
 title: 'Android bindService流程'
-date: 2020-03-20 10:18:50
-tags: [Android,WebView,Vue]
+date: 2021-04-12 10:18:50
+tags: [Android,源码分析]
 published: true
 hideInList: false
 feature: 
@@ -291,7 +291,7 @@ isTop: false
 
 #### AMS如何获取ApplicationThread？
 
-* APP进程在binderSerice时，将自己进程中的ApplicationThread取出，通过Binde机制传递给AMS进程；
+* APP进程在binderSerice时，将自己进程中的ApplicationThread取出，通过Binder机制传递给AMS进程，传递过程中会转换成一个Proxy对象；
 
   ```java
   ActivityManager.getService().bindIsolatedService(
@@ -321,7 +321,7 @@ isTop: false
 
 ### 整体流程总结
 
-#### 问题
+> 待补充
 
 ## 详细分析解答问题
 
@@ -335,14 +335,14 @@ isTop: false
 
 ==总结：==
 
-* APP进程中通过 `ServiceManager.getService(Context.ACTIVITY_SERVICE)` 获取的ActivityManagerService的客户端操作代理对象（Proxy）。
-* 该对象位于APP进程中，可以使用此对象（通过Binder进程间通信）来要求（位于system_process中）的ActivityManagerService进行对应的服务操作； 
+* APP进程中通过 `ServiceManager.getService(Context.ACTIVITY_SERVICE)` 获取的`ActivityManagerService`的客户端操作代理对象（Proxy）。
+* 该对象位于APP进程中，可以使用此对象（通过Binder进程间通信）来要求（位于`system_process`中）的`ActivityManagerService`进行对应的服务操作； 
 
 具体查看如下代码：
 
 #### ContextImpl.bindServiceCommon
 
-我们看 `ContextImpl.bindServiceCommon` 方法的实现，可以看到是调用了 ActivityManager.getService() 获取的；
+我们看 `ContextImpl.bindServiceCommon` 方法的实现，可以看到是调用了 `ActivityManager.getService()` 获取的；
 
 `frameworks/base/core/java/android/app/ContextImpl.java`: 
 
@@ -401,7 +401,7 @@ public static IActivityManager getService() {
 
 #### ApplicationThread的来源？
 
-查看 **ContextImpl.bindServiceCommon** 的代码，可以看到，是在调用AMS的bindService方法时，将自己进程中的ApplicationThread及ActivityToken取出传递给了AMS服务；
+查看 **ContextImpl.bindServiceCommon** 的代码，可以看到，是在调用AMS的bindService方法时，将自己进程中的`ApplicationThread`及`ActivityToken`取出传递给了AMS服务；
 
 ```java
 // frameworks/base/core/java/android/app/ContextImpl.java
@@ -434,11 +434,79 @@ private boolean bindServiceCommon(Intent service, ServiceConnection conn, int fl
     }
 ```
 
+实际上，上面的`mMainThread.getApplicationThread()`取出的是我们的APP进程中的ApplicationThread的服务端对象，然后经过IActivityManager进行binder传输（transact）前，会将其转换为一个Proxy代理对象，用于在AMS中请求我们进程的ApplicationThread来提供服务； 
+
+```java
+// android.app.IActivityManager.Stub#TRANSACTION_bindIsolatedService 
+case TRANSACTION_bindIsolatedService:
+        {
+          data.enforceInterface(descriptor);
+          android.app.IApplicationThread _arg0;
+          // 这里将IApplicationThread的服务对象转换成一个Proxy代理对象
+          _arg0 = android.app.IApplicationThread.Stub.asInterface(data.readStrongBinder());
+          android.os.IBinder _arg1;
+          _arg1 = data.readStrongBinder();
+          android.content.Intent _arg2;
+          if ((0!=data.readInt())) {
+            _arg2 = android.content.Intent.CREATOR.createFromParcel(data);
+          }
+          else {
+            _arg2 = null;
+          }
+          java.lang.String _arg3;
+          _arg3 = data.readString();
+          android.app.IServiceConnection _arg4;
+          // 同理，这里将IServiceConnection的服务对象也转换成一个Proxy代理对象
+          _arg4 = android.app.IServiceConnection.Stub.asInterface(data.readStrongBinder());
+          int _arg5;
+          _arg5 = data.readInt();
+          java.lang.String _arg6;
+          _arg6 = data.readString();
+          java.lang.String _arg7;
+          _arg7 = data.readString();
+          int _arg8;
+          _arg8 = data.readInt();
+          int _result = this.bindIsolatedService(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7, _arg8);
+          reply.writeNoException();
+          reply.writeInt(_result);
+          return true;
+        }
+        
+// android.app.IApplicationThread.Stub
+ /** Local-side IPC implementation stub class. */
+  public static abstract class Stub extends android.os.Binder implements android.app.IApplicationThread
+  {
+    private static final java.lang.String DESCRIPTOR = "android.app.IApplicationThread";
+    /** Construct the stub at attach it to the interface. */
+    public Stub()
+    {
+      this.attachInterface(this, DESCRIPTOR);
+    }
+    /**
+     * Cast an IBinder object into an android.app.IApplicationThread interface,
+     * generating a proxy if needed.
+     */
+    public static android.app.IApplicationThread asInterface(android.os.IBinder obj)
+    {
+      if ((obj==null)) {
+        return null;
+      }
+      android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
+      if (((iin!=null)&&(iin instanceof android.app.IApplicationThread))) {
+        return ((android.app.IApplicationThread)iin);
+      }
+      // 这里构造成了Proxy
+      return new android.app.IApplicationThread.Stub.Proxy(obj);
+    }
+  }
+```
+
+
 > 这里我们暂不考虑ApplicationThread由何处而来，每个进程中都对应一个ActivityThread，ActivityThread中有一个ApplicationThread对象。
 
 #### ApplicationThread在bind流程中的使用
 
-我们发现，最终是使用 `ApplicationThread`的 `requestServiceBindingLocked` 方法来绑定服务的。不过这里使用的时候是经过了几次成员变量操作符（`r.app.thread.scheduleBindService`），我们先梳理一下ServiceRecord类同ApplicationThread的关系；
+我们发现，最终是使用 `ApplicationThread`的 `requestServiceBindingLocked` 方法来绑定服务的（`r.app.thread.scheduleBindService`），我们先梳理一下ServiceRecord类同ApplicationThread的关系；
 
 ```java
 // frameworks/base/services/core/java/com/android/server/am/ActiveServices.java
@@ -467,149 +535,147 @@ IApplicationThread thread;  // the actual proc...  may be null only if
 其中 `ServiceRecord.app` 的类型为 `ProcessRecord` ，`ServiceRecord.app.thread` 的类型为 `IApplicationThread`，我们梳理下对应的几个类的关系，如下图：
 
 
-<svg width="730px" height="473px" viewBox="0 0 730 473" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="772px" height="493px" viewBox="0 0 772 493" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <g id="Android源码分析" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="ServiceRecord类图" transform="translate(-38.000000, -20.000000)">
-            <g id="类" transform="translate(41.000000, 22.000000)">
-                <g id="编组" transform="translate(0.663121, -1.869103)">
-                    <path d="M182.673759,0.5 C183.364115,0.5 183.989115,0.779822031 184.441526,1.23223305 C184.893937,1.68464406 185.173759,2.30964406 185.173759,3 L185.173759,3 L185.173759,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
-                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="41.574" y="16.3255814">ServiceRecord</tspan>
+        <g id="ServiceRecord类图" transform="translate(-31.000000, -33.000000)">
+            <g id="UML/类图/类模块" transform="translate(32.000000, 34.000000)">
+                <g id="名称" transform="translate(-0.284133, 0.000000)">
+                    <path d="M214.320588,-0.5 C215.563229,-0.5 216.688229,0.00367965644 217.502569,0.818019485 C218.316909,1.63235931 218.820588,2.75735931 218.820588,4 L218.820588,4 L218.820588,27.4753086 L-0.179411765,27.4753086 L-0.179411765,4 C-0.179411765,2.75735931 0.324267892,1.63235931 1.13860772,0.818019485 C1.95294755,0.00367965644 3.07794755,-0.5 4.32058824,-0.5 L4.32058824,-0.5 Z" id="标题" stroke="#979797" fill="#F4F4F4"></path>
+                    <text id="Class-Name" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="60.4815882" y="16">ServiceRecord</tspan>
                     </text>
                 </g>
-                <g id="属性" transform="translate(0.663121, 22.288571)">
-                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="184.756391" height="46.2285714"></rect>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="9.36631979" y="14.7457143">app:ProcessRecord </tspan>
-                        <tspan x="9.36631979" y="32.7457143">isolatedProc: ProcessRecord </tspan>
+                <g id="属性" transform="translate(0.036455, 26.975309)">
+                    <rect stroke="#979797" fill="#F6FFDF" x="-0.5" y="-0.5" width="219" height="45.0123457"></rect>
+                    <text id="Properties" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="6" y="17">app:ProcessRecord </tspan>
+                        <tspan x="6" y="37">isolatedProc: ProcessRecord</tspan>
                     </text>
                 </g>
-                <g id="方法" transform="translate(0.663121, 67.942857)">
-                    <path d="M185.256391,0.5 L185.256391,43.2285714 C185.256391,44.1950697 184.86464,45.0700697 184.231264,45.7034452 C183.597889,46.3368206 182.722889,46.7285714 181.756391,46.7285714 L181.756391,46.7285714 L4,46.7285714 C3.03350169,46.7285714 2.15850169,46.3368206 1.52512627,45.7034452 C0.891750844,45.0700697 0.5,44.1950697 0.5,43.2285714 L0.5,43.2285714 L0.5,0.5 L185.256391,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="9.36631979" y="15.74">+ setProcess(ProcessRecord) </tspan>
-                    </text>
-                </g>
-            </g>
-            <g id="类备份" transform="translate(41.000000, 193.000000)">
-                <g id="编组" transform="translate(0.663121, -1.869103)">
-                    <path d="M182.673759,0.5 C183.364115,0.5 183.989115,0.779822031 184.441526,1.23223305 C184.893937,1.68464406 185.173759,2.30964406 185.173759,3 L185.173759,3 L185.173759,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
-                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="40.426" y="16.3255814">ProcessRecord</tspan>
-                    </text>
-                </g>
-                <g id="属性" transform="translate(0.663121, 22.288571)">
-                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="184.756391" height="46.2285714"></rect>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="9.36631979" y="14.7457143">thread:IApplicationThread </tspan>
-                        <tspan x="9.36631979" y="32.7457143">pid: int  </tspan>
-                    </text>
-                </g>
-                <g id="方法" transform="translate(0.663121, 67.942857)">
-                    <path d="M185.256391,0.5 L185.256391,43.2285714 C185.256391,44.1950697 184.86464,45.0700697 184.231264,45.7034452 C183.597889,46.3368206 182.722889,46.7285714 181.756391,46.7285714 L181.756391,46.7285714 L4,46.7285714 C3.03350169,46.7285714 2.15850169,46.3368206 1.52512627,45.7034452 C0.891750844,45.0700697 0.5,44.1950697 0.5,43.2285714 L0.5,43.2285714 L0.5,0.5 L185.256391,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
-                </g>
-            </g>
-            <g id="类备份-2" transform="translate(326.000000, 84.000000)">
-                <g id="编组" transform="translate(1.570922, 0.886379)">
-                    <path d="M436.858156,0.5 C437.548512,0.5 438.173512,0.779822031 438.625923,1.23223305 C439.078334,1.68464406 439.358156,2.30964406 439.358156,3 L439.358156,3 L439.358156,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
-                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="152.123" y="16.3255814">IApplicationThread</tspan>
-                    </text>
-                </g>
-                <g id="属性" transform="translate(1.570922, 27.284286)">
-                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="439.05391" height="56.8142857"></rect>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="22.1886613" y="14.9128571">thread:IApplicationThread </tspan>
-                        <tspan x="22.1886613" y="32.9128571">pid: int  </tspan>
-                    </text>
-                </g>
-                <g id="方法" transform="translate(1.570922, 83.171429)">
-                    <path d="M439.55391,0.5 L439.55391,53.8142857 C439.55391,54.780784 439.162159,55.655784 438.528783,56.2891594 C437.895408,56.9225349 437.020408,57.3142857 436.05391,57.3142857 L436.05391,57.3142857 L4,57.3142857 C3.03350169,57.3142857 2.15850169,56.9225349 1.52512627,56.2891594 C0.891750844,55.655784 0.5,54.780784 0.5,53.8142857 L0.5,53.8142857 L0.5,0.5 L439.55391,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="22.1886613" y="16.13">+ scheduleBindService(IBinder, Intent, boolean rebind, int processState)</tspan>
-                        <tspan x="22.1886613" y="34.13">+ scheduleCreateService(IBinder, ServiceInfo info,… )</tspan>
-                        <tspan x="22.1886613" y="52.13">+ bindApplication(…)</tspan>
+                <g id="方法" transform="translate(0.036455, 70.987654)">
+                    <path d="M218.5,-0.5 L218.5,40.0123457 C218.5,41.2549864 217.99632,42.3799864 217.181981,43.1943262 C216.367641,44.008666 215.242641,44.5123457 214,44.5123457 L214,44.5123457 L4,44.5123457 C2.75735931,44.5123457 1.63235931,44.008666 0.818019485,43.1943262 C0.00367965644,42.3799864 -0.5,41.2549864 -0.5,40.0123457 L-0.5,40.0123457 L-0.5,-0.5 L218.5,-0.5 Z" stroke="#979797" fill="#FFDFDF"></path>
+                    <text id="Methods" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="5" y="16">+ setProcess(ProcessRecord)</tspan>
                     </text>
                 </g>
             </g>
-            <g id="IApplicationThread.Stub" transform="translate(326.000000, 402.000000)">
-                <g id="编组" transform="translate(0.946809, -4.518605)">
-                    <path d="M262.106383,0.5 C262.796739,0.5 263.421739,0.779822031 263.87415,1.23223305 C264.326561,1.68464406 264.606383,2.30964406 264.606383,3 L264.606383,3 L264.606383,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
-                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="66.65" y="16.3255814">ApplicationThread</tspan>
+            <g id="UML/类图/类模块备份-3" transform="translate(310.000000, 34.000000)">
+                <g id="名称" transform="translate(-0.639952, 0.000000)">
+                    <path d="M487.722059,-0.5 C488.9647,-0.5 490.0897,0.00367965644 490.904039,0.818019485 C491.718379,1.63235931 492.222059,2.75735931 492.222059,4 L492.222059,4 L492.222059,39.9074074 L0.222058824,39.9074074 L0.222058824,4 C0.222058824,2.75735931 0.72573848,1.63235931 1.54007831,0.818019485 C2.35441814,0.00367965644 3.47941814,-0.5 4.72205882,-0.5 L4.72205882,-0.5 Z" id="标题" stroke="#979797" fill="#F4F4F4"></path>
+                    <text id="Class-Name" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="181.017059" y="16">IApplicationThread</tspan>
                     </text>
                 </g>
-                <g id="属性" transform="translate(0.946809, 17.485000)">
-                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="264.224365" height="36.05"></rect>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
+                <g id="属性" transform="translate(0.082107, 39.407407)">
+                    <rect stroke="#979797" fill="#F6FFDF" x="-0.5" y="-0.5" width="492" height="65.2962963"></rect>
+                    <text id="Properties" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005"></text>
                 </g>
-                <g id="方法" transform="translate(0.946809, 53.300000)">
-                    <path d="M264.724365,0.5 L264.724365,33.05 C264.724365,34.0164983 264.332615,34.8914983 263.699239,35.5248737 C263.065864,36.1582492 262.190864,36.55 261.224365,36.55 L261.224365,36.55 L4,36.55 C3.03350169,36.55 2.15850169,36.1582492 1.52512627,35.5248737 C0.891750844,34.8914983 0.5,34.0164983 0.5,33.05 L0.5,33.05 L0.5,0.5 L264.724365,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
-                </g>
-            </g>
-            <g id="IApplicationThread.Stub备份-2" transform="translate(38.000000, 375.000000)">
-                <g id="编组" transform="translate(0.673759, -4.518605)">
-                    <path d="M185.652482,0.5 C186.342838,0.5 186.967838,0.779822031 187.420249,1.23223305 C187.87266,1.68464406 188.152482,2.30964406 188.152482,3 L188.152482,3 L188.152482,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
-                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="41.408" y="16.3255814">ActivityThread</tspan>
+                <g id="方法" transform="translate(0.082107, 103.703704)">
+                    <path d="M491.5,-0.5 L491.5,60.2962963 C491.5,61.538937 490.99632,62.663937 490.181981,63.4782768 C489.367641,64.2926166 488.242641,64.7962963 487,64.7962963 L487,64.7962963 L4,64.7962963 C2.75735931,64.7962963 1.63235931,64.2926166 0.818019485,63.4782768 C0.00367965644,62.663937 -0.5,61.538937 -0.5,60.2962963 L-0.5,60.2962963 L-0.5,-0.5 L491.5,-0.5 Z" stroke="#979797" fill="#FFDFDF"></path>
+                    <text id="Methods" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="5" y="16">+ scheduleBindService(IBinder, Intent, boolean rebind, int processState) </tspan>
+                        <tspan x="5" y="36">+ scheduleCreateService(IBinder, ServiceInfo info,… ) </tspan>
+                        <tspan x="5" y="56">+ bindApplication(…)</tspan>
                     </text>
                 </g>
-                <g id="属性" transform="translate(0.673759, 17.485000)">
-                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="187.73644" height="36.05"></rect>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="9.5165816" y="14.585">mAppThread:ApplicationThread </tspan>
+            </g>
+            <g id="UML/类图/类模块备份-4" transform="translate(310.000000, 264.000000)">
+                <g id="名称" transform="translate(-0.311504, 0.000000)">
+                    <path d="M235.351471,-0.5 C236.594111,-0.5 237.719111,0.00367965644 238.533451,0.818019485 C239.347791,1.63235931 239.851471,2.75735931 239.851471,4 L239.851471,4 L239.851471,25.3641975 L-0.148529412,25.3641975 L-0.148529412,4 C-0.148529412,2.75735931 0.355150245,1.63235931 1.16949007,0.818019485 C1.9838299,0.00367965644 3.1088299,-0.5 4.35147059,-0.5 L4.35147059,-0.5 Z" id="标题" stroke="#979797" fill="#F4F4F4"></path>
+                    <text id="Class-Name" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="36.6004705" y="16">IApplicationThread.Stub</tspan>
                     </text>
                 </g>
-                <g id="方法" transform="translate(0.673759, 53.300000)">
-                    <path d="M188.23644,0.5 L188.23644,33.05 C188.23644,34.0164983 187.844689,34.8914983 187.211313,35.5248737 C186.577938,36.1582492 185.702938,36.55 184.73644,36.55 L184.73644,36.55 L4,36.55 C3.03350169,36.55 2.15850169,36.1582492 1.52512627,35.5248737 C0.891750844,34.8914983 0.5,34.0164983 0.5,33.05 L0.5,33.05 L0.5,0.5 L188.23644,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
+                <g id="属性" transform="translate(0.039967, 24.864198)">
+                    <rect stroke="#979797" fill="#F6FFDF" x="-0.5" y="-0.5" width="240" height="41.5679012"></rect>
+                    <text id="Properties" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005"></text>
+                </g>
+                <g id="方法" transform="translate(0.039967, 65.432099)">
+                    <path d="M239.5,-0.5 L239.5,36.5679012 C239.5,37.8105419 238.99632,38.9355419 238.181981,39.7498817 C237.367641,40.5642216 236.242641,41.0679012 235,41.0679012 L235,41.0679012 L4,41.0679012 C2.75735931,41.0679012 1.63235931,40.5642216 0.818019485,39.7498817 C0.00367965644,38.9355419 -0.5,37.8105419 -0.5,36.5679012 L-0.5,36.5679012 L-0.5,-0.5 L239.5,-0.5 Z" stroke="#979797" fill="#FFDFDF"></path>
+                    <text id="Methods" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005"></text>
                 </g>
             </g>
-            <g id="IApplicationThread.Stub备份" transform="translate(326.000000, 268.000000)">
-                <g id="编组" transform="translate(0.946809, -4.094684)">
-                    <path d="M262.106383,0.5 C262.796739,0.5 263.421739,0.779822031 263.87415,1.23223305 C264.326561,1.68464406 264.606383,2.30964406 264.606383,3 L264.606383,3 L264.606383,27.8255814 L0.5,27.8255814 L0.5,3 C0.5,2.30964406 0.779822031,1.68464406 1.23223305,1.23223305 C1.68464406,0.779822031 2.30964406,0.5 3,0.5 L3,0.5 Z" id="矩形" stroke="#979797" fill="#F2F2F2"></path>
-                    <text id="类名" font-family="NotoSansCJKsc-Black, Noto Sans CJK SC" font-size="14" font-weight="800" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
-                        <tspan x="44.7399999" y="16.3255814">IApplicationThread.Stub</tspan>
+            <g id="UML/类图/类模块备份-5" transform="translate(310.000000, 419.000000)">
+                <g id="名称" transform="translate(-0.311504, 0.000000)">
+                    <path d="M235.351471,-0.5 C236.594111,-0.5 237.719111,0.00367965644 238.533451,0.818019485 C239.347791,1.63235931 239.851471,2.75735931 239.851471,4 L239.851471,4 L239.851471,25.3641975 L-0.148529412,25.3641975 L-0.148529412,4 C-0.148529412,2.75735931 0.355150245,1.63235931 1.16949007,0.818019485 C1.9838299,0.00367965644 3.1088299,-0.5 4.35147059,-0.5 L4.35147059,-0.5 Z" id="标题" stroke="#979797" fill="#F4F4F4"></path>
+                    <text id="Class-Name" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="56.8864705" y="16">ApplicationThread</tspan>
                     </text>
                 </g>
-                <g id="属性" transform="translate(0.946809, 18.253571)">
-                    <rect id="矩形" stroke="#979797" fill="#E0E0E0" x="0.5" y="0.5" width="264.224365" height="37.6785714"></rect>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
+                <g id="属性" transform="translate(0.039967, 24.864198)">
+                    <rect stroke="#979797" fill="#F6FFDF" x="-0.5" y="-0.5" width="240" height="41.5679012"></rect>
+                    <text id="Properties" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005"></text>
                 </g>
-                <g id="方法" transform="translate(0.946809, 55.642857)">
-                    <path d="M264.724365,0.5 L264.724365,34.6785714 C264.724365,35.6450697 264.332615,36.5200697 263.699239,37.1534452 C263.065864,37.7868206 262.190864,38.1785714 261.224365,38.1785714 L261.224365,38.1785714 L4,38.1785714 C3.03350169,38.1785714 2.15850169,37.7868206 1.52512627,37.1534452 C0.891750844,36.5200697 0.5,35.6450697 0.5,34.6785714 L0.5,34.6785714 L0.5,0.5 L264.724365,0.5 Z" id="矩形备份" stroke="#979797" fill="#E0E0E0"></path>
-                    <text font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="12" font-weight="300" letter-spacing="0.132000005"></text>
+                <g id="方法" transform="translate(0.039967, 65.432099)">
+                    <path d="M239.5,-0.5 L239.5,36.5679012 C239.5,37.8105419 238.99632,38.9355419 238.181981,39.7498817 C237.367641,40.5642216 236.242641,41.0679012 235,41.0679012 L235,41.0679012 L4,41.0679012 C2.75735931,41.0679012 1.63235931,40.5642216 0.818019485,39.7498817 C0.00367965644,38.9355419 -0.5,37.8105419 -0.5,36.5679012 L-0.5,36.5679012 L-0.5,-0.5 L239.5,-0.5 Z" stroke="#979797" fill="#FFDFDF"></path>
+                    <text id="Methods" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005"></text>
                 </g>
             </g>
-            <g id="UML/线条/实现" transform="translate(455.000000, 225.500000)" stroke="#979797">
-                <line x1="2.5" y1="38.8055556" x2="2.5" y2="7.30555556" id="直线-24" stroke-linecap="square" stroke-dasharray="2"></line>
-                <path d="M2.5,-0.931966011 L5.69098301,5.45 L-0.690983006,5.45 L2.5,-0.931966011 Z" id="三角形"></path>
+            <g id="UML/类图/类模块备份" transform="translate(32.000000, 183.000000)">
+                <g id="名称" transform="translate(-0.284133, 0.000000)">
+                    <path d="M214.320588,-0.5 C215.563229,-0.5 216.688229,0.00367965644 217.502569,0.818019485 C218.316909,1.63235931 218.820588,2.75735931 218.820588,4 L218.820588,4 L218.820588,27.4753086 L-0.179411765,27.4753086 L-0.179411765,4 C-0.179411765,2.75735931 0.324267892,1.63235931 1.13860772,0.818019485 C1.95294755,0.00367965644 3.07794755,-0.5 4.32058824,-0.5 L4.32058824,-0.5 Z" id="标题" stroke="#979797" fill="#F4F4F4"></path>
+                    <text id="Class-Name" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="59.2005882" y="16">ProcessRecord</tspan>
+                    </text>
+                </g>
+                <g id="属性" transform="translate(0.036455, 26.975309)">
+                    <rect stroke="#979797" fill="#F6FFDF" x="-0.5" y="-0.5" width="219" height="45.0123457"></rect>
+                    <text id="Properties" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="6" y="17">thread:IApplicationThread </tspan>
+                        <tspan x="6" y="37">pid: int</tspan>
+                    </text>
+                </g>
+                <g id="方法" transform="translate(0.036455, 70.987654)">
+                    <path d="M218.5,-0.5 L218.5,40.0123457 C218.5,41.2549864 217.99632,42.3799864 217.181981,43.1943262 C216.367641,44.008666 215.242641,44.5123457 214,44.5123457 L214,44.5123457 L4,44.5123457 C2.75735931,44.5123457 1.63235931,44.008666 0.818019485,43.1943262 C0.00367965644,42.3799864 -0.5,41.2549864 -0.5,40.0123457 L-0.5,40.0123457 L-0.5,-0.5 L218.5,-0.5 Z" stroke="#979797" fill="#FFDFDF"></path>
+                    <text id="Methods" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005"></text>
+                </g>
             </g>
-            <g id="UML/线条/实现" transform="translate(455.000000, 363.000000)" stroke="#979797">
-                <line x1="4.5" y1="34.8333333" x2="4.5" y2="8" id="直线-24" stroke-linecap="square"></line>
+            <g id="UML/类图/类模块备份-2" transform="translate(32.000000, 332.000000)">
+                <g id="名称" transform="translate(-0.284133, 0.000000)">
+                    <path d="M214.320588,-0.5 C215.563229,-0.5 216.688229,0.00367965644 217.502569,0.818019485 C218.316909,1.63235931 218.820588,2.75735931 218.820588,4 L218.820588,4 L218.820588,27.4753086 L-0.179411765,27.4753086 L-0.179411765,4 C-0.179411765,2.75735931 0.324267892,1.63235931 1.13860772,0.818019485 C1.95294755,0.00367965644 3.07794755,-0.5 4.32058824,-0.5 L4.32058824,-0.5 Z" id="标题" stroke="#979797" fill="#F4F4F4"></path>
+                    <text id="Class-Name" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="59.6275882" y="16">ActivityThread</tspan>
+                    </text>
+                </g>
+                <g id="属性" transform="translate(0.036455, 26.975309)">
+                    <rect stroke="#979797" fill="#F6FFDF" x="-0.5" y="-0.5" width="219" height="45.0123457"></rect>
+                    <text id="Properties" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005" fill="#020202" fill-opacity="0.88378138">
+                        <tspan x="6" y="17">mAppThread:ApplicationThread</tspan>
+                    </text>
+                </g>
+                <g id="方法" transform="translate(0.036455, 70.987654)">
+                    <path d="M218.5,-0.5 L218.5,40.0123457 C218.5,41.2549864 217.99632,42.3799864 217.181981,43.1943262 C216.367641,44.008666 215.242641,44.5123457 214,44.5123457 L214,44.5123457 L4,44.5123457 C2.75735931,44.5123457 1.63235931,44.008666 0.818019485,43.1943262 C0.00367965644,42.3799864 -0.5,41.2549864 -0.5,40.0123457 L-0.5,40.0123457 L-0.5,-0.5 L218.5,-0.5 Z" stroke="#979797" fill="#FFDFDF"></path>
+                    <text id="Methods" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="14" font-weight="300" letter-spacing="0.154000005"></text>
+                </g>
+            </g>
+            <g id="UML/类图/线条/聚合" transform="translate(132.000000, 149.000000)">
+                <path id="直线-24" d="M4.01066824,9.66098325 L5.01044532,9.68209681 L4.99988854,10.1819853 L4.65783637,26.3789701 L4.529,32.448 L8.22683349,26.1900249 L8.4811105,25.7595099 L9.34214059,26.2680639 L9.08786358,26.6985789 L4.41995827,34.6017846 L3.96791026,35.3671447 L3.54857702,34.5833825 L-0.781511421,26.4901549 L-1.01738637,26.0492887 L-0.135653962,25.5775388 L0.100220985,26.018405 L3.529,32.428 L3.65805929,26.3578565 L4.00011146,10.1608718 L4.01066824,9.66098325 Z" fill="#979797" fill-rule="nonzero"></path>
+                <path d="M4.5065476,0.824414956 L8.13197663,5.5 L4.5065476,10.175585 L0.998600008,5.5 L4.5065476,0.824414956 Z" id="多边形" stroke="#979797"></path>
+            </g>
+            <g id="编组" transform="translate(277.500000, 162.500000)" fill="#979797">
+                <g id="UML/类图/线条/组合" transform="translate(2.500000, 29.500000) rotate(-90.000000) translate(-2.500000, -29.500000) ">
+                    <path id="直线-24" d="M2.00288144,9.84713507 L3.00286493,9.85288144 L2.99999174,10.3528732 L2.76527988,51.1974318 L2.73,57.282 L6.33087375,50.9672406 L6.57850452,50.5328687 L7.44724844,51.0281302 L7.19961767,51.4625022 L2.653721,59.4365114 L2.21348852,60.2087282 L1.78215985,59.431503 L-2.67179488,51.4057764 L-2.91441726,50.9685872 L-2.04003889,50.4833425 L-1.79741651,50.9205317 L1.73,57.276 L1.76529639,51.1916854 L2.00000826,10.3471268 L2.00288144,9.84713507 Z" fill-rule="nonzero"></path>
+                    <polygon id="多边形" stroke="#979797" points="2.46928974 0 6.73396667 5.5 2.46928974 11 -1.65719103 5.5"></polygon>
+                </g>
+            </g>
+            <g id="编组" transform="translate(278.500000, 402.500000)" fill="#979797">
+                <g id="UML/类图/线条/组合" transform="translate(2.500000, 29.500000) rotate(-90.000000) translate(-2.500000, -29.500000) ">
+                    <path id="直线-24" d="M2.00288144,9.84713507 L3.00286493,9.85288144 L2.99999174,10.3528732 L2.76527988,51.1974318 L2.73,57.282 L6.33087375,50.9672406 L6.57850452,50.5328687 L7.44724844,51.0281302 L7.19961767,51.4625022 L2.653721,59.4365114 L2.21348852,60.2087282 L1.78215985,59.431503 L-2.67179488,51.4057764 L-2.91441726,50.9685872 L-2.04003889,50.4833425 L-1.79741651,50.9205317 L1.73,57.276 L1.76529639,51.1916854 L2.00000826,10.3471268 L2.00288144,9.84713507 Z" fill-rule="nonzero"></path>
+                    <polygon id="多边形" stroke="#979797" points="2.46928974 0 6.73396667 5.5 2.46928974 11 -1.65719103 5.5"></polygon>
+                </g>
+            </g>
+            <g id="UML/类图/线条/实现" transform="translate(425.000000, 202.000000)" stroke="#979797">
+                <line x1="4.5" y1="61.6653117" x2="4.5" y2="7.44579946" id="直线-24" stroke-linecap="square" stroke-dasharray="2"></line>
+                <path d="M4.5,0.218033989 L7.69098301,6.6 L1.30901699,6.6 L4.5,0.218033989 Z" id="三角形"></path>
+            </g>
+            <g id="UML/类图/线条/继承" transform="translate(430.000000, 370.000000)" stroke="#979797">
+                <line x1="4.5" y1="48.7469136" x2="4.5" y2="8" id="直线-24" stroke-linecap="square"></line>
                 <path d="M4.5,1.11803399 L7.69098301,7.5 L1.30901699,7.5 L4.5,1.11803399 Z" id="三角形"></path>
-            </g>
-            <g id="UML/线条/聚合" transform="translate(128.000000, 138.000000)">
-                <path id="直线-24" d="M6.50883555,9.81274647 L7.5086821,9.83026412 L7.49992328,10.3301874 L6.85324563,47.2403042 L6.746,53.315 L10.4214873,47.041539 L10.6742143,46.6101122 L11.5370678,47.1155662 L11.2843409,47.546993 L6.64489019,55.466936 L6.19559777,56.2339169 L5.77344839,55.451668 L1.41428008,47.3740662 L1.17682105,46.9340512 L2.05685107,46.4591331 L2.2943101,46.8991481 L5.747,53.297 L5.85339907,47.2227865 L6.50007672,10.3126697 L6.50883555,9.81274647 Z" fill="#979797" fill-rule="nonzero"></path>
-                <path d="M7.04493542,0.824414956 L10.6703645,5.5 L7.04493542,10.175585 L3.53698783,5.5 L7.04493542,0.824414956 Z" id="多边形" stroke="#979797"></path>
-            </g>
-            <g id="编组" transform="translate(272.810486, 148.720337)" fill="#979797">
-                <g id="UML/线条/组合" transform="translate(4.500000, 49.000000) rotate(-90.000000) translate(-4.500000, -49.000000) ">
-                    <path id="直线-24" d="M4.00288801,10.1257 L5.00287142,10.1314594 L4.99999171,10.6314511 L4.54315542,89.9498322 L4.507,96.035 L8.10875237,89.7196752 L8.35638881,89.2853065 L9.22512627,89.7805794 L8.97748982,90.2149481 L4.43148901,98.188898 L3.99124645,98.9611091 L3.55992793,98.1838782 L-0.893921989,90.1580935 L-1.13653865,89.7209011 L-0.262153947,89.2356678 L-0.0195372819,89.6728601 L3.507,96.027 L3.54317201,89.9440727 L4.00000829,10.6256917 L4.00288801,10.1257 Z" fill-rule="nonzero"></path>
-                    <polygon id="多边形" stroke="#979797" points="4.5 0 8.76467693 5.5 4.5 11 0.373519229 5.5"></polygon>
-                </g>
-            </g>
-            <g id="编组" transform="translate(272.810486, 366.720337)" fill="#979797">
-                <g id="UML/线条/组合" transform="translate(4.500000, 49.000000) rotate(-90.000000) translate(-4.500000, -49.000000) ">
-                    <path id="直线-24" d="M4.00288801,10.1257 L5.00287142,10.1314594 L4.99999171,10.6314511 L4.54315542,89.9498322 L4.507,96.035 L8.10875237,89.7196752 L8.35638881,89.2853065 L9.22512627,89.7805794 L8.97748982,90.2149481 L4.43148901,98.188898 L3.99124645,98.9611091 L3.55992793,98.1838782 L-0.893921989,90.1580935 L-1.13653865,89.7209011 L-0.262153947,89.2356678 L-0.0195372819,89.6728601 L3.507,96.027 L3.54317201,89.9440727 L4.00000829,10.6256917 L4.00288801,10.1257 Z" fill-rule="nonzero"></path>
-                    <polygon id="多边形" stroke="#979797" points="4.5 0 8.76467693 5.5 4.5 11 0.373519229 5.5"></polygon>
-                </g>
             </g>
         </g>
     </g>
 </svg>
+
 
 现在我们看下 ServiceRecord 是何时构造的，首先，根据方法的调用层次，我们可以看到：
 
@@ -757,7 +823,7 @@ int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
 > 问题：
 >
 > 1. 进程何时创建？- 已解决
-> 2. ApplicationThread对象何时设置到ProcessRecord中? - 已解决
+> 2. ApplicationThread（代理）对象何时设置到ProcessRecord中? - 已解决
 > 3. ActivityThread#main的入口点中，如何获取之前的结果？ - 已解决
 
 下面为创建进程的调用序列，注意如下序列中只是创建了一个ProcessRecord的对象，对应于Linux上的进程创建我们再起文章进行分析，对于我们的Service来说，拿到ProcessRecord对象即可供我们来创建服务；
@@ -782,6 +848,15 @@ int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
                 </text>
                 <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="8.70292887" font-weight="300" letter-spacing="0.0957322235" fill="#151515" fill-opacity="0.88378138">
                     <tspan x="37.0705764" y="30.122449">startProcessLocked(hostingRecord, entryPoint) 带入口点</tspan>
+                </text>
+            </g>
+            <g id="架构图/模块-源码备份-38" transform="translate(1232.000000, 473.000000)">
+                <rect id="矩形" stroke="#979797" fill="#D5FFA2" x="0.5" y="0.5" width="173.816901" height="33" rx="6.9623431"></rect>
+                <text id="方法过程" font-family="NotoSansCJKsc-Bold, Noto Sans CJK SC" font-size="12.1841004" font-weight="bold" letter-spacing="0.134025104" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="11.1847185" y="14">ProcessList#startProcess</tspan>
+                </text>
+                <text id="代码地址" font-family="NotoSansCJKsc-Light, Noto Sans CJK SC" font-size="8.70292887" font-weight="300" letter-spacing="0.0957322235" fill="#151515" fill-opacity="0.88378138">
+                    <tspan x="14.2951452" y="30.122449">带入口类 android.app.ActivityThread</tspan>
                 </text>
             </g>
             <g id="架构图/模块-源码备份-49" transform="translate(1423.000000, 473.000000)">
@@ -948,11 +1023,12 @@ int bindServiceLocked(IApplicationThread caller, IBinder token, Intent service,
 </svg>
 
 
+
 * 进程创建的执行位于AMS所在的系统进程之中；
 * （AMS进程）首先，构建一个ProcessRecord记录，并将其记录到AMS中；
 * （AMS进程）AMS通过socket通信，通知zygote来创建一个新的进程，同时指定入口点为 `android.app.ActivityThread` ;
-* （APP进程）新的进程启动后，执行ActivityThread中的方法，执行通知AMS来attachApplication；
-* （AMS进程）AMS中，通过PID获取之前存储的ProcessRecord，然后将ApplicationThread赋值给ProcessRecord的成员变量thread；
+* （APP进程）新的进程启动后，执行ActivityThread中的方法，通知AMS来执行attachApplication；
+* （AMS进程）AMS中，通过PID获取之前存储的ProcessRecord，然后将ApplicationThread（代理对象）赋值给ProcessRecord的成员变量thread；
 * 支持完成了关联；
 
 #### 构造ProcessRecord实例
