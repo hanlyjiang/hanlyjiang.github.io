@@ -2199,13 +2199,7 @@ public static abstract class Stub extends android.os.Binder implements android.o
 </svg>
 
 
-### Binder.transactNative()
-
-```cpp
-
-```
-
-
+transact 方法中，调用了具体服务实例的onTransact方法，这个方法由子类负责实现；
 
 
 ## 问题
@@ -2219,6 +2213,8 @@ public static abstract class Stub extends android.os.Binder implements android.o
 具体的需要分析bindService的源码
 
 ### 自定义的Service如何找到的呢？
+
+通过ActivityManagerService来管理，并不注册到系统的ServiceManager进程中。
 
 ## 参考
 

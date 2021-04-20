@@ -7,17 +7,17 @@ Spring Boot 可以让您的配置外部化，以便可以在不同环境中使�
 Spring Boot 使用了一个非常特别的 PropertySource 指令，用于智能覆盖默认值。属性将按照以下顺序处理：**（重点关注加粗的四个- 3，5，6，11）**
 
 1. 默认属性 (通过 SpringApplication.setDefaultProperties 设置). 
-2. @Configuration 类上的 @PropertySource 注解. （Please note that such property sources are     not added to the Environment until the application context is being     refreshed. This is too late to configure certain properties such as logging.* and spring.main.* which     are read before refresh begins. ）
+2. @Configuration 类上的 @PropertySource 注解. （Please note that such property sources are not added to the Environment until the application context is being refreshed. This is too late to configure certain properties such as logging.* and spring.main.* which are read before refresh begins. ）
 3. **配置数据**（Config data） (如 application.properties 类似的文件) 
 4. A RandomValuePropertySource     that has properties only in random.*. 
 5. **操作系统环境变量** （OS environment variables ）； 
 6. **Java系统属性** - Java System     properties (System.getProperties()). 
-7. JNDI     attributes from java:comp/env. 
+7. JNDI attributes from java:comp/env. 
 8. ServletContext init parameters. 
-9. ServletConfig     init parameters. 
-10. Properties from SPRING_APPLICATION_JSON (inline JSON     embedded in an environment variable or system property). 
+9. ServletConfig init parameters. 
+10. Properties from SPRING_APPLICATION_JSON (inline JSON embedded in an environment variable or system property). 
 11. **命令行参数** - Command line arguments. 
-12. properties attribute on     your tests. Available on @SpringBootTest and the test annotations for testing a particular     slice of your application. 
+12. properties attribute on your tests. Available on @SpringBootTest and the test annotations for testing a particular     slice of your application. 
 13. @TestPropertySource     annotations on your tests. 
 14. Devtools global settings properties in the $HOME/.config/spring-boot directory when devtools is active. 
 
@@ -84,10 +84,10 @@ java -jar myproject.jar  --spring.config.location=optional:classpath:/default.pr
 - **通配规则：**
 
 - - 如果最后一个路径段包含 * ，则会以通配模式加载，通配模式下除了搜索当前目录之外，还会搜索当前目录的直接子目录；如：config/*/  可以加载到 /config/redis/application.properties，/config/mysql/application.properties      
-  - 一个通配位置仅可包含一个      * 并且以 */ 结尾，搜索时会检索f */<filename>的文件并加载
+  - 一个通配位置仅可包含一个 * 并且以 */ 结尾，搜索时会检索f */<filename>的文件并加载
   - 通配的文件会按字母顺序进行排序
   - 通配位置仅可在外部目录中使用，无法使用于 classpath: 
 
  
 
-> ⚠️注意：   如通过环境变量来指定属性配置，因为操作系统一般不允许使用 xxx.xxx 的格式，可以使用XXX_XXX的形式来设置（例如： 使用 SPRING_CONFIG_NAME 替换 spring.config.name).  可参考 Binding from Environment  Variables ）  
+> ⚠️注意：如通过环境变量来指定属性配置，因为操作系统一般不允许使用 xxx.xxx 的格式，可以使用XXX_XXX的形式来设置（例如： 使用 SPRING_CONFIG_NAME 替换 spring.config.name).  可参考 Binding from Environment Variables ）  
