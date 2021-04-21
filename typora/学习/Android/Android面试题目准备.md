@@ -329,3 +329,122 @@ intent.putExtras(bundle);
 
 
 
+
+
+# Context
+
+## Context的理解
+
+应用环境的全局信息访问接口，可以访问应用相关的资源和类，允许访问特定于应用程序的资源和类，以及对应用程序级操作（如启动活动，广播和接收意图等）的调用。如：
+
+* 获取资源，包括Resource及AssetsManager，还有各种方便的方法
+* 启动组件，如Activity，Service，广播接收器；
+* 获取系统服务：getSystemService
+* 应用信息：
+  * 应用信息
+  * 数据目录，数据库，缓存目录
+* APP主线程消息：getMainExecutor，getMainLooper
+* 类加载器；
+
+## 四大组件中的Context的来源
+
+* Application，Service，Activity都是创建对应的对象示例的时候创建的ContextImpl对象，然后关联起来；
+* 广播接收器则使用的是Application的Context，然后包装成一个新的Context，限制了bindService和registerReceiver相关操作；
+
+
+
+
+
+# Application启动流程
+
+## AMS是如何确认Application启动完成的？关键条件是什么
+
+zygote进程会向AMS返回（socket）进程的PID，如果PID大于0，则启动成功；
+
+```java
+// android.os.ZygoteProcess#attemptZygoteSendArgsAndGetResult   
+private Process.ProcessStartResult attemptZygoteSendArgsAndGetResult(
+            ZygoteState zygoteState, String msgStr) throws ZygoteStartFailedEx {
+        try {
+            final BufferedWriter zygoteWriter = zygoteState.mZygoteOutputWriter;
+            final DataInputStream zygoteInputStream = zygoteState.mZygoteInputStream;
+
+            zygoteWriter.write(msgStr);
+            zygoteWriter.flush();
+
+            // Always read the entire result from the input stream to avoid leaving
+            // bytes in the stream for future process starts to accidentally stumble
+            // upon.
+            Process.ProcessStartResult result = new Process.ProcessStartResult();
+            result.pid = zygoteInputStream.readInt();
+            result.usingWrapper = zygoteInputStream.readBoolean();
+
+            if (result.pid < 0) {
+                throw new ZygoteStartFailedEx("fork() failed");
+            }
+
+            return result;
+        } catch (IOException ex) {
+            zygoteState.close();
+            Log.e(LOG_TAG, "IO Exception while communicating with Zygote - "
+                    + ex.toString());
+            throw new ZygoteStartFailedEx(ex);
+        }
+ }
+```
+
+## 应用如何注册到AMS
+
+应用进程启动后，会执行ActivityThread的main方法，然后会执行binder通信调用AMS的attachApplication方法将进程的ApplicationThread的代理对象注册到AMS中；在AMS中，AMS会为进程创建一个`ProcessRecord`，然后将进程的`ApplicationThread`的代理对象记录在其中；
+
+```java
+// com.android.server.am.ActivityManagerService#attachApplicationLocked
+private boolean attachApplicationLocked(@NonNull IApplicationThread thread,
+            int pid, int callingUid, long startSeq) {
+        ProcessRecord app;
+        // 省略若干代码
+        // Make app active after binding application or client may be running requests (e.g
+        // starting activities) before it is ready.
+        app.makeActive(thread, mProcessStats);
+}
+
+// com.android.server.am.ProcessRecord#makeActive
+public void makeActive(IApplicationThread _thread, ProcessStatsService tracker) {
+        thread = _thread;
+        mWindowProcessController.setThread(thread);
+}
+```
+
+
+
+## Application#constructor、Application#onCreate、Application#attach的执行顺序
+
+1. Application#constructor
+2. Application#attach
+3. Application#onCreate
+
+构造之后就会执行attach来绑定基础context，然后在通知AMS来attachApplication(记录进程-同时也记录AppcalitionThread)，AMS执行attach时会通知ApplicationThread处理，此时调用handleBindApplication，在这里只想了onCreate
+
+
+
+```java
+  // android.app.ActivityThread#handleBindApplication
+    private void handleBindApplication(AppBindData data) {
+        Application app;
+        try {
+            // If the app is being launched for full backup or restore, bring it up in
+            // a restricted environment with the base application class.
+            app = data.info.makeApplication(data.restrictedBackupMode, null);
+            // Do this after providers, since instrumentation tests generally start their
+            // test thread at this point, and we don't want that racing.
+            mInstrumentation.onCreate(data.instrumentationArgs);
+            // 这里执行onCreate
+            mInstrumentation.callApplicationOnCreate(app);
+        }
+    }
+```
+
+
+
+# startActivity的具体过程
+

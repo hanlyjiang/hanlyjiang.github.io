@@ -195,7 +195,7 @@ docker run -it --rm --name aosp-builder -v $PWD:/src $BUILD_IMAGE
      ```cpp
      namespace base {
          
-     size_t psize = getpagesize();
+     op
          
      ssize_t SendFileDescriptorVector(borrowed_fd sockfd, const void* data, size_t len,
      ```
