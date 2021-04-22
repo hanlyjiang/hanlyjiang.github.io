@@ -9,6 +9,53 @@
 * [编写自己的主题](https://theme.typora.io/doc/zh/Write-Custom-Theme/)
 * [主题自动编号](https://github.com/lipengzhou/typora-theme-auto-numbering)
 
+### 设置字体
+
+```java
+/* https://developer.mozilla.org/zh-CN/docs/Web/CSS/font-family */
+html {
+    /* 默认字体大小 */
+    font-size: 14px;
+}
+
+/* 使用SF Pro字体，无衬线字体族 */
+body {
+    font-family: "SF Pro", sans-serif !important;
+    color: #333333;
+    -webkit-font-smoothing: auto;
+    line-height: 1.6rem;
+    letter-spacing: 0;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+/* 代码块 */
+#write .md-fences {
+    font-size: 0.9rem;
+    padding: 0.5rem !important;
+    border-radius: 2px;
+    /* 调整为等宽字体，使用Apple的SF字体 */
+    font-family: "SF Mono", monospace !important;
+    word-wrap: normal;
+    color: #24292e;
+    background-color: #F6F8FA;
+    border: none;
+}
+
+/*行内代码*/
+#write code, tt {
+    margin: 0 2px;
+    border-radius: 2px;
+    /* 调小一点 */
+    font-size: 0.9em;
+    /* 调整为等宽字体，使用Apple的SF字体 */
+    font-family: "SF Mono", monospace  !important;
+    color: var(--drake-highlight);
+}
+```
+
+
+
 ## PicGo图床配置
 
 0. **参考文档：**
@@ -46,8 +93,6 @@
 ### Gitee图床的限制
 
 gitee图片文件大小超过1M之后，需要登录才能使用。暂时无解
-
-
 
 ## 分页配置	
 

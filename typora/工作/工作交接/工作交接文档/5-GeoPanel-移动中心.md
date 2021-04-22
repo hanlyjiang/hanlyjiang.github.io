@@ -585,7 +585,6 @@ sync_work_repo_branch https://chuanqi900:stgzsz821006@github.com/3930615/moa-rel
 ### 项目地址
 
 * 项目仓库地址： http://172.17.0.205/GeoPanel/MobileCenter/geopanel-android
-* 相关文档： 
 
 ### 仓库分支及Tag说明
 
@@ -840,10 +839,10 @@ sync_work_repo_branch https://chuanqi900:stgzsz821006@github.com/3930615/moa-rel
 
 #### Tag管理
 
-由于我们在一个仓库中放置了若干个模块，通过分支区分，在建立tag时，也需要相应的区分；另外由于链动也会在仓库中提交tag，所以我们需要对tag的命名作一定的约束，一般tag应将分支名称作为前缀，如：
+由于我们在一个仓库中放置了若干个模块，通过分支区分，在建立tag时，也需要相应的区分；另外由于链动也会在仓库中提交tag，所以我们需要对tag的命名作一定的约束，一般tag应将分支名称作为前缀，用于区分tag是为那个分支（模块）而创建的，如：
 
 * [geo-client-android-v1.2.22](http://172.17.0.205/GeoPanel/MobileCenter/geopanel-android/-/releases/geo-client-android-v1.2.22): 为android端的最新版本tag
-* [geo-app-appmarket-v1.0.2](http://172.17.0.205/GeoPanel/MobileCenter/geopanel-android/-/releases/geo-app-appmarket-v1.0.2)： 为小应用的最新版本tag
+* [geo-app-appmarket-v1.0.2](http://172.17.0.205/GeoPanel/MobileCenter/geopanel-android/-/releases/geo-app-appmarket-v1.0.2)： 为应用市场小应用的最新版本tag
 
 
 
@@ -868,8 +867,6 @@ APP的版本号不与任何项目进行关联，打包时不论针对哪个项�
 2. **UI界面样式调整；**
 3. **迁移到AndroidX；**
 4. **扩展cordova插件；**
-
-
 
 ### 打包配置修改
 
@@ -913,11 +910,11 @@ android
   apply from: '../dist-config.gradle'
   ```
 
-> 具体的每个地方的配置，由于已经有接触并配置过，不再赘述
+> 具体的每个地方的配置，由于已经有接触并配置过，不再赘述。
 
 #### 签名配置
 
-* 设置debug和release相同签名: (platforms/android/app/build.gradle)
+* 设置debug和release相同签名: (`platforms/android/app/build.gradle`)
 
   ```groovy
    buildTypes {
@@ -934,7 +931,7 @@ android
   }
   ```
 
-* 签名信息替换：(platforms/android/gradle.properties)(链动未提供其签名信息，所以我们自己生成了签名并替换链动的配置)
+* 签名信息替换：(`platforms/android/gradle.properties`)(链动未提供其签名信息，所以我们自己生成了签名并替换链动的配置)
 
   ```groovy
   # keyAlias
@@ -947,7 +944,7 @@ android
   MOA_RELEASE_STORE_PASSWORD=9b1d0e07ee4bdb03e2249bf57f6974a4
   ```
 
-  
+  android在上面的属性文件中定义变量，引用的地方在app模块的`build.gradle`文件中。
 
 ### 迁移到AndroidX
 
@@ -959,13 +956,11 @@ google最初发布了support库（如：v4，v7，design），之前很多控件
 
 ### UI界面样式调整
 
-在MOA最初应用到南山项目时，按照南山的UI界面进行了一波界面调整。主要包括：
+在MOA最初应用到南山项目时，按照南山的UI界面进行了一波界面调整，后续我们针对各个项目的版本都是基于此套UI提供的。修改内容部分主要包括：
 
 * 登录界面替换；
 * 所有native页面的顶部样式；
 * 基础小应用的顶部样式及界面样式；
-
-
 
 ### 扩展cordova插件
 
@@ -1152,5 +1147,41 @@ APP整体的架构如下：
 
 ## 其他说明
 
-由于最初规划是链动开发基础版本，后续由公司自行维护，故前期部分修改并未特别严格的考虑同链动的代码后续的合并。且我方代码只有非常少的部分同步到了链动，故后续合并代码时应该特别注意。==建议合并代码后再与合并前的代码进行对比，确认合并所产生的差异==。
+由于最初规划是链动开发基础版本，后续由公司自行维护，故前期部分修改并未特别严格的考虑同链动的代码后续的合并。且我方代码只有非常少的部分同步到了链动，故后续合并代码时应该特别注意。
 
+1. ==谨慎使用git的自动合并功能，链动方提供的小修改最好使用手动挑代码的方式将代码合并；==。
+
+2. ==如遇到大的修改，可使用git自动合并功能，但是自动合并后，请务必和合并前的代码进行比对，仔细检查是否有自动合并覆盖了我方修改的部分；==
+3. ==始终建议合并代码后再与合并前的代码进行对比，确认合并所产生的差异==
+
+
+
+
+
+# 移动中心APP-android项目开发简要说明
+
+## 如何在AndroidStudio中打开项目？
+
+### 获取代码
+
+代码仓库位于 http://172.17.0.205/GeoPanel/MobileCenter/geopanel-android ，可通过如下命令获取代码，并切换分支到android端主分支
+
+```shell
+git clone -b geo-client-android/master git@172.17.0.205:GeoPanel/MobileCenter/geopanel-android.git 
+```
+
+### 打开项目
+
+由于项目基于Cordova开发，项目结构也是沿用了cordova的文件结构，供AndroidStudio打开的目录并不是根目录。
+
+android项目位于的目录为： ==platforms/android==，使用androidstudio打开此目录即可；
+
+
+
+
+
+# 移动中心扩展JS-API的方式
+
+## 概述
+
+如上所述，移动中心APP基于Cordova进行扩展，所以JS-APi扩展的方式和Cordova一致。

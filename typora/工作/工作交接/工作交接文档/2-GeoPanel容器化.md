@@ -259,7 +259,7 @@ docker buildx ls
 >
 > 怎么确定一个可执行文件/so库的对应的执行架构？ 可以通过 `file {可执行文件路径}` 来查看，
 >
-> 如下面时macOS上执行file命令的输入，可以发现macOS上的git程序可以兼容两种架构-`x86_64&arm64e`：
+> 如下面是macOS上执行file命令的输入，可以发现macOS上的git程序可以兼容两种架构-`x86_64&arm64e`🙄：
 >
 > ```shell
 > file $(which git)
@@ -584,7 +584,7 @@ RUN cd postgresql-11.6 \
 ENV PATH $PATH:/usr/local/pgspider/bin
 ```
 
-
+上面的镜像构建完成之后，镜像中即包含了pgspider的源码，已经编译好的pgspdier，接下来我们会基于此镜像进行构建；
 
 ## base镜像构建
 
