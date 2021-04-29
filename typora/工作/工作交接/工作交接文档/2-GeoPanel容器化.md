@@ -1,3 +1,11 @@
+---
+title: GeoPanel容器化完全指南
+author: 蒋航航
+tags: Docker
+---
+
+
+
 # GeoPanel容器化概览
 
 此部分主要工作是对GeoPanel中的各服务进行容器化改造，即制作docker镜像，然后对服务进行容器化编排，简化部署步骤，适应更加智能化的部署需求。

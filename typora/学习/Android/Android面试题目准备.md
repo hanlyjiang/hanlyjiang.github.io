@@ -1,7 +1,11 @@
 ---
-时间：2021/03/12
-分类：
-- Android知识点
+title: Android面试知识准备
+author: Hanly Jiang
+creator: HJ
+subject: Android
+tags:
+  - Android知识点
+  - 面试
 ---
 
 # Activity的启动模式

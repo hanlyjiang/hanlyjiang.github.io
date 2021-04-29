@@ -344,3 +344,115 @@ classDiagram
 
 
 
+## 文件导出
+
+### 普通导出
+
+在`版本0.10.3 (5294)`中开始支持添加页眉和页脚了。
+
+### pandoc导出
+
+#### 安装
+
+```shell
+brew install pandoc
+```
+
+不过上面的命令安装失败，所以才用了pkg安装的方式，直接从[github的release页面](https://github.com/jgm/pandoc/releases)下载pkg文件安装即可。
+
+#### 使用-概述
+
+* [typora的pandoc帮助文档](https://support.typora.io/Install-and-Use-Pandoc/)： 包括安装，卸载，使用。
+
+使用Typora导出和直接使用pandoc的命令行导出还是有区别的，使用Typora导出时，不是直接将markdown文件传递给pandoc，而是将typora中一个内部的ast传递给pandoc。typora导出的样式上会保持一致，但是pandoc直接导出时，格式会不一样。
+
+另外，不用pandoc的话，HTML/PDF也可以导出。只有其他格式导出可能会使用pandoc。
+
+
+
+#### pdf引擎
+
+Pandoc 提供了多个引擎
+
+### 导出PDF
+
+#### 分页
+
+1. 设置H1标题自动断页；
+2. footnote会自动断页；
+3. 手动添加 `<div style="page-break-after:always" /> ` 也可以分页；
+
+#### 设置页眉和页脚
+
+如： 
+
+* 页眉：`${title} - ${author}`
+* 页脚：`No. ${pageNo} / ${pageCount}`
+
+可以在[YAML Front Matter](https://jekyllrb.com/docs/front-matter/)中为单个文档设置自己的页眉和页脚的信息。
+
+```yaml
+---
+header: 
+footer: Written in Typora
+---
+```
+
+也可以通过元数据来修改，下面的元数据是PDF支持的：
+
+```yaml
+---
+title: Export in Typora
+author: John Snow
+creator: Typora inc.
+subject: Tutorial
+keywords: [Pandoc, Tutorial, Export]
+---
+```
+
+> 注意：当没有声明keywords，typora会使用 tags 。
+
+```yaml
+---
+tags:
+    - Pandoc
+    - Tutorial
+    - Export
+---
+```
+
+
+
+#### 添加自定义内容到PDF
+
+PDF版本是从HTML输出渲染的，所以可以添加HTML内容（包括scripts）来附加元数据。
+
+设置路径： `首选项 → PDF →Append Extra Content` 
+
+效果： 添加一个`<body>` 标签到生成的HTML 中。
+
+示例：
+
+```html
+<meta name="title" content="${title}">
+<div id='_export_cover' style="height:100vh;">
+  <div id='_export_title' style="margin-top: 25%;text-align: center;font-size: 3rem;">
+  </div>
+</div>
+<script>
+var $cover = document.querySelector("#_export_cover");
+var title = document.querySelector("meta[name='title']").getAttribute("content");
+if(!title || title == "${title}") {
+  // no title
+  $cover.remove();
+} else {
+  document.body.insertBefore($cover, document.body.childNodes[0])
+  $cover.querySelector("#_export_title").textContent = title;
+}
+</script>
+```
+
+> 另外也可以使用 LaTex/Pandoc 生成PDF时添加额外的内容
+
+
+
