@@ -357,3 +357,26 @@ services:
 
   
 
+
+
+## 常见问题
+
+### swarm模式下设置/dev/shm 的大小
+
+swarm模式下设置/dev/shm 大小，参考：
+
+- https://stackoverflow.com/questions/55416904/increase-dev-shm-in-docker-container-in-swarm-environment-docker-stack-deploy
+- https://github.com/moby/moby/issues/26714
+- https://github.com/docker/swarmkit/issues/1030#issuecomment-262551740
+
+目前docker run时支持通过选项来指定shm的大小，但是swarm中不支持直接配置，可通过挂载tmpfs的方式实现：
+
+**docker-swarm-shm.yaml**
+
+```yaml
+volumes:
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+           size: 4096000000 # (this means 4GB)
+```

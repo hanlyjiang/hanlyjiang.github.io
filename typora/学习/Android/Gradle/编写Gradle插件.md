@@ -8,11 +8,7 @@ feature:
 isTop: false
 ---
 
-
-
 # 编写一个Android Gradle插件
-
-
 
 自定义gradle插件有如下三种方式（[🔗链接](https://docs.gradle.org/current/userguide/custom_plugins.html#sec:packaging_a_plugin)）：
 
@@ -24,9 +20,43 @@ isTop: false
 
 ## 新建 buildSrc module
 
+```shell
+mkdir -p buildSrc/src/main/kotlin
+touch buildSrc/build.gradle.kts
+# 或者使用groovy的
+touch buildSrc/build.gradle
+```
+
 gradle会在项目中寻找名称为buildSrc模块，将其加载为gradle的插件代码目录。所以我们直接通过菜单新建一个名为 buildSrc 的java/kotlin模块。
 
 然后在build.gradle中添加相关的plugin(java-gradle-plugin)及依赖：
+
+### kotlin
+
+```kotlin
+plugins {
+    id("java")
+    id("java-gradle-plugin")
+    id("org.jetbrains.kotlin.jvm").version("1.3.61")
+}
+
+group = "io.github.hanlyjiang.gradle"
+version = "0.0.2"
+
+
+repositories {
+    google()
+    jcenter()
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+    // 添加android相关build tools依赖，以便使用 android gradle 相关的API
+    implementation("com.android.tools.build:gradle:4.1.3")
+}
+```
+
+### groovy
 
 ```groovy
 plugins {
@@ -400,6 +430,242 @@ android {
     }
 }
 ```
+
+
+
+### kotlin的插件使用
+
+```kotlin
+plugins.apply(io.hanlyjiang.gradle.PluginAssetsCopyPlugin::class.java)
+```
+
+## 设置任务顺序
+
+### 手动触发
+
+dependsOn 设置依赖关系，但需要通过执行我们定义的任务
+
+```kotlin
+val copyTask = subProject.tasks.register("copyApkToHostAssets${variant.name.capitalize()}", Copy::class.java) {
+    it.apply {
+        group = "custom"
+        // 
+        //                dependsOn("assemble${variant.name.capitalize()}")
+        val fileName = File(apkPath).name.replace("-${variant.name}", "")
+        from(apkPath)
+        into(hostProjectAssetsDir)
+        rename {
+            it.replace("-${variant.name}", "")
+        }
+        doLast {
+            log("Copy $apkPath to $hostProjectAssetsDir")
+            if (File(hostProjectAssetsDir, fileName).isFile) {
+                log("Copy Success!!!")
+            } else {
+                log("Copy Failed!!! ")
+            }
+        }
+    }
+}
+subProject.tasks.getByName("assemble${variant.name.capitalize()}").setFinalizedBy(mutableListOf(copyTask))
+```
+
+### 自动触发（android任务执行后执行）
+
+设置 setFinalizedBy 之后， 即可在指定的系统任务任务执行之后执行我们的任务
+
+```kotlin
+subProject.tasks.getByName("assemble${variant.name.capitalize()}").setFinalizedBy(mutableListOf(copyTask))
+```
+
+# 独立项目中开发插件并发布
+
+## 创建独立项目
+
+1. 新建一个module
+
+![image-20210527203820713](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210527203823.png)
+
+## 发布插件到gradle插件仓库
+
+> [Publishing Plugins to the Gradle Plugin Portal](https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html)
+
+如果需要把插件共享给所有人，就需要将插件发布到[Gradle Plugin Portal](https://plugins.gradle.org/)。
+
+### 创建Gradle Plugin Portal账号
+
+包括如下操作：
+
+* 创建账号；
+* 创建API key；
+* 添加API key到gradle配置中；
+
+1. 打开 [Gradle - Registration](https://plugins.gradle.org/user/register) 注册账号；
+
+2. 在API key 标签中找到自己的KEY
+
+   ![image-20210527202058627](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210527202100.png)
+
+3. 编辑 `~/.gradle/gradle.properties` ，添加获取到的配置信息
+
+### 添加插件Publishing 插件到项目
+
+在build脚本中添加：
+
+```kotlin
+plugins {
+    id("java-gradle-plugin")                          
+    id("maven-publish")                               
+    id("com.gradle.plugin-publish") version "0.15.0"  
+}
+```
+
+`com.gradle.plugin-publish` 插件的最新版本可以从 [Gradle - Plugin: com.gradle.plugin-publish](https://plugins.gradle.org/plugin/com.gradle.plugin-publish) 查找。
+
+### 配置将要发布的插件信息
+
+基本信息
+
+```kotlin
+pluginBundle {
+    website = "<substitute your project website>"   
+    vcsUrl = "<uri to project source repository>"   
+    tags = listOf("tags", "for", "your", "plugins") 
+}
+```
+
+详细信息配置
+
+```kotlin
+group = "org.myorg" 
+version = "1.0"     
+
+gradlePlugin {
+    plugins { 
+        create("greetingsPlugin") { 
+            id = "<your plugin identifier>" 
+            displayName = "<short displayable name for plugin>" 
+            description = "<Good human-readable description of what your plugin is about>" 
+            implementationClass = "<your plugin class>"
+        }
+    }
+}
+```
+
+完整实例：
+
+```kotlin
+pluginBundle {
+    website = "https://github.com/ysb33r/gradleTest"
+    vcsUrl = "https://github.com/ysb33r/gradleTest.git"
+    tags = listOf("testing", "integrationTesting", "compatibility")
+}
+gradlePlugin {
+    plugins {
+        create("gradletestPlugin") {
+            id = "org.ysb33r.gradletest"
+            displayName = "Plugin for compatibility testing of Gradle plugins"
+            description = "A plugin that helps you test your plugin against a variety of Gradle versions"
+            implementationClass = "org.ysb33r.gradle.gradletest.GradleTestPlugin"
+        }
+    }
+}
+```
+
+### 发布
+
+执行 `./gradlew publishPlugins` 即可发布，也支持直接指定key和secret
+
+```shell
+./gradlew publishPlugins -Pgradle.publish.key=<key> -Pgradle.publish.secret=<secret>
+```
+
+
+
+### 定义多个插件（分别定义版本）
+
+> [Gradle - How do I use the Plugin Publishing Plugin?](https://plugins.gradle.org/docs/publish-plugin)
+
+
+
+
+
+## 发布到本地配置
+
+### 定义一个本地repo
+
+可以通过发布到本地查看即将发布的插件的文件是什么样的；
+
+```kotlin
+publishing {
+    repositories {
+        maven {
+            name = "localPluginRepository"
+            url = uri("../local-plugin-repository")
+        }
+    }
+}
+```
+
+### 本地使用
+
+#### 生成插件
+
+1. 通过 `./gradlew plugin` 任务来生成插件并安装到指定的repo；
+
+
+
+#### 自定义插件加载repo
+
+> [Using Gradle Plugins](https://docs.gradle.org/current/userguide/plugins.html#sec:custom_plugin_repositories)
+
+默认情况下，gradle 脚本中的 `plugins {}` 配置段只会从公开的  [Gradle Plugin Portal](https://plugins.gradle.org/) 中加载插件，所以我们需要将本地的repo注册进来；
+
+可以在settings 脚本中的pluginManager 段中配置：
+
+ **settings.gradle.kts**
+
+```kotlin
+pluginManagement {
+    repositories {
+        maven {
+            url = "./local-plugin-repository"
+        }
+        gradlePluginPortal()
+    }
+}
+```
+
+#### 引入插件
+
+> [Different ways to apply plugins ? (Gradle Kotlin DSL) - Stack Overflow](https://stackoverflow.com/questions/48290389/different-ways-to-apply-plugins-gradle-kotlin-dsl)
+
+kotlin中引入插件的时候需要注意，需要按如下方式分两步引入：
+
+```kotlin
+// 1. 引入插件到classpath
+plugins {
+    id("com.android.library")
+    id("signing")
+    `maven-publish`
+
+    // 引入我们本地仓库中的gradle插件（但是不应用-通过apply false实现)
+    id("com.github.hanlyjiang.android_maven_pub") version ("0.0.3") apply (false)
+}
+
+// 2. 实际应用插件
+android {
+}
+
+dependencies {
+}
+// 这个时候再引入插件一次，这时会应用插件
+apply(plugin = "com.github.hanlyjiang.android_maven_pub")
+```
+
+
+
+
 
 ## 参考文档
 

@@ -53,7 +53,7 @@ vim /lib/systemd/system/docker.service
 6. **重启docker**
 ```
 sudo systemctl daemon-reload
-sudo systemctl restart docker
+sudo systemctl restart docker
 sudo systemctl enable docker # 运行docker自动启动，这里可以不执行
 ```
 7. **启动之后确认docker 没有问题，确认之前的容器和镜像都还在，然后删除旧的/var/lib/docker/目录**
@@ -63,5 +63,4 @@ sudo systemctl enable docker # 运行docker自动启动，这里可以不执行
 ## 参考文章：
 
 * [https://www.cnblogs.com/insist-forever/p/11739207.html](https://www.cnblogs.com/insist-forever/p/11739207.html?fileGuid=qQhpHWDVq8HrH9kj)
-
 

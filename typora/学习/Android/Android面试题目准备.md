@@ -116,7 +116,7 @@ A.onResume -->  A.onPause --> B.onCreate --> B.onStart --> B.onResume --> A.onSt
 
 ```mermaid
 graph LR
-A.onStop --> B.onPause --> A.onStart --> A.onResume --> B.onStop --> B.onDestory
+A.onStop状态 --> B.onPause --> A.onStart --> A.onResume --> B.onStop --> B.onDestory
 
 ```
 

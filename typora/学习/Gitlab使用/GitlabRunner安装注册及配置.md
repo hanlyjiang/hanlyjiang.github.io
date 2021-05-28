@@ -176,7 +176,7 @@ Gitlab-CI 任务在 runner 机器上执行，会先通过git获取对应仓库�
 
     ```shell
     # 安装编译依赖库
-    sudo yum install  -y autoconf gcc openssh zlib-devel
+    sudo yum install  -y autoconf gcc openssh zlib-devel libcurl-devel
     
     # 编译并安装
     make configure ;# as yourself

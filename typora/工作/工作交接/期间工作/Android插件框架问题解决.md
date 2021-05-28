@@ -1,8 +1,20 @@
+# Android插件化框架问题解决
+
 ## 问题
 
 ![C4093E75BD1AF826BA935C7FE548E963](../../../../../../../../Containers/com.tencent.qq/Data/Library/Caches/Images/C4093E75BD1AF826BA935C7FE548E963.png)
 
 ![1091DA40B8F3268BD56147798D66F604](../../../../../../../../Containers/com.tencent.qq/Data/Library/Caches/Images/1091DA40B8F3268BD56147798D66F604.png)
+
+华为核心错误：
+
+```shell
+AndroidRuntime: java.lang.NullPointerException: Attempt to invoke interface method 'boolean com.huawei.android.view.IHwWindowManager.isAppControlPolicyExists()' on a null object reference 
+at com.huawei.android.view.HwWindowManager.isAppControlPolicyExists(HwWindowManager.java:504) 
+at android.app.Dialog.show(Dialog.java:388)
+```
+
+
 
 ```shell
     Process: com.geostar.futian:plugin, PID: 17041
@@ -67,4 +79,10 @@
         at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1006) 
 17041-17041 E/SFSDK-SangforAuth: [SangforAuth:vpnLogout:191] call logout failed, VPN没有初始化
 ```
+
+
+
+## 解决
+
+参考： [Android-Plugin-Framework-v0.70 · 标签 · 开发部 / 移动组 / 历史项目 / robox · GitLab](http://172.17.0.205/Development/Mobile/history/robox/-/tags/Android-Plugin-Framework-v0.70)
 

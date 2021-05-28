@@ -61,3 +61,40 @@
 # Docker官方宣传
 
 **构建，分享，运行**
+
+
+
+
+
+# Docker自身问题定位
+
+## 查看日志
+
+docker引擎日志，docker查看服务守护进程本身日志(注意不是容器日志)
+
+```
+journalctl -u docker.service
+```
+
+>  [Docker 日志都在哪里？怎么收集？ - YatHo - 博客园 (cnblogs.com)](https://www.cnblogs.com/YatHo/p/7866029.html)
+
+`Docker 引擎日志` 一般是交给了 `Upstart`(Ubuntu 14.04) 或者 `systemd` (CentOS 7, Ubuntu 16.04)。前者一般位于 `/var/log/upstart/docker.log` 下，后者一般通过 `jounarlctl -u docker` 来读取。不同系统的位置都不一样，SO上有人总结了一份列表，我修正了一下，可以参考：
+
+| 系统                   | 日志位置                                                     |
+| ---------------------- | ------------------------------------------------------------ |
+| Ubuntu(14.04)          | `/var/log/upstart/docker.log`                                |
+| Ubuntu(16.04)          | `journalctl -u docker.service`                               |
+| CentOS 7/RHEL 7/Fedora | `journalctl -u docker.service`                               |
+| CoreOS                 | `journalctl -u docker.service`                               |
+| OpenSuSE               | `journalctl -u docker.service`                               |
+| OSX                    | `~/Library/Containers/com.docker.docker/Data/com.docker.driver.amd64-linux/log/d‌ocker.log` |
+| Debian GNU/Linux 7     | `/var/log/daemon.log`                                        |
+| Debian GNU/Linux 8     | `journalctl -u docker.service`                               |
+| Boot2Docker            | `/var/log/docker.log`                                        |
+
+
+
+## 遇到的奇怪问题及解决
+
+### 卡死怎么重启
+

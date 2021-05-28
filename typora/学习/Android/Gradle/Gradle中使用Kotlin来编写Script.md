@@ -1,0 +1,225 @@
+# 使用Kotlin编写gradle脚本
+
+[toc]
+
+## 参考文档
+
+## 概述
+
+### IDE 支持
+
+|                          | Build import | Syntax highlighting <sub>1</sub> | Semantic editor <sub>2</sub> |
+| -----------------------: | :----------: | :------------------------------: | :--------------------------: |
+|            IntelliJ IDEA |    **✓**     |              **✓**               |            **✓**             |
+|           Android Studio |    **✓**     |              **✓**               |            **✓**             |
+|              Eclipse IDE |    **✓**     |              **✓**               |              ✖               |
+|                    CLion |    **✓**     |              **✓**               |              ✖               |
+|          Apache NetBeans |    **✓**     |              **✓**               |              ✖               |
+| Visual Studio Code (LSP) |    **✓**     |              **✓**               |              ✖               |
+|            Visual Studio |    **✓**     |                ✖                 |              ✖               |
+
+1. Gradle Kotlin DSL scripts 中的Kotlin语法高亮
+2.  Gradle Kotlin DSL scripts 中支持代码补全，导航到源码，文档查看，重构等等；
+
+
+
+### 限制
+
+
+
+### Kotlin DSL 脚本
+
+#### 命名
+
+Groovy DSL script 文件使用 `.gradle` 扩展文件名
+
+Kotlin DSL script 文件使用 `.gradle.kts` 扩展文件名
+
+#### 激活并使用kotlin dsl
+
+* 将脚本文件命名为 `.gradle.kts` 即可激活。也适用于 [settings file](https://docs.gradle.org/current/userguide/build_lifecycle.html#sec:settings_file)（ `settings.gradle.kts`)和 [initialization scripts](https://docs.gradle.org/current/userguide/init_scripts.html#init_scripts).
+* 为了得到更好的IDE支持，建议使用如下命名约定：
+  * Settings脚本命名为 `*.settings.gradle.kts`（包括所有从settings脚本中引入的脚本）
+  * [initialization scripts](https://docs.gradle.org/current/userguide/init_scripts.html#init_scripts) 按 `*.init.gradle.kts`的命名模式命名，或者简单的取名为 `init.gradle.kts`。
+* kotlin DSL 构建脚本隐式的导入了如下内容：
+  * [default Gradle API imports](https://docs.gradle.org/current/userguide/writing_build_scripts.html#script-default-imports)
+  * 在`org.gradle.kotlin.dsl` 和 `org.gradle.kotlin.dsl.plugins.dsl` 包中的Kotlin DSL API
+
+## 用法说明
+
+### kotlin中读取运行时属性
+
+> [Gradle Kotlin DSL Primer](https://docs.gradle.org/current/userguide/kotlin_dsl.html#kotdsl:properties)
+
+gradle 拥有两种运行时属性:
+
+1.  [*project properties*](https://docs.gradle.org/current/userguide/build_environment.html#sec:project_properties) 
+2. [*extra properties*](https://docs.gradle.org/current/userguide/writing_build_scripts.html#sec:extra_properties)
+
+#### 项目属性
+
+可以通过kotlin的代理属性来访问:
+
+**build.gradle.kts**
+
+```kotlin
+// 属性必须存在
+val myProperty: String by project  
+// 属性可以不存在
+val myNullableProperty: String? by project 
+```
+
+#### extra 属性
+
+extra属性在任意实现了[ExtensionAware](https://docs.gradle.org/current/dsl/org.gradle.api.plugins.ExtensionAware.html#org.gradle.api.plugins.ExtensionAware)接口的对象上都可以访问; 
+
+**build.gradle.kts**
+
+```kotlin
+val myNewProperty by extra("initial value")   // ❶
+val myOtherNewProperty by extra { "calculated initial value" }   //❷ 
+
+val myProperty: String by extra   // ❸
+val myNullableProperty: String? by extra   // ❹
+```
+
+❶ 在当前上下文(当前为project中)创建一个名为`myNewProperty`新的extra属性,并且初始化其值为 "initial value"
+
+❷ 同 ❶ ，不过属性的初始值是通过lamdba表达式来计算的;
+
+❸ 绑定当前上下文(当前为project)中的属性到myProperty属性中;
+
+❹ 同 ❸ ，不过允许值为null；
+
+
+
+#### 在子项目中访问rootProject的属性
+
+```kotlin
+val myNewProperty: String by rootProject.extra
+```
+
+
+
+#### 在任务中定义和使用属性
+
+任务也继承了ExtensionAware，所以我们也可以在任务中使用extra属性
+
+```kotlin
+tasks {
+    test {
+        val reportType by extra("dev")  
+        doLast {
+            // Use 'suffix' for post processing of reports
+        }
+    }
+
+    register<Zip>("archiveTestReports") {
+        val reportType: String by test.get().extra  
+        archiveAppendix.set(reportType)
+        from(test.get().reports.html.destination)
+    }
+}
+```
+
+#### 通过map格式定义和访问extra属性
+
+```kotlin
+extra["myNewProperty"] = "initial value"   // ❶
+
+tasks.create("myTask") {
+    doLast {
+        println("Property: ${project.extra["myNewProperty"]}")  // ❷ 
+    }
+}
+```
+
+
+
+## 迁移gradle构建逻辑到Kotlin
+
+> 参考文档：
+>
+> 1. [Migrating build logic from Groovy to Kotlin (gradle.org)](https://docs.gradle.org/current/userguide/migrating_from_groovy_to_kotlin_dsl.html)
+> 2. [Android Gradle脚本从Groovy迁移到Kotlin DSL - 圣骑士wind - 博客园 (cnblogs.com)](https://www.cnblogs.com/mengdd/p/android-gradle-migrate-from-groovy-to-kotlin.html)
+
+### 准备groovy脚本
+
+1. 引号统一为双引号
+2. 方法调用加上括号
+3. 赋值操作加上等号
+
+
+
+#### 引号统一
+
+* 通过==⌘⇧R==快捷键调出查找替换工具窗，将文件匹配设置为 `.gradle` ，然后将所有单引号替换为双引号。
+
+![image-20210507110114689](../../../../../../../../Application Support/typora-user-images/image-20210507110114689.png)
+
+* 完成之后重新使用gradle文件同步项目，查看是否有错误
+
+
+
+#### 赋值和属性修改
+
+* 将所有的赋值操作添加上等号
+* 所有的函数调用操作添加括号
+
+这里就需要根据实际情况进行调整了。
+
+
+
+
+
+### 重命名文件
+
+将 `.gradle`文件重命名为`.gradle.kts`，通过如下命令可以完成重命名操作
+
+```shell
+find . -name "*.gradle" -type f | xargs -I {} mv {} {}.kts
+```
+
+
+
+
+
+比较麻烦，且AndroidStudio新建的项目默认还是groovy的，故暂时不迁移。
+
+
+
+
+
+### 其他
+
+#### 在kotlin rootProject脚本中访问 gradle 属性
+
+```kotlin
+allprojects {
+    repositories {
+        maven {
+            name = "Sonatype-Snapshots"
+            setUrl("https://oss.sonatype.org/content/repositories/snapshots")
+            credentials(PasswordCredentials::class.java) {
+                username = property("ossrhUsername").toString()
+                password = property("ossrhPassword").toString()
+            }
+        }
+        google()
+        jcenter()
+        mavenCentral()
+    }
+}
+```
+
+
+
+#### 定义任务
+
+```kotlin
+tasks.register("clean", Delete::class.java) {
+    group = "build"
+    delete(rootProject.buildDir)
+}
+```
+

@@ -150,3 +150,143 @@ tags:
         return m;
     }
 ```
+
+## Activity
+
+### 问题
+
+1. Activity是什么？Activity的生命周期？不同的生命周期做什么事情？
+
+2. Activity的几种启动模式？这几种启动模式分别有什么用途？为什么要这几种启动模式？如何指定启动模式？
+
+3. Activity在系统中的系统启动流程（何时创建？如何创建？如何启动？启动过程中做了些什么事情）
+
+4. 场景问题：
+
+   1. A启动B，调用序列
+   2. A启动B，然后back，调用序列
+   3. A启动B，然后Home键
+
+5. onSaveInstance的调用时机
+
+   
+
+### 回答
+
+#### Activity是什么？Activity的生命周期？不同的生命周期做什么事情？
+
+1. 是什么：Android四大组件之一，用于提供界面交互；
+2. 生命周期：onCreate，onStart，resume，stop，resume，destory
+3. 生命周期中做什么？
+   1. onCreate是实例创建时调用，只调用一次，我们应该执行基本的应用启动逻辑，如设置布局，绑定数据到列表，关联ViewModel；
+   2. onStart，进入已开始状态时调用，我们应该为Activity进入前台交互做准备，如初始化界面的内容；
+   3. onResume，进入已恢复状态是调用，应用交互状态，等待事件发生；
+   4. onPause，Activity不再位于前台时调用，我们应该暂停任务的执行，释放系统资源及传感器，但是由于时间很短，不应执行用户数据保存，网络请求及数据库事物。（因为你pause了，别人才能resume）
+   5. onStop： 不再对用户可见，新的Activity覆盖了整个屏幕，或者自己的finish被调用时执行，这时执行相对耗时的关闭操作，数据持久化操作；
+   6. onDestory： 用户关闭或者主动调用finish时调用，配置变更导致系统自动销毁时调用；
+
+#### Activity的几种启动模式？这几种启动模式分别有什么用途？为什么要这几种启动模式？如何指定启动模式？
+
+1. 启动模式用于控制Activity的实例个数和所处的任务栈；
+2. 标准模式（`standard`）可以多个实例，可以分布在多个任务栈，一个任务栈中可以有多个实例；
+3. `singleTop` 和标准模式差不多，唯一的区别在于如果目标任务栈的栈顶有了一个Activity，则不会重新创建实例，而是调用起`onNewIntent` 方法；
+4. `singleTask`则限制了Activity在一个任务栈中的实例的数量，每个任务栈中，一个Activity只能有一个实例，如果目标任务栈中已经存在了该Activity的实例，则会复用该实例，如果这个时候Activity不在栈顶，那么其上的Activity都会被销毁，然后调用目标实例的`onNewIntent`方法；
+5. `singleInstance` 则限制系统中只能有一个对应的Activity实例，所以也只能存在于一个任务栈，该任务栈中也无法添加其他Activity。
+6. ==为什么需要这几种启动模式？分别的用途？： 待补充==
+7. 如何指定启动模式：通过Manifest或者Intent的标记可以指定启动模式，其中通过Intent设置标记的优先级要高一些，不过通过Intent无法将Activity设置为singleInstance。
+
+#### Activity在系统中的系统启动流程（何时创建？如何创建？如何启动？启动过程中做了些什么事情）
+
+> 待补充
+
+#### 场景问题
+
+##### A启动B，调用序列
+
+```mermaid
+graph LR
+A.onResume -->  A.onPause --> B.onCreate --> B.onStart --> B.onResume --> A.onStop
+```
+
+> 1. 栈顶的需要先pause，然后才执行下面的方法；
+> 2. 后来者显示出来之后（resume），才会给机会旧的去执行stop；
+
+##### A启动B，然后back，调用序列
+
+```mermaid
+graph LR
+A.onStop状态 --> B.onPause --> A.onStart --> A.onResume --> B.onStop --> B.onDestory
+
+```
+
+> 解释：
+>
+> 1. 栈顶的需要先pause，然后才执行下面的方法；
+> 2. 由于还在栈中，所以不会再create；
+> 3. 后来者显示出来之后（resume），才会给机会旧的去执行stop；
+
+##### A启动B，然后Home键
+
+```mermaid
+graph LR
+P1[原始状态] --> PP[A.onStop]
+P1 --> P3[B.onResume]
+
+P2[HOME键]
+P2 --> B.onPause --> B.onStop --> B.onSaveInstanceState 
+
+重新进入 --> B.onStart --> B.onResume
+```
+
+> 1. 注意，此时A不参与（A不在焦点）
+> 2. 实际上是B.pause，然后执行桌面Activity的start-resume，再执行B的stop，saveInstanceState
+
+#### onSaveInstance的调用时机
+
+1. 在Android8.0 之前是在onStop之前，但是不确定在onPause之前还是之后。
+2. 在Android8.0 之后是在onStop之后，但是在onDestory之前。
+
+
+
+#### Window和Activity
+
+* Window 是什么？
+  Window 是 Android 中窗口的宏观定义，主要是管理 View 的创建，以及与 ViewRootImpl 的交互，将 Activity 与 View 解耦。
+
+* Activity 与 PhoneWindow 与 DecorView 之间什么关系？
+  一个 Activity 对应一个 Window 也就是 PhoneWindow，一个 PhoneWindow 持有一个 DecorView 的实例，DecorView 本身是一个 FrameLayout。
+
+  > 参考链接：https://blog.csdn.net/freekiteyu/article/details/79408969 
+
+## 事件分发机制
+
+### 问题
+
+1. 事件分发机制说明？有哪些流程？
+
+2. 滑动冲突如何解决？具体在哪个方法里面解决？如何判断滑动方向？
+
+### 回答
+
+#### 事件分发机制说明？有哪些流程？
+
+1. 事件分发有三个流程：分发，拦截，消费；
+2. 事件最先到达Activity，然后由Activity进行分发(dispatchTouchEvent)，如果Activity分发过程中没有对象处理事件，则最终由Activity进行处理；
+3. Activity分发时，会调用Window的superDispatchTouchEvent方法，然后调用到DecorView的（也就是最顶层的ViewGroup的）dispatchTouchEvent方法；
+4. ViewGroup则首先尝试拦截，如果本身不拦截（onInterceptTouchEvent），则继续往子View传递；
+5. View如果消费事件，则返回true，View如果没有消费事件，则又往上传递，看是否有ViewGroup来消费事件（onTouchEvent）；
+6. 如果ViewGroup也都没有消费事件，则最终由Activity来处理；
+
+#### 滑动冲突如何解决？具体在哪个方法里面解决？如何判断滑动方向？
+
+1. 有两种方法：
+   1. 外部拦截，在上层ViewGroup中拦截
+   2. 内部拦截，在View中拦截
+2. 外部拦截：在ViewGroup的`onInterceptTouchEvent`方法中进行是否拦截的逻辑判断；
+3. 内部拦截：在子控件事件处理的`dispatchTouchEvent`过程中适当的时机调用`requestDisallowInterceptTouchEvent`方法来告知上层的容器拦截或者不拦截事件；
+4. **判断滑动方向**：
+   * 屏幕左上角坐标为 $(0,0)$  ，根据当前事件的坐标减去手指落下时的坐标，得到两个值$dx，dy$ 
+   * 如果 $dx > 0$，则表示向右滑动，反之，则向左滑动
+   * 如果 $dy > 0$ ，则表示向下滑动，反之，则向上滑动
+   * 通过打开触摸位置可以看到触摸中的坐标及 $dx$ 和 $dy$
+

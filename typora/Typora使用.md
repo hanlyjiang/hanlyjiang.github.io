@@ -456,3 +456,40 @@ if(!title || title == "${title}") {
 
 
 
+# 与其他工具的结合
+
+## 结合IDEA使用
+
+### 配置好的效果
+
+我们设置通过IDEA的上下文菜单在Typora中打开文件，配置好之后的效果如下图：
+
+![image-20210519153506512](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210519153508.png)
+
+点击typora之后即可在typora中打开选中的README.md文件，同时将Typora的目录设置为文件所在的目录。
+
+
+
+### 配置方式
+
+1. 在IDEA的偏好设置中找到 `External Tools`，并通过添加按钮添加一个外部工具；
+
+   <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210519153703.png" alt="image-20210519153700870" style="zoom:67%;" />
+
+2. 在弹出的设置表单中填写如下内容
+
+   ![image-20210519153757974](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210519153759.png)
+
+   其中，Name，Group，Description可随意填写，Program则需要指向我们自己的一个脚本，脚本内容如下，可自行新建文件保存到合适的位置：
+
+   ```shell
+   #!/bin/zsh 
+   # 使用typora打开
+   open -a typora $*
+   ```
+
+   另外两个 Arguments 及 Working directory则可通过输入框旁边的➕号进行选择；
+
+3. 添加完毕后点击OK保存；
+
+4. 在文件或目录上右键即可在Typora中打开选中的文件或者目录；

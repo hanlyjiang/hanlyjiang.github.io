@@ -1,8 +1,21 @@
-# Gitlab持续集成与持续部署
+---
+title: 'Gitlab持续集成与持续部署-实例'
+date: 2021-05-26 16:12:17
+tags: [Gitlab,CICD]
+published: true
+hideInList: false
+feature: 
+isTop: false
+---
+
+
+本篇文章介绍如何基于Gitlab来配置一个服务集群的自动构建与部署更新，其中服务的更新基于docker来完成，本文主要关注如何完成部署操作，及如何完成gitlab上ci的配置；在完成单一的服务自动部署更新后，我们通过gitlab的include及trigger机制来简化统一部署流程；
+<!-- more -->
 
 ## 前言
 
-我们需要实现GeoPanel的服务的自动构建后的自动更新部署，注意这里我们只需要能做到更新部署的服务即可，服务的初次部署属于低频操作，且和服务器环境相关，需要手动来完成；我们这里假定机器上已经部署好了服务；
+我们需要实现服务的自动构建后的自动更新部署，注意这里我们只需要能做到更新部署的服务即可，服务的初次部署属于低频操作，且和服务器环境相关，需要手动来完成；我们这里假定机器上已经部署好了服务；
+
 
 ## 单一项目的自动部署的示例
 
@@ -565,7 +578,7 @@ include:
 所有嵌套的includes都在当前目标项目的范围内执行，所以可以使用local (相对于目标项目), project, remote, 或者 template includes。
 
 * 可以最多有 100 个 includes；
-* 不能有重复的include （==⚠️注意：这里是指一个文件里面只能有一个include标签，所有不同类型的都需要定义在一个include标签内部==）
+* 不能有重复的include
 
 * 在[GitLab 12.4](https://gitlab.com/gitlab-org/gitlab/-/issues/28212) 及后续版本中, 解析所有文件的时间被限制在30秒之内，所以可能需要考虑文件的复杂度；
 
@@ -993,3 +1006,4 @@ deploy:
 4. 部署完成后，可在独立部署仓库中生成一个部署环境，点击即可前往；
 
    ![image-20210526160146582](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526160148.png)
+
