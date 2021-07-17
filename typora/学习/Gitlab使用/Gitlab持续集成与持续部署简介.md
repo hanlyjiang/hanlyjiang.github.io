@@ -2,7 +2,7 @@
 
 ## 前言
 
-我们需要实现GeoPanel的服务的自动构建后的自动更新部署，注意这里我们只需要能做到更新部署的服务即可，服务的初次部署属于低频操作，且和服务器环境相关，需要手动来完成；我们这里假定机器上已经部署好了服务；
+我们需要实现整套服务的自动构建后的自动更新部署，注意这里我们只需要能做到更新部署的服务即可，服务的初次部署属于低频操作，且和服务器环境相关，需要手动来完成；我们这里假定机器上已经部署好了服务；
 
 ## 单一项目的自动部署的示例
 
@@ -573,8 +573,6 @@ include:
 
 执行人需要具有项目的权限；
 
-All [nested includes](https://docs.gitlab.com/ee/ci/yaml/README.html#nested-includes) are executed only with the permission of the user, so it’s possible to use project, remote or template includes.
-
 #### trigger
 
 gitlab可以使用trigger来触发多项目构建，在gitlab-ci配置中，可以使用trigger来定义一个下游流水线的触发器，当Gitlab启动这个trigger的任务时，会创建一个下游流水线；
@@ -993,3 +991,31 @@ deploy:
 4. 部署完成后，可在独立部署仓库中生成一个部署环境，点击即可前往；
 
    ![image-20210526160146582](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526160148.png)
+
+
+
+
+
+## 问题
+
+###  Developer 触发下游项目失败
+
+#### 问题
+
+普通开发人员触发单独的部署项目时，提示没有权限的问题，实际上开发是有这个待触发项目的 Developer 的权限的。对应的错误界面如下：
+
+![image-20210528161618336](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210528161620.png)
+
+关于问题的详细测试记录可参考 ： [“No permissions to trigger downstream pipeline” … for a user who has permissions (#326941) · Issues · GitLab.org / GitLab · GitLab](https://gitlab.com/gitlab-org/gitlab/-/issues/326941)
+
+#### 解决方案
+
+根据人官方文档中对于[在保护分支上运行流水线](https://docs.gitlab.com/ee/user/permissions.html#running-pipelines-on-protected-branches)的说明 ， 保护分支上运行流水线时，权限根据该人员是否具备保护分支的合并和推送权限来决定的；
+
+不过对于保护分支的权限设置，可以推送和合并权限是分开设置的，那么为了能够让我们的 Developer 能够触发保护分支上的流水线，需要设置成什么样子呢？
+
+测试发现，只要允许其中一种即可让对应角色的成员可以触发保护分支上的流水线，所以我们将保护分支的权限设置为如下模式：
+
+![image-20210528162227743](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210528162229.png)
+
+即允许开发人员合并，但是不允许直接推送；
