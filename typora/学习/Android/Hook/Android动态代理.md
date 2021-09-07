@@ -87,6 +87,8 @@ java.lang.reflect.Proxy`: 这是生成代理类的主类，通过 `Proxy类` 生
 
 通过代理接口调用代理实例的一个方法时，将会被分发到关联的invocation Handler对象的 `InvocationHandler#invoke` 方法上，同时将当前的代理实例，一个 标识当前所调用的方法的`java.lang.reflect.Method` 类型的对象及调用参数传递给invoke方法。
 
+
+
 `InvocationHandler#invoke` 这处理方法调用，并且其返回值会作为代理实例的方法调用的返回值；
 
 

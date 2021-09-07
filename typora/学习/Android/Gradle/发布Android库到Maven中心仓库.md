@@ -349,6 +349,9 @@ $ module=apf-library; ./gradlew "$module":publishReleasePublicationToCenterRepos
 
 ## 发布
 
+* close
+* release
+
 > 参考：
 >
 > * [Releasing the Deployment - The Central Repository Documentation (sonatype.org)](https://central.sonatype.org/publish/release/)
@@ -432,7 +435,7 @@ allprojects {
 
 > Central sync is activated for com.github.hanlyjiang. After you successfully release, your component will be published to Central https://repo1.maven.org/maven2/, typically within 10 minutes, though updates to [https://search.maven.org](https://search.maven.org/) can take up to two hours.
 
-也就是说从maven中心仓库中查询需要10分钟左右，从网页搜索则需要2个小时；
+也就是说从maven中心仓库中查询需要10分钟左右，从网页搜索则需要2个小时，可以访问：https://search.maven.org 来搜索，可以通过访问 https://repo1.maven.org/maven2/ 来确认是否被索引了，如果被索引，则可以引入到项目之中；
 
 在gradle中使用则只需要导入mavenCenter() 即可；
 
