@@ -71,7 +71,7 @@ val myNullableProperty: String? by project
 
 #### extra 属性
 
-extra属性在任意实现了[ExtensionAware](https://docs.gradle.org/current/dsl/org.gradle.api.plugins.ExtensionAware.html#org.gradle.api.plugins.ExtensionAware)接口的对象上都可以访问; 
+extra属性在任意实现了[ExtensionAware](https://docs.gradle.org/current/dsl/org.gradle.api.plugins.ExtensionAware.html#org.gradle.api.plugins.ExtensionAware) 接口的对象上都可以访问; 
 
 **build.gradle.kts**
 
@@ -99,7 +99,7 @@ val myNullableProperty: String? by extra   // ❹
 val myNewProperty: String by rootProject.extra
 ```
 
-
+> `by`是kotlin的关键字，表示 provided by ，即属性由某个其他的对象代理
 
 #### 在任务中定义和使用属性
 
@@ -220,6 +220,174 @@ allprojects {
 tasks.register("clean", Delete::class.java) {
     group = "build"
     delete(rootProject.buildDir)
+}
+```
+
+
+
+## 附录
+
+### rootProject kotlin dsl build脚本模板
+
+```kotlin
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    // 定义extra 属性
+    val kotlin_version by extra("1.4.32")
+    val android_gradle_build_version by extra("4.1.3")
+    repositories {
+        maven { setUrl("https://maven.aliyun.com/repository/gradle-plugin") }
+        maven { setUrl("https://maven.aliyun.com/repository/jcenter") }
+        maven { setUrl("https://maven.aliyun.com/repository/google") }
+        maven { setUrl("https://maven.aliyun.com/repository/public") }
+        google()
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:$android_gradle_build_version")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        maven { setUrl("https://maven.aliyun.com/repository/jcenter") }
+        maven { setUrl("https://maven.aliyun.com/repository/google") }
+        maven { setUrl("https://maven.aliyun.com/repository/gradle-plugin") }
+        maven { setUrl("https://maven.aliyun.com/repository/public") }
+        // 加入项目临时仓库，方便测试
+        maven {
+            name = "ProjectLocal-Snapshots"
+            setUrl(File(rootProject.rootDir, "local-maven-repo${File.separator}snapshots"))
+        }
+        maven {
+            name = "ProjectLocal-Release"
+            setUrl(File(rootProject.rootDir, "local-maven-repo${File.separator}release"))
+        }
+
+        // 加入 maven snapshot 仓库及 release 仓库
+        maven {
+            name = "Sonatype-Snapshots"
+            setUrl("https://oss.sonatype.org/content/repositories/snapshots")
+        }
+        maven {
+            name = "Sonatype-Staging"
+            setUrl("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials(PasswordCredentials::class.java) {
+                username = property("ossrhUsername").toString()
+                password = property("ossrhPassword").toString()
+            }
+        }
+        google()
+        mavenCentral()
+        jcenter()
+    }
+}
+
+tasks.register("clean", Delete::class.java) {
+    group = "build"
+    delete(rootProject.buildDir)
+}
+```
+
+### 模块 build.gradle 模块build脚本模板
+
+```kotlin
+plugins {
+    id("com.android.library")
+    id("signing")
+    // 等同于 id("")
+    `maven-publish`
+    kotlin("android")
+    kotlin("android.extensions")
+
+    // 引入三方Gradle插件
+    id("com.github.hanlyjiang.android_maven_pub") version ("0.0.9") apply (false)
+}
+
+android {
+    compileSdkVersion(30)
+    buildToolsVersion("30.0.3")
+
+    defaultConfig {
+        minSdkVersion(22)
+        targetSdkVersion(30)
+        versionCode(1)
+        versionName("1.0.0")
+
+        testInstrumentationRunner("androidx.test.runner.AndroidJUnitRunner")
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    buildTypes {
+        getByName("release") {
+            minifyEnabled(false)
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility(JavaVersion.VERSION_1_8)
+        targetCompatibility(JavaVersion.VERSION_1_8)
+    }
+}
+
+dependencies {
+    implementation("org.jetbrains:annotations:21.0.1")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.3")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    
+    // StringRes 注解
+    implementation("androidx.appcompat:appcompat:1.3.1")
+    // 注解库 https://developer.android.com/jetpack/androidx/releases/annotation#annotation-1.2.0
+    implementation("androidx.annotation:annotation:1.2.0")
+}
+
+// 创建自定义任务
+tasks.create("showGitRepoInfo") {
+    group = "help"
+    doLast {
+        println("${getGitBranch()}/${getGitRevision()}")
+    }
+}
+
+// 扩展函数
+fun String.execute(): String {
+    val process = Runtime.getRuntime().exec(this)
+    return with(process.inputStream.bufferedReader()) {
+        readText()
+    }
+}
+
+/**
+ * Get git revision with work tree status
+ *
+ * @return
+ */
+fun getGitRevision(): String {
+    val rev = "git rev-parse --short HEAD".execute().trim()
+    val stat = "git diff --stat".execute().trim()
+    return if (stat.isEmpty()) {
+        rev
+    } else {
+        "$rev-dirty"
+    }
+}
+
+/**
+ * Get git branch name
+ *
+ * @return
+ */
+fun getGitBranch(): String {
+    return "git rev-parse --abbrev-ref HEAD".execute().trim()
 }
 ```
 

@@ -26,3 +26,11 @@ It could be cool that this experimental change is put in the release note of and
 
 
 
+## UML 插件安装
+
+* [PlantUML integration - IntelliJ IDEs Plugin | Marketplace (jetbrains.com)](https://plugins.jetbrains.com/plugin/7017-plantuml-integration)
+
+> macOS上可能需要安装Graphviz：
+>
+> `brew install Graphviz`
+

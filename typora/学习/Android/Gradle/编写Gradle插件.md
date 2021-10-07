@@ -325,6 +325,10 @@ class FlavorSoExcludePlugin : Plugin<Project> {
 
 ```
 
+## 调试插件
+
+使用新版的AndroidStudio 可以非常方便的调试Gradle插件
+
 
 
 ## 使用枚举进行配置
