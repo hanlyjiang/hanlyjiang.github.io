@@ -1,3 +1,11 @@
+## 查看层次
+
+> https://www.jetbrains.com/help/idea/2020.3/viewing-structure-and-hierarchy-of-the-source-code.html
+
+* 类型层次： ==⌃H==
+* 方法层次：==⇧⌘H==
+* 调用层次：==⌃⌥H==
+
 ## 复制
 
 * 复制文件路径： ==⇧⌘C==

@@ -65,13 +65,15 @@ tags:
 
 #### AIDL是什么？如何使用？
 
-* AIDL就是Android接口定义语言，用于简化Binder通信机制中的模板代码的编写，让我们专注于业务实现。
+* AIDL就是Android接口定义语言，用于**简化Binder通信机制中的模板代码的编写**，让我们专注于业务实现。
 * 对于APP来说，需要编写Service时需要编写AIDL文件来定义IPC的接口；
 * 使用的时候需要先提供一个AIDL文件编写通信接口，放入到客户端可服务端的项目中，编译时AIDL文件会生成对应的Java文件，其中包括
   * 一个Stub和一个Proxy类
   * 我们的服务端代码中创建一个Binder类实现Stub类，覆盖里面我们自己的业务接口方法，用于提供具体的业务通信代码，并且在onBind方法中方法我们的Binder对象；
   * 我们的客户端bind服务时提供一个ServiceConnect的对象，用于接收服务绑定的回调，并在服务绑定回调中，通过Stub#asInterface 静态方法将Binder服务对象转换为一个Proxy对象
   * 后续我们在客户端中即可使用这个Proxy对象来访问远程的服务；
+  
+  > 服务端和客户端都是我们自己定义的，所以，AIDL编译工具会为我们生成模板代码，包括stub和proxy，其中stub
 
 #### oneway关键字
 
@@ -99,7 +101,7 @@ tags:
 
 #### 实现原理：消息如何发送，如何接收，如何处理？消息如何存储？
 
-* Looper#prepare时会构建一个Looper实例并设置为线程变量，也就是每个线程都会有一个Looper
+* Looper#prepare时会构建一个Looper实例并设置为**线程变量**，也就是每个线程都会有一个Looper
 * Looper中包含一个消息队列，也就是说每个线程都有一个消息队列，消息队列中有一个消息链表；
 * Looper#loop进入消息循环
 * Handler在构造的时候可以传递一个Looper，如果不传递，则通过Looper#myLooper取出当前线程的Looper进行绑定。
@@ -290,3 +292,8 @@ P2 --> B.onPause --> B.onStop --> B.onSaveInstanceState
    * 如果 $dy > 0$ ，则表示向下滑动，反之，则向上滑动
    * 通过打开触摸位置可以看到触摸中的坐标及 $dx$ 和 $dy$
 
+
+
+## Android DataBinding
+
+参考： [Android DataBinding 从入门到进阶](https://juejin.cn/post/6844903609079971854#:~:text=Android%20DataBinding%20从入门到进阶%20DataBinding%20是谷歌官方发布的一个框架，顾名思义即为数据绑定，是%20MVVM%20模式在%20Android,上的一种实现，用于降低布局和逻辑的耦合性，使代码逻辑更加清晰%E3%80%82%20MVVM%20相对于%20MVP，其实就是将%20Presenter%20层替换成了%20ViewModel%20层%E3%80%82)
