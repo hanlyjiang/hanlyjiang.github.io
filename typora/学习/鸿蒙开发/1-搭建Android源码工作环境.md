@@ -1,6 +1,6 @@
-# 第一章 搭建Android源码工作环境
+# 搭建Android源码工作环境
 
-本章主要内容：
+本文主要内容：
 
 * 简单介绍系统架构、编译环境的搭建
 * 简单介绍利用 AndroidStudio 调试 system_process 进程的方法及编译更新部分系统模块的方式
@@ -12,8 +12,6 @@ Android 系统架构如下两图所示：
 ![Android 框架详情](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210401092831.png) 
 
 ![Android 系统架构概览](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210401092925.png)
-
-<?xml version="1.0" encoding="UTF-8"?>
 
 
 
@@ -271,16 +269,6 @@ repo sync -c -j16
 >
 > 代码下载完成后，我们复制一份到另外一个目录只用于浏览代码 `rsync -a -H --progress aosp aosp-ro`
 
-> 从国内镜像下载可参考如下方式：
->
-> ```shell
-> curl https://mirrors.tuna.tsinghua.edu.cn/git/git-repo > ~/bin/repo
-> chmod a+x ~/bin/repo
-> export REPO_URL='https://mirrors.tuna.tsinghua.edu.cn/git/git-repo/'
-> repo init -u https://aosp.tuna.tsinghua.edu.cn/platform/manifest -b android-11.0.0_r33
-> repo sync -c -j16
-> ```
-
 ### 编译源码
 
 首先， 我们使用 repo 启动一个工作分支
@@ -395,7 +383,7 @@ idegen.jar 在执行时会根据配置的规则自动写入这三种规则，其
 
 * 没有被过滤规则匹配到的目录都会尝试去其中搜寻java及jar文件，只有在其中找到了源码文件，才会被加入到sourceFolder中。
 * 过滤规则中配置的目录，只有其中有java及jar文件时，才会被加入到excludeFolder配置中。
-* 如果目录中找到了java文件，会去读取java文件，自动确认sourceFolder的开始路径，以保证路径能正确匹配包名，如：有个目录`de vice/test/src/java/android/Test.java`，其中Test.java的包为android，那么sourceFolder的路径会自动设置为`de vice/test/src/java/`。
+* 如果目录中找到了java文件，会去读取java文件，自动确认sourceFolder的开始路径，以保证路径能正确匹配包名，如：有个目录`de vice/test/src/java/android/Test.java`，其中Test.java的包为android，那么sourceFolder的路径会自动设置为`device/test/src/java/`。
 
 #### 修改idegen代码并编译idegen.jar
 
@@ -427,14 +415,12 @@ idegen.jar 在执行时会根据配置的规则自动写入这三种规则，其
    ```shell
    # 在源码根目录执行
    source build/envsetup.sh
-   # 加载正确的Java
-   lunch aosp_x86_64-eng 
    cd development/tools/idegen
    mm -j16
    ```
 
    成功生成后输出如下：
-   
+
    ```shell
    [100% 228/228] Install: out/host/darwin-x86/framework/idegen.jar
    #### build completed successfully (05:30 (mm:ss)) ####
@@ -514,17 +500,10 @@ cp -R out/soong/.intermediates/frameworks/base/core/res/framework-res/android_co
 2. 生成iml文件，执行下面命令生成
 
    ```shell
-   # 在源码根目录执行
-   source build/envsetup.sh
-   lunch aosp_x86_64-eng 
    development/tools/idegen/idegen.sh
    ```
-   
-   完成后根目录下即生成了`android.iml`,`android.ipr` 
 
-> **排除规则说明：**
->
-> * 排除apps中的除了Camera2 目录之外的其他文件：`^packages/apps/(?!Camera2)`
+   完成后根目录下即生成了`android.iml`,`android.ipr` 
 
 ### 导入到AndroidStudio
 
@@ -666,16 +645,6 @@ adb reboot
 
 ## 使用提示及常见错误
 
-### 使用提示：设置等待调试器
-
-```shell
-# 启用
-adb -s emulator-5554 shell am set-debug-app -w com.android.camera2
-# 取消设置
-adb -s emulator-5554 shell am clear-debug-app com.android.camera2 
-# 具体可参考：https://developer.android.google.cn/studio/command-line/adb?hl=zh_cn
-```
-
 ### 使用提示：项目源码浏览配置
 
 #### 筛选Project代码范围
@@ -759,123 +728,7 @@ emulator
 # 启动模拟器
 ```
 
-### 错误解决：升级macOS12(Monterey)后编译不通过
-
-报错如下：
-
-```shell
-"Could not find a supported mac sdk: [\"10.10\" \"10.11\" \"10.12\" \"10.13\" \"10.14\" \"10.15\"
-```
-
-解决方案：（有两种方式）
-
-1. 直接修改 `build/soong/cc/config/x86_darwin_host.go`，添加 `12.0` 版本信息
-
-   ```go
-   darwinSupportedSdkVersions = []string{
-   		"10.10",
-   		"10.11",
-   		"10.12",
-   		"10.13",
-   		"10.14",
-   		"10.15",
-   		"12.0",
-   	}
-   ```
-
-2. 下载10.15版本的SDK，参考 *搭建Android构建环境* 小节。
-
-
-
-### 错误解决：升级macOS12 
-
-python2/3兼容mac的问题
-
-```shell
-Wno-string-compare -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-pessimizing-move -MD -MF out/soong/.intermediates/external/python/cpython3/py3-launcher-lib/darwin_x86_64_static/obj/external/python/cpython3/Modules/getpath.o.d -o out/soong/.intermediates/external/python/cpython3/py3-launcher-lib/darwin_x86_64_static/obj/external/python/cpython3/Modules/getpath.o external/python/cpython3/Modules/getpath.c
-external/python/cpython3/Modules/getpath.c:809:49: error: incompatible pointer types passing 'unsigned long *' to parameter of type 'uint32_t *' (aka 'unsigned int *') [-Werror,-Wincompatible-pointer-types]
-    else if(0 == _NSGetExecutablePath(execpath, &nsexeclength) &&
-                                                ^~~~~~~~~~~~~
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.0.sdk/usr/include/mach-o/dyld.h:98:54: note: passing argument to parameter 'bufsize' here
-extern int _NSGetExecutablePath(char* buf, uint32_t* bufsize)                 __OSX_AVAILABLE_STARTING(__MAC_10_2, __IPHONE_2_0);
-                                                     ^
-1 error generated.
-21:40:10 ninja failed with: exit status 1
-```
-
-方法：`external/python/cpython2/Modules/getpath.c`  `external/python/cpython3/Modules/getpath.c `编辑getpath.c 文件，添加头文件引入。 
-
-```c
-#include <AvailabilityMacros.h>
-```
-
-> 链接：https://juejin.cn/post/7027490556397748254
-
-## aidegen 工具使用
-
-> 参考： [AIDEGen 官方使用文档](https://android.googlesource.com/platform/tools/asuite/+/refs/heads/master/aidegen/README.md)
-
-### 基本用法
-
-aidegen 工具可以用来配置安卓源码模块的IDEA项目（AndroidStudio或IDEA），使用方式如下：
-
-#### 初始化安卓构建环境
-
-```shell
-$ source build/envsetup.sh && lunch aosp_x86_64-eng
-```
-
-#### 示例 1: 使用模块名称启动IDE
-
-```
-$ aidegen Settings framework -i s
-```
-
-> -i s 指定使用androidstduio启动项目，但是需要androidstudio在系统path中，对于JetBrain Toolbox安装的Studio，可能无法创建命令行启动方式，可以直接将对应版本加入到Path中，如下：
->
-> ```shell
-> export PATH=/Users/hanlyjiang/Library/Application\ Support/JetBrains/Toolbox/apps/AndroidStudio/ch-0/203.7784292/Android\ Studio.app/Contents/MacOS:$PATH
-> ```
-
-#### 示例 2:使用模块路径启动IDE
-
-```
-$ aidegen packages/apps/Settings frameworks/base
-```
-
-#### 示例 3: 跳过构建并启动IDE
-
-```
-$ aidegen Settings framework -s
-```
-
-#### 示例4: 使用IDE启动native模块
-
-在 CLion 中启动native模块:
-
-```
-$ aidegen <module> -i c
-```
-
-执行上诉命令之后，将会在 CLion 中启动你选择的模块，需要通过如下菜单路径**Tools > CMake > Change Project Root**来更改项目的根路径到 `development/ide/clion/rel_path`, 其中 `rel_path` 会成为 CLion’s 项目视图中显示的根目录。
-
-### 所有参数
-
-| Option |    Long option    |                         Description                          |
-| :----: | :---------------: | :----------------------------------------------------------: |
-|  `-d`  |     `--depth`     |          The depth of module referenced by source.           |
-|  `-i`  |      `--ide`      | Launch IDE type, j=IntelliJ s=Android Studio e=Eclipse c=CLion v=VS Code |
-|  `-p`  |   `--ide-path`    |              Specify user's IDE installed path.              |
-|  `-n`  |   `--no_launch`   |                      Do not launch IDE.                      |
-|  `-r`  | `--config-reset`  |          Reset all AIDEGen's saved configurations.           |
-|  `-s`  |  `--skip-build`   |                Skip building jars or modules.                |
-|  `-v`  |    `--verbose`    |                Displays DEBUG level logging.                 |
-|  `-a`  | `--android-tree`  |   Generate whole Android source tree project file for IDE.   |
-|  `-e`  | `--exclude-paths` |               Exclude the directories in IDE.                |
-|  `-l`  |   `--language`    |  Launch IDE with a specific language,j=java c=C/C++ r=Rust   |
-|  `-h`  |     `--help`      |                Shows help message and exits.                 |
-
-## 参考文章 
+## 参考文章
 
 **参考：** 
 
