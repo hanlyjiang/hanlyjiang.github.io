@@ -68,7 +68,7 @@ body {
 
 2. 打开应用（可能需要在安全设置中确认后才能打开）
 
-3. 安装gitee插件；
+3. 安装f插件；
 
    ![image-20210224180222724](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210224180222.png)
 
@@ -329,9 +329,9 @@ classDiagram
 
 
 
-————————————————
-版权声明：本文为CSDN博主「liuchunming033」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
-原文链接：https://blog.csdn.net/liuchunming033/article/details/106034799
+> ————————————————
+> 版权声明：本文为CSDN博主「liuchunming033」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+> 原文链接：https://blog.csdn.net/liuchunming033/article/details/106034799
 
 ### 矢量图片
 
