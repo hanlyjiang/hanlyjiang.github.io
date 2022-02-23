@@ -132,13 +132,13 @@ hkp://keys.openpgp.org
 导出公钥：
 
 ```shell
-gpg -a -o ~/.gnupg/maven-pub.key --export 0B372361CC1A9AE2452D43FDE8A99FE282B70849
+gpg -a -o ~/.gnupg/maven-pub.key --export $KEY_ID
 ```
 
 导出私钥：(需要输入密码)
 
 ```shell
-gpg -a -o ~/.gnupg/maven-prv.key --export-secret-keys 0B372361CC1A9AE2452D43FDE8A99FE282B70849
+gpg -a -o ~/.gnupg/maven-prv.key --export-secret-keys $KEY_ID
 ```
 
 导出gpgkey：
@@ -672,6 +672,16 @@ afterEvaluate {
 ```
 
 
+
+## ❌ 错误记录
+
+### 400 错误
+
+```shell
+maven publish Received status code 400 from server
+```
+
+可能的原因： maven 仓库分两个，一个是snapshot仓库，一个是release 仓库，如果将snapshot版本（版本号带SNAPSHOT）的包上传到Release仓库的地址，则会报错。
 
 ## 参考文章
 

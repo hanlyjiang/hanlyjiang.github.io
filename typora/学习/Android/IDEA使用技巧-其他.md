@@ -42,3 +42,20 @@ It could be cool that this experimental change is put in the release note of and
 >
 > `brew install Graphviz`
 
+* [PlantUML Parser - IntelliJ IDEs Plugin | Marketplace (jetbrains.com)](https://plugins.jetbrains.com/plugin/15524-plantuml-parser)
+* [PlantUML Diagram Generator - IntelliJ IDEs Plugin | Marketplace (jetbrains.com)](https://plugins.jetbrains.com/plugin/15991-plantuml-diagram-generator)
+
+
+
+## Shared Indexes
+
+![image-20211210103431370](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202112101034449.png)
+
+
+
+## androidstudio 默认keystore
+
+```shell
+keytool -list -v -keystore $USER_HOME/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+```
+
