@@ -180,6 +180,16 @@ signing.secretKeyRingFile=/Users/hanlyjiang/.gnupg/secring.gpg
 
 我们在需要上传的项目中配置，注意pom中的信息也需要补全，否则上传之后无法通过sonatype的检查，无法发布；
 
+> ⚠️注意： 有的人的上传地址可能是 https://s01.oss.sonatype.org 的域名，如：
+>
+> * ```
+>   https://s01.oss.sonatype.org/content/repositories/snapshots
+>   ```
+>
+> * ```
+>   https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/
+>   ```
+
 ```groovy
 plugins {
     id 'com.android.library'
@@ -316,7 +326,7 @@ afterEvaluate {
 
 > 关于maven 仓库的注意点：
 >
-> 1. snapshots仓库上传的库其版本号需要以 `-SNAPSHOT` 结尾，否则可能出现400错误；
+> 1. snapshots仓库上传的库，其版本号需要以 `-SNAPSHOT` 结尾，否则可能出现400错误；
 
 ### 执行上传任务
 
@@ -396,6 +406,11 @@ gpg --keyserver $KEY_SERVER --recv-keys 0B372361CC1A9AE2452D43FDE8A99FE282B70849
 ## 引入并使用
 
 ### 引入snapshot或staging版本
+
+可通过如下路径确认自己的库是否上传成功（注意将后面的路径替换为自己的）：
+
+* Snapshot： https://oss.sonatype.org/content/repositories/snapshots/com/github/hanlyjiang/
+* Release： https://repo1.maven.org/maven2/com/github/hanlyjiang/
 
 snapshot和staging的仓库中的版本可在推送后立即访问，不过只能自己访问，需要验证用户名和密码。
 
