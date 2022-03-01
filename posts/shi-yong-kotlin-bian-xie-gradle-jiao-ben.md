@@ -1,8 +1,19 @@
-# 使用Kotlin编写gradle脚本
+---
+title: '使用Kotlin编写gradle脚本'
+date: 2022-02-24 22:29:04
+tags: [Gradle]
+published: true
+hideInList: false
+feature: 
+isTop: false
+---
 
-[toc]
 
-## 参考文档
+
+将 groovy 编写的gradle 脚本迁移到 kotlin dsl 
+
+<!-- more -->
+
 
 ## 概述
 
@@ -21,13 +32,7 @@
 1. Gradle Kotlin DSL scripts 中的Kotlin语法高亮
 2.  Gradle Kotlin DSL scripts 中支持代码补全，导航到源码，文档查看，重构等等；
 
-
-
-### 限制
-
-
-
-### Kotlin DSL 脚本
+### Kotlin DSL 脚本命名
 
 #### 命名
 
@@ -35,7 +40,7 @@ Groovy DSL script 文件使用 `.gradle` 扩展文件名
 
 Kotlin DSL script 文件使用 `.gradle.kts` 扩展文件名
 
-#### 激活并使用kotlin dsl
+#### 激活并使用 kotlin dsl
 
 * 将脚本文件命名为 `.gradle.kts` 即可激活。也适用于 [settings file](https://docs.gradle.org/current/userguide/build_lifecycle.html#sec:settings_file)（ `settings.gradle.kts`)和 [initialization scripts](https://docs.gradle.org/current/userguide/init_scripts.html#init_scripts).
 * 为了得到更好的IDE支持，建议使用如下命名约定：
@@ -45,7 +50,7 @@ Kotlin DSL script 文件使用 `.gradle.kts` 扩展文件名
   * [default Gradle API imports](https://docs.gradle.org/current/userguide/writing_build_scripts.html#script-default-imports)
   * 在`org.gradle.kotlin.dsl` 和 `org.gradle.kotlin.dsl.plugins.dsl` 包中的Kotlin DSL API
 
-## 用法说明
+
 
 ### kotlin中读取运行时属性
 
@@ -90,8 +95,6 @@ val myNullableProperty: String? by extra   // ❹
 ❸ 绑定当前上下文(当前为project)中的属性到myProperty属性中;
 
 ❹ 同 ❸ ，不过允许值为null；
-
-
 
 #### 在子项目中访问rootProject的属性
 
@@ -149,17 +152,11 @@ tasks.create("myTask") {
 2. 方法调用加上括号
 3. 赋值操作加上等号
 
-
-
 #### 引号统一
 
 * 通过==⌘⇧R==快捷键调出查找替换工具窗，将文件匹配设置为 `.gradle` ，然后将所有单引号替换为双引号。
 
-![image-20210507110114689](../../../../../../../../Application Support/typora-user-images/image-20210507110114689.png)
-
 * 完成之后重新使用gradle文件同步项目，查看是否有错误
-
-
 
 #### 赋值和属性修改
 
@@ -167,8 +164,6 @@ tasks.create("myTask") {
 * 所有的函数调用操作添加括号
 
 这里就需要根据实际情况进行调整了。
-
-
 
 
 
@@ -182,15 +177,7 @@ find . -name "*.gradle" -type f | xargs -I {} mv {} {}.kts
 
 
 
-
-
-比较麻烦，且AndroidStudio新建的项目默认还是groovy的，故暂时不迁移。
-
-
-
-
-
-### 其他
+### 其他常见修改
 
 #### 在kotlin rootProject脚本中访问 gradle 属性
 
@@ -225,7 +212,7 @@ tasks.register("clean", Delete::class.java) {
 
 
 
-## 附录
+## 迁移配置实例
 
 ### rootProject kotlin dsl build脚本模板
 
@@ -390,4 +377,13 @@ fun getGitBranch(): String {
     return "git rev-parse --abbrev-ref HEAD".execute().trim()
 }
 ```
+
+
+
+## 限制/不足
+
+在 kotlin dsl 脚本中引入其他独立的 kotlin 的dsl 脚本不方便，会存在无法识别相关依赖对象的问题，部分情况下还是得导入使用 groovy 编写的 gradle 脚本。
+
+
+
 

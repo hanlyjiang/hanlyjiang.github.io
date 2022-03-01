@@ -1,4 +1,4 @@
-# 发布Android库到Maven中心仓库
+# 如何发布Android库到Maven中心仓库
 
 ## 前言
 
@@ -94,6 +94,10 @@ sub   rsa3072 2021-05-24 [E] [有效至：2023-05-24]
 
 ### 发送key到服务器
 
+> **提示：**
+>
+>  如果一个key服务器不通的话，可以换一个重新来一遍，只要上传成功一个即可。
+
 key需要发送到服务器上，以便sonatype获取并校验签名，通过如下命令上传：
 
 设置key的信息：
@@ -156,7 +160,7 @@ gpg --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg
 修改gradle配置：
 
 ```properties
-$ cat ~/.gradle/gradle.properties
+#  ~/.gradle/gradle.properties 写入如下内容：
 
 ossrhUsername=hanlyjiang # jira的用户名
 ossrhPassword=#jira的密码
@@ -193,7 +197,6 @@ signing.secretKeyRingFile=/Users/hanlyjiang/.gnupg/secring.gpg
 ```groovy
 plugins {
     id 'com.android.library'
-//    id 'maven'
     id 'signing'
     id 'maven-publish'
 }
@@ -609,7 +612,7 @@ tasks.register("javadoc", Javadoc::class.java) {
         isFailOnError = false
 
         (this as StandardJavadocDocletOptions).apply {
-//            addStringOption("Xdoclint:none")
+            addStringOption("Xdoclint:none")
             links?.add("https://developer.android.google.cn/reference/")
             links?.add("http://docs.oracle.com/javase/8/docs/api/")
         }

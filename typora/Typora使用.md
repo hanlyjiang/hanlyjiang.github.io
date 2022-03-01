@@ -289,6 +289,7 @@ $$
 ### 图表绘制
 
 * [还在到处寻找画图软件？快来用Typora画饼图、时序图、流程图、UML图和状态图吧](https://blog.csdn.net/liuchunming033/article/details/106034799)
+* [Flowchart (mermaid-js.github.io)](https://mermaid-js.github.io/mermaid/#/flowchart)
 
 Typora是在 0.9.9.30 (0.9.80) beta版本开始支持classDiagram的，目前支持的还不太好。所以画classDiagram时，最好使用mermaid在线编辑器 https://mermaid-js.github.io/mermaid-live-editor编辑，然后保存成svg图片，再将其插入到markdown中。
 
@@ -339,6 +340,36 @@ classDiagram
 
 * 不支持渐变
 * 不支持设置色调（统一改变组件颜色）
+
+
+
+### 图形
+
+````shell
+```mermaid
+graph LR
+%% 这是注释，流程图中用到的各种图形画法、连线
+  id1((start))-->A[方角矩形]
+    A -.虚线.-> B(圆角矩形)
+    A --> F[\平行四边形\]--> G[/平行四边形/]-->H[/梯形\]-->I[\梯形/]
+    A ---|没箭头的连线|i21(圆角矩形)
+    B --文案--> C{菱形}
+    C -->|One| D{{Result one}}
+    C -->|Two| E>Result two]
+```
+````
+
+```mermaid
+graph LR
+%% 这是注释，流程图中用到的各种图形画法、连线
+  id1((start))-->A[方角矩形]
+    A -.虚线.-> B(圆角矩形)
+    A --> F[\平行四边形\]--> G[/平行四边形/]-->H[/梯形\]-->I[\梯形/]
+    A ---|没箭头的连线|i21(圆角矩形)
+    B --文案--> C{菱形}
+    C -->|One| D{{Result one}}
+    C -->|Two| E>Result two]
+```
 
 
 
