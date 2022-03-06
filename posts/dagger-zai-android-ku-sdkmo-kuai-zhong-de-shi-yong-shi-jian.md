@@ -1,12 +1,14 @@
 ---
 title: 'Dagger 在Android库(SDK)模块中的使用实践'
 date: 2022-03-06 15:11:54
-tags: []
+tags: [Android,源码分析,依赖注入,开源框架]
 published: true
 hideInList: false
 feature: 
 isTop: false
 ---
+
+
 本文主要描述如何使用Dagger解决实际项目中遇到的问题，这两个问题是：
 
 1. 如何在库（SDK）模块中使用Dagger依赖注入？
@@ -835,7 +837,6 @@ protected void onCreate(@Nullable  Bundle savedInstanceState) {
 ```
 
 ##  示例代码
-
+具体实施过程中还有一些细节，可以参考Github中对应示例模块的源码。
 * [android-libraries/lib_di_sample at master · hanlyjiang/android-libraries (github.com)](https://github.com/hanlyjiang/android-libraries/tree/master/lib_di_sample)
-
 

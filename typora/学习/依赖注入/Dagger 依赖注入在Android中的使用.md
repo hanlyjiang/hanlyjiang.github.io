@@ -282,77 +282,77 @@ override fun activityInjector() = dispatchingAndroidInjector
 
 可以看到 DaggerAppComponent中在注入`inject(GithubApp)`时，会将`DispatchingAndroidInjector<Activity>` 类型的依赖注入到 GithubApp 中。
 
-> **更多细节：**
->
-> 1. dagger-android-processor  处理其会根据 `@ContributesAndroidInjector` 自动生成一个Module的代码，内容如下：
->
->    ```java
->    @Module(subcomponents = MainActivityModule_ContributeMainActivity.MainActivitySubcomponent.class)
->    public abstract class MainActivityModule_ContributeMainActivity {
->      private MainActivityModule_ContributeMainActivity() {}
->    
->      @Binds
->      @IntoMap
->      @ActivityKey(MainActivity.class)
->      abstract AndroidInjector.Factory<? extends Activity> bindAndroidInjectorFactory(
->          MainActivitySubcomponent.Builder builder);
->    
->      @Subcomponent(modules = FragmentBuildersModule.class)
->      public interface MainActivitySubcomponent extends AndroidInjector<MainActivity> {
->        @Subcomponent.Builder
->        abstract class Builder extends AndroidInjector.Builder<MainActivity> {}
->      }
->    }
->    ```
->
->    - 此模块中定义了 `bindAndroidInjectorFactory` 方法，使用 `@Binds @IntoMap`生成  `Map<Class<? extends T>, Provider<AndroidInjector.Factory<? extends T>>>` 类型的Map
->    - 在这里注入到Map中的内容就是 `(MainActivity.class, MainActivitySubcomponent.Builder builder)`, 其中 `MainActivitySubcomponent.Builder`  用于构建 `MainActivitySubcomponent`
->    - `MainActivitySubcomponent` 继承了 `AndroidInjector<MainActivity>` 类，所以会有一个 `inject(MainActivity instance)`的方法，这个方法就是最中实现对 MainActivity 依赖注入的实现入口；
->
-> 2. 同时 `dagger-android` 中的`DispatchingAndroidInjector` 类中，会声明对 类型`Map<Class<? extends T>, Provider<AndroidInjector.Factory<? extends T>>>` 的依赖，所以上面的`(MainActivity.class, MainActivitySubcomponent.Builder builder)`会自动被注入到 `DispatchingAndroidInjector` 对象中
->
->    ```java
->     public final class DispatchingAndroidInjector<T> implements AndroidInjector<T> {
->         private final Map<Class<? extends T>, Provider<AndroidInjector.Factory<? extends T>>>
->          injectorFactories;
->       
->         @Inject
->          DispatchingAndroidInjector(
->            Map<Class<? extends T>, Provider<AndroidInjector.Factory<? extends T>>> injectorFactories) {
->            this.injectorFactories = injectorFactories;
->          }
->     }
->    ```
->
-> 3. 而这个 `DispatchingAndroidInjector<Activity>` 在 GithubApp中被声明为依赖，所以也会被自动注入，从而我们能在GithubApp中通过 AndroidInjection 获取到 `DispatchingAndroidInjector<Activity>`, 然后调用其 `MainActivitySubcomponent` ，然后调用其 inject 方法完成注入
->
->    ```java
->    public final class DispatchingAndroidInjector<T> implements AndroidInjector<T> { 
->    	public boolean maybeInject(T instance) {
->        Provider<AndroidInjector.Factory<? extends T>> factoryProvider =
->          // instance 类型为 MainActivity，所以可以获取到 Provider<MainActivitySubcomponent.Builder>
->            injectorFactories.get(instance.getClass());
->    		// 这里就通过 MainActivitySubcomponent.Builder 获取到 factory = MainActivitySubcomponent.Builder
->        AndroidInjector.Factory<T> factory = (AndroidInjector.Factory<T>) factoryProvider.get();
->        try {
->          AndroidInjector<T> injector =
->              checkNotNull(
->                  factory.create(instance), "%s.create(I) should not return null.", factory.getClass());
->    			// 上面调用  factory.create(instance) 就是调用 MainActivitySubcomponent.Builder.create 方法创建 MainActivitySubcomponent
->          // 这里的 inejctor 就是 MainActivitySubcomponent
->          // 然后通过 MainActivitySubcomponent 的 inejct(MainActivity) 方法来实现对 MainActivity 的注入
->          injector.inject(instance);
->          return true;
->        } catch (ClassCastException e) {
->          throw new InvalidInjectorBindingException(
->              String.format(
->                  "%s does not implement AndroidInjector.Factory<%s>",
->                  factory.getClass().getCanonicalName(), instance.getClass().getCanonicalName()),
->              e);
->        }
->      }
->    }
->    ```
+#### 更多细节：
+
+1. dagger-android-processor  处理其会根据 `@ContributesAndroidInjector` 自动生成一个Module的代码，内容如下：
+
+   ```java
+   @Module(subcomponents = MainActivityModule_ContributeMainActivity.MainActivitySubcomponent.class)
+   public abstract class MainActivityModule_ContributeMainActivity {
+     private MainActivityModule_ContributeMainActivity() {}
+
+     @Binds
+     @IntoMap
+     @ActivityKey(MainActivity.class)
+     abstract AndroidInjector.Factory<? extends Activity> bindAndroidInjectorFactory(
+         MainActivitySubcomponent.Builder builder);
+
+     @Subcomponent(modules = FragmentBuildersModule.class)
+     public interface MainActivitySubcomponent extends AndroidInjector<MainActivity> {
+       @Subcomponent.Builder
+       abstract class Builder extends AndroidInjector.Builder<MainActivity> {}
+     }
+   }
+   ```
+
+   - 此模块中定义了 `bindAndroidInjectorFactory` 方法，使用 `@Binds @IntoMap`生成  `Map<Class<? extends T>, Provider<AndroidInjector.Factory<? extends T>>>` 类型的Map
+   - 在这里注入到Map中的内容就是 `(MainActivity.class, MainActivitySubcomponent.Builder builder)`, 其中 `MainActivitySubcomponent.Builder`  用于构建 `MainActivitySubcomponent`
+   - `MainActivitySubcomponent` 继承了 `AndroidInjector<MainActivity>` 类，所以会有一个 `inject(MainActivity instance)`的方法，这个方法就是最中实现对 MainActivity 依赖注入的实现入口；
+
+2. 同时 `dagger-android` 中的`DispatchingAndroidInjector` 类中，会声明对 类型`Map<Class<? extends T>, Provider<AndroidInjector.Factory<? extends T>>>` 的依赖，所以上面的`(MainActivity.class, MainActivitySubcomponent.Builder builder)`会自动被注入到 `DispatchingAndroidInjector` 对象中
+
+   ```java
+    public final class DispatchingAndroidInjector<T> implements AndroidInjector<T> {
+        private final Map<Class<? extends T>, Provider<AndroidInjector.Factory<? extends T>>>
+         injectorFactories;
+
+        @Inject
+         DispatchingAndroidInjector(
+           Map<Class<? extends T>, Provider<AndroidInjector.Factory<? extends T>>> injectorFactories) {
+           this.injectorFactories = injectorFactories;
+         }
+    }
+   ```
+
+3. 而这个 `DispatchingAndroidInjector<Activity>` 在 GithubApp中被声明为依赖，所以也会被自动注入，从而我们能在GithubApp中通过 AndroidInjection 获取到 `DispatchingAndroidInjector<Activity>`, 然后调用其 `MainActivitySubcomponent` ，然后调用其 inject 方法完成注入
+
+   ```java
+   public final class DispatchingAndroidInjector<T> implements AndroidInjector<T> { 
+   	public boolean maybeInject(T instance) {
+       Provider<AndroidInjector.Factory<? extends T>> factoryProvider =
+         // instance 类型为 MainActivity，所以可以获取到 Provider<MainActivitySubcomponent.Builder>
+           injectorFactories.get(instance.getClass());
+   		// 这里就通过 MainActivitySubcomponent.Builder 获取到 factory = MainActivitySubcomponent.Builder
+       AndroidInjector.Factory<T> factory = (AndroidInjector.Factory<T>) factoryProvider.get();
+       try {
+         AndroidInjector<T> injector =
+             checkNotNull(
+                 factory.create(instance), "%s.create(I) should not return null.", factory.getClass());
+   			// 上面调用  factory.create(instance) 就是调用 MainActivitySubcomponent.Builder.create 方法创建 MainActivitySubcomponent
+         // 这里的 inejctor 就是 MainActivitySubcomponent
+         // 然后通过 MainActivitySubcomponent 的 inejct(MainActivity) 方法来实现对 MainActivity 的注入
+         injector.inject(instance);
+         return true;
+       } catch (ClassCastException e) {
+         throw new InvalidInjectorBindingException(
+             String.format(
+                 "%s does not implement AndroidInjector.Factory<%s>",
+                 factory.getClass().getCanonicalName(), instance.getClass().getCanonicalName()),
+             e);
+       }
+     }
+   }
+   ```
 
 ### 总结
 
@@ -835,6 +835,8 @@ protected void onCreate(@Nullable  Bundle savedInstanceState) {
 ```
 
 ##  示例代码
+
+具体实施过程中还有一些细节，可以参考Github中对应示例模块的源码。
 
 * [android-libraries/lib_di_sample at master · hanlyjiang/android-libraries (github.com)](https://github.com/hanlyjiang/android-libraries/tree/master/lib_di_sample)
 
