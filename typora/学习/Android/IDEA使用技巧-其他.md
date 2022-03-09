@@ -59,3 +59,7 @@ It could be cool that this experimental change is put in the release note of and
 keytool -list -v -keystore $USER_HOME/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
 ```
 
+## 命令行
+
+- CMD + Enter 从命令行调用UI任务执行
+- CMD + Enter + Shift ： debug gradle task
