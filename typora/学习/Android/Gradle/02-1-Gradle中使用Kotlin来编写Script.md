@@ -1,6 +1,8 @@
 # 使用Kotlin编写gradle脚本
 
-[toc]
+将gradle 脚本从 groovy 迁移到 kotlin dsl。
+
+<!-- more -->
 
 ## 概述
 

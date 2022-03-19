@@ -1,8 +1,19 @@
-# AAR Java8 接口 NoSuchMethodError 错误解决记录
+---
+title: ' AAR Java8 接口 NoSuchMethodError 错误解决记录'
+date: 2022-03-13 23:18:16
+tags: [Android,问题解决]
+published: true
+hideInList: false
+feature: 
+isTop: false
+---
 
 遇到一个初看时非常诡异的问题，现已解决，特记录一下解决过程。
+<!-- more -->
 
 ## 🙋‍♀️ 是什么问题？
+
+
 
 ### 错误日志
 
@@ -272,23 +283,17 @@ invoke-static {}, Lio/reactivex/rxjava3/disposables/Disposable;->disposed()Lio/r
 
 ### 对应我们的问题
 
-可能的原因如下：
-
-- **将类文件编译成 dex 代码的过程中执行字节码转换，这种转换称为 `desugar`。AGP 使用 D8 完成desugar ，为了能正确的处理class，需要根据POM依赖信息来寻找对应的依赖，然后将所有依赖项目都加入到 desurge classpath，然后才能正确处理。而 aar 引入时不具备这些POM依赖信息，所以无法还原。**
-
-
-
-> **待补充**
+> 待补充
 >
-> - 通过 d8 手动对class进行dex转换，然后观察转换差异。
->
->   - ```shell
->     d8 MainActivity.class --intermediate --file-per-class --output ~/build/intermediate/dex
->     --lib android_sdk/platforms/api-level/android.jar
->     --classpath ~/build/javac/debug
->     ```
->
-> - 通过查看AGP 插件源码对于 `依赖-D8` 的处理过程的了解具体的原因
+> 通过 d8 手动对class进行dex转换，然后观察转换差异。
+
+```shell 
+d8 MainActivity.class --intermediate --file-per-class --output ~/build/intermediate/dex
+--lib android_sdk/platforms/api-level/android.jar
+--classpath ~/build/javac/debug
+```
+
+将类文件编译成 dex 代码的过程中执行字节码转换，这种转换称为 `desugar`。AGP 使用 D8 完成desugar ，为了能正确的处理class，需要根据POM依赖信息来寻找对应的依赖，然后将所有依赖项目都加入到 desurge classpath，然后才能正确处理。而 aar 引入时不具备这些POM依赖信息，所以无法还原。
 
 ## 进一步了解
 
@@ -296,4 +301,6 @@ invoke-static {}, Lio/reactivex/rxjava3/disposables/Disposable;->disposed()Lio/r
 - [使用 Java 8 语言功能和 API  | Android 开发者  | Android Developers (google.cn)](https://developer.android.google.cn/studio/write/java8-support)
 - [使用 Java 8 语言功能和 API  | Android 开发者  | Android Developers (google.cn)](https://developer.android.google.cn/studio/write/java8-support#library-desugaring)
 - [Android Gradle 插件版本说明  | Android 开发者  | Android Developers (google.cn)](https://developer.android.google.cn/studio/releases/gradle-plugin)
+
+
 
