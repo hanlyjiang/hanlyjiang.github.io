@@ -25,7 +25,7 @@ isTop: false
 
 * 提交之后，自动构建jar，并打包docker镜像
 
-  ![image-20210526101018201](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526101021.png)
+  ![image-20210526101018201](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192258673.png)
 
 * 构建完成后，通过gitlab界面，可以触发部署，完成后可以访问对应的环境（详见下方说明）
 
@@ -45,15 +45,15 @@ isTop: false
 
 3. 流水线详情中，点击触发部署
 
-   ![image-20210526101603210](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526101604.png)
+   ![image-20210526101603210](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192259870.png)
 
 4. 对应手动作业的详情中，点击“触发此手动操作”
 
-   ![image-20210526101644456](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526101646.png)
+   ![image-20210526101644456](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192300715.png)
 
 5. 作业列表中对应的部署作业的尾部
 
-   ![image-20210526102728195](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526102729.png)
+   ![image-20210526102728195](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192301127.png)
 
 ### 访问部署环境的方式
 
@@ -69,7 +69,7 @@ isTop: false
 
 3. 也可以在对应的环境详情页面，点击“查看部署” （注意在部署作业的详情中也可以找到对应环境的入口哦-触发部署步骤的方式的第四中方式的附图）
 
-   ![image-20210526101945707](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526101946.png)
+   ![image-20210526101945707](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192302195.png)
 
 ### 实现方式
 
@@ -86,11 +86,11 @@ isTop: false
 ```yaml
 variables:
   #  配置仓库环境
-  DOCKER_REGISTRY: zh-registry.geostar.com.cn
-  DOCKER_NAMESPACE: geopanel
-  DEPLOY_PATH: /GeoRoboxPro/GeoPanelWork/geopanel-deploy/deploy/
+  DOCKER_REGISTRY: zh-registry.colorless.com.cn
+  DOCKER_NAMESPACE: colorless
+  DEPLOY_PATH: /Wksp/colorlessWork/colorless-deploy/deploy/
   #  配置镜像服务名
-  SERVICE_NAME: blockapi-token
+  SERVICE_NAME: graphql-token
 
 stages:
   - test
@@ -160,7 +160,7 @@ deploy:
     - branches
     - web
   tags:
-    - deploy_blockapi
+    - deploy_graphql
 
 ```
 
@@ -206,7 +206,7 @@ deploy:
 
 ```shell
 # 更新服务
-update_service geopanel blockapi-engine zh-registry.geostar.com.cn/geopanel/blockapi-engine:1aaa7ad9
+update_service colorless graphql-engine zh-registry.colorless.com.cn/colorless/graphql-engine:1aaa7ad9
 ```
 
 deploy.sh 脚本内容：（只关注update_service 的流程即可）
@@ -216,9 +216,9 @@ deploy.sh 脚本内容：（只关注update_service 的流程即可）
 #set -eo pipefail
 
 REGISTRY_ALIYUN=registry.cn-hangzhou.aliyuncs.com/hasura
-REGISTRY_HARBOR=zh-registry.geostar.com.cn/geopanel
+REGISTRY_HARBOR=zh-registry.colorless.com.cn/colorless
 # 部署服务
-STACK_NAME=geopanel
+STACK_NAME=colorless
 
 function getSedOption() {
   if [ "$(uname)" = "Darwin" ]; then
@@ -309,26 +309,26 @@ function export_images() {
 
 # 部署所有服务
 # deploy_all [stack_name]
-# - stack_name ： stack 名称，不传则为 geopanel
+# - stack_name ： stack 名称，不传则为 colorless
 function deploy_all() {
   stack_name=$1
   if [ -z "$stack_name" ]; then
     stack_name=$STACK_NAME
   fi
-  deploy blockapi $stack_name
+  deploy graphql $stack_name
   deploy kafka $stack_name
   deploy "gpl-datacollection" $stack_name
 }
 
 # 不pull镜像，部署所有服务
 # deploy_all_offline [stack_name]
-# - stack_name ： stack 名称，不传则为 geopanel
+# - stack_name ： stack 名称，不传则为 colorless
 function deploy_all_offline() {
   stack_name=$1
   if [ -z "$stack_name" ]; then
     stack_name=$STACK_NAME
   fi
-  deploy_offline blockapi $stack_name
+  deploy_offline graphql $stack_name
   deploy_offline kafka $stack_name
   deploy_offline "gpl-datacollection" $stack_name
 }
@@ -348,7 +348,7 @@ function _usage_update_service() {
 
 # 更新服务，用法如下：
 # update_service {stack} {service} {image}
-# update_service geopanel blockapi-engine zh-registry.geostar.com.cn/geopanel/blockapi-engine:1aaa7ad9
+# update_service colorless graphql-engine zh-registry.colorless.com.cn/colorless/graphql-engine:1aaa7ad9
 # 本函数按如下流程执行：
 # 1. 获取镜像；
 # 2. 更新服务；如更新失败，则尝试回滚服务；
@@ -437,8 +437,8 @@ function update_service_yaml_config() {
   # -print0 | xargs -0 用于处理文件名中可能存在的特殊字符
   # 这里 /b:/b 的匹配模式 确保有空格的情况下尽可能的匹配到service
   # 完成后输出类似如下：
-  # ./blockapi/docker-compose-20210325.yml:  blockapi-engine:
-  # ./blockapi/docker-compose.yml:  blockapi-engine:
+  # ./graphql/docker-compose-20210325.yml:  graphql-engine:
+  # ./graphql/docker-compose.yml:  graphql-engine:
   # 获取需要修改的文件列表
   #   IFS=" " read -r -a file_list <<< find . -type f -name "*.yml" -print0 | xargs -0 -I {} grep -H "$service *: *$" {} | grep -v "arm" | awk -F: '{print $1}' | tr "\n" " "
 #  file_list=($(find . -type f -name "*.yml" -print0 | xargs -0 -I {} grep -H "$service *: *$" {} | grep -v "arm" | awk -F: '{print $1}' | tr "\n" " "))
@@ -469,7 +469,7 @@ function update_service_yaml_config() {
 
 # 导出所有镜像
 function export_all_images() {
-  export_images blockapi
+  export_images graphql
   export_images kafka
   export_images "gpl-datacollection"
 }
@@ -506,7 +506,7 @@ deploy:
     - branches
     - web
   tags:
-    - deploy_blockapi
+    - deploy_graphql
 ```
 
 接下来，我们带着上述两个问题来寻找相关的技术支持 - 即：gitlab能帮助我们做到哪些及什么程度？
@@ -705,16 +705,16 @@ staging:
 
 
 <svg width="982px" height="690px" viewBox="0 0 982 690" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <g id="🐶-GeoPanel部署策略" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <g id="🐶-colorless部署策略" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g id="PPT" transform="translate(-417.000000, -233.000000)">
-            <g id="GeoPanel" transform="translate(863.000000, 481.000000)">
+            <g id="colorless" transform="translate(863.000000, 481.000000)">
                 <g id="架构图/标题/带栏框/圆角">
                     <g id="分组">
                         <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="226" height="155" rx="6"></rect>
                         <path d="M6,0 L221,0 C224.313708,-1.44363618e-14 227,2.6862915 227,6 L227,32 L227,32 L0,32 L0,6 C4.82366169e-16,2.6862915 2.6862915,1.4968968e-15 6,0 Z" id="标题栏" fill="#FF9500"></path>
                     </g>
                     <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.107999999" fill="#FFFFFF">
-                        <tspan x="35.5778135" y="22">GeoPanel部署仓库</tspan>
+                        <tspan x="35.5778135" y="22">colorless部署仓库</tspan>
                     </text>
                 </g>
                 <g id="架构图/标题/纯标题/直角备份-2" transform="translate(42.000000, 78.000000)">
@@ -772,14 +772,14 @@ staging:
                 </g>
                 <path id="直线" d="M131,82 L131,90 L135,90 L130.5,99 L126,90 L130,90 L130,82 L131,82 Z" fill="#979797" fill-rule="nonzero"></path>
             </g>
-            <g id="块数据API" transform="translate(417.000000, 593.000000)">
+            <g id="GraphQLAPI" transform="translate(417.000000, 593.000000)">
                 <g id="架构图/标题/带栏框/圆角">
                     <g id="分组">
                         <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="260" height="149" rx="6"></rect>
                         <path d="M6,0 L255,0 C258.313708,-6.08718376e-16 261,2.6862915 261,6 L261,32 L261,32 L0,32 L0,6 C-4.05812251e-16,2.6862915 2.6862915,6.08718376e-16 6,0 Z" id="标题栏" fill="#FF9500"></path>
                     </g>
                     <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.107999999" fill="#FFFFFF">
-                        <tspan x="69.7226269" y="22">块数据API引擎</tspan>
+                        <tspan x="69.7226269" y="22">GraphQLAPI引擎</tspan>
                     </text>
                 </g>
                 <g id="架构图/标题/纯标题/直角" transform="translate(34.000000, 52.000000)">
@@ -852,19 +852,19 @@ staging:
                 <g id="架构图/标题/纯标题/直角备份-4" transform="translate(0.000000, 92.000000)">
                     <rect id="标题框" fill="#AF52DE" x="0" y="0" width="193" height="31"></rect>
                     <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
-                        <tspan x="41.847" y="21.5">blockapi-engine</tspan>
+                        <tspan x="41.847" y="21.5">graphql-engine</tspan>
                     </text>
                 </g>
                 <g id="架构图/标题/纯标题/直角备份-5" transform="translate(0.000000, 138.000000)">
                     <rect id="标题框" fill="#AF52DE" x="0" y="0" width="193" height="31"></rect>
                     <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
-                        <tspan x="45.69" y="21.5">blockapi-token</tspan>
+                        <tspan x="45.69" y="21.5">graphql-token</tspan>
                     </text>
                 </g>
                 <g id="架构图/标题/纯标题/直角备份-6" transform="translate(0.000000, 184.000000)">
                     <rect id="标题框" fill="#AF52DE" x="0" y="0" width="193" height="31"></rect>
                     <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
-                        <tspan x="41.476" y="21.5">blockapi-restapi</tspan>
+                        <tspan x="41.476" y="21.5">graphql-restapi</tspan>
                     </text>
                 </g>
                 <g id="架构图/标题/纯标题/直角备份-7" transform="translate(0.000000, 228.000000)">
@@ -892,8 +892,8 @@ staging:
 </svg>
 
 1. 每个项目分别定义自己的构建和镜像打包任务；
-2. 镜像打包完成后通过`trigger`来触发GeoPanel部署仓库的部署任务，需要传递自己的信息给部署仓库生成的流水线；
-3. 触发任务的定义文件放置到GeoPanel部署仓库中，在各个服务项目中通过`include`来引入；
+2. 镜像打包完成后通过`trigger`来触发colorless部署仓库的部署任务，需要传递自己的信息给部署仓库生成的流水线；
+3. 触发任务的定义文件放置到colorless部署仓库中，在各个服务项目中通过`include`来引入；
 
 ## 优化方案实现
 
@@ -916,12 +916,12 @@ stages:
 
 # 引入触发自动编译部署任务配置 
 include:
-  - project: 'dept-development/product-project/geopanel/geopanel-deploy'
+  - project: 'Deptproduct-project/colorless/colorless-deploy'
     # ref: master
     file: '/ci/gitlab-ci-base.yml'
 ```
 
-这段配置会从 `dept-development/product-project/geopanel/geopanel-deploy` 项目中导入 `/ci/gitlab-ci-base.yml` 的配置，具体内容如下：
+这段配置会从 `Deptproduct-project/colorless/colorless-deploy` 项目中导入 `/ci/gitlab-ci-base.yml` 的配置，具体内容如下：
 
 ```yaml
 # 子模块用的公用触发项目，可以在子模块源码中 include
@@ -937,10 +937,10 @@ trigger:auto-build-deploy:
     HARBOR_USER: $HARBOR_USER
     SERVICE_NAME: $SERVICE_NAME
   trigger:
-    project: dept-development/product-project/geopanel/geopanel-deploy
+    project: Deptproduct-project/colorless/colorless-deploy
 ```
 
-在子项目中的ci配置中`include`该文件时，会生成一个触发任务，这个触发任务会触发`dept-development/product-project/geopanel/geopanel-deploy`这个项目，也就是我们的独立部署项目；
+在子项目中的ci配置中`include`该文件时，会生成一个触发任务，这个触发任务会触发`Deptproduct-project/colorless/colorless-deploy`这个项目，也就是我们的独立部署项目；
 
 也就是说会触发我们独立部署项目生成一个流水线，此时流水线读取的就是我们独立部署项目的`.gitlab-ci.yml` 文件；
 
@@ -959,7 +959,7 @@ trigger:auto-build-deploy:
 
 其中，由我们自行定义的变量（`$DOCKER_REGISTRY`,`DOCKER_NAMESPACE`,`$HARBOR_PWD`,`$HARBOR_USER`,`$SERVICE_NAME`）需要在项目/群组的CI的变量中进行配置，在解析此触发任务时才可以读取到；
 
-![image-20210526155206137](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526155207.png)
+![image-20210526155206137](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192303519.png)
 
 ### 独立部署项目的配置
 
@@ -968,9 +968,9 @@ trigger:auto-build-deploy:
 ```yaml
 variables:
 #  UI界面配置 DEPLOY_PATH
-  DEPLOY_PATH: /GeoRoboxPro/GeoPanelWork/geopanel-deploy/deploy/
+  DEPLOY_PATH: /Wksp/colorlessWork/colorless-deploy/deploy/
 #  部署的stack
-  DOCKER_STACK: geopanel
+  DOCKER_STACK: colorless
 
 deploy:
   stage: deploy
@@ -984,7 +984,7 @@ deploy:
     url: $APP_URL/
   when: manual
   tags:
-    - deploy_blockapi
+    - deploy_graphql
 ```
 
 #### web UI中CI/CD变量配置
@@ -999,11 +999,11 @@ deploy:
 
 2. 点击下游任务即可跳转到我们的独立部署仓库中对应的流水线中；
 
-![image-20210526155942216](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526155943.png)
+![image-20210526155942216](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192305536.png)
 
 3. 点击deploy任务的运行按钮，即可进行部署；
 
 4. 部署完成后，可在独立部署仓库中生成一个部署环境，点击即可前往；
 
-   ![image-20210526160146582](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526160148.png)
+   ![image-20210526160146582](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192306371.png)
 

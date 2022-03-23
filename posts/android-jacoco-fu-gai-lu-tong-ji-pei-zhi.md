@@ -1,4 +1,12 @@
-# Android Jacoco覆盖率统计配置
+---
+title: 'Android Jacoco覆盖率统计配置'
+date: 2022-03-19 22:29:12
+tags: []
+published: false
+hideInList: false
+feature: 
+isTop: false
+---
 Android Jacoco 覆盖率统计Gradle配置，包括生成本地单元测试报告，仪器单元测试报告，合并两种测试的报告，合并两种测试的执行数据并在AndroidStudio的编辑器中查看每一行的覆盖率情况。
 <!-- more -->
 
