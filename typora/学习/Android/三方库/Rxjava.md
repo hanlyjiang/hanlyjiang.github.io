@@ -293,6 +293,17 @@ observer.onSubscribe(ScalarDisposable);
 
 也就是说重点来到了 `ObserveOnObserver` (ObserveOnObserver(LambdaObserver,scheduler.createWorker()))
 
+即：
+
+```java
+ObserveOnObserver.onSubscribe(ScalarDisposable);
+	ScalarDisposable.run
+		ObserveOnObserver.onNext(value);
+		ObserveOnObserver.onComplete();
+```
+
+
+
 ####  ObserveOnObserver
 
 ```java
@@ -311,10 +322,17 @@ ObserveOnObserver(Observer<? super T> actual, Scheduler.Worker worker, boolean d
 
 接下来，我们按调用序列依次查看其实现：
 
-##### 1. observer.onSubscribe(ScalarDisposable);
+```java
+ObserveOnObserver.onSubscribe(ScalarDisposable);
+	ScalarDisposable.run
+		ObserveOnObserver.onNext(value);
+		ObserveOnObserver.onComplete();
+```
+
+##### 1. ObserveOnObserver.onSubscribe(ScalarDisposable);
 
 ```java
-@Override
+				@Override
         public void onSubscribe(Disposable d) {
             if (DisposableHelper.validate(this.upstream, d)) {
                 this.upstream = d;
@@ -327,11 +345,13 @@ ObserveOnObserver(Observer<? super T> actual, Scheduler.Worker worker, boolean d
 										 // sd 返回 SYNC，走以下同步分支
                     if (m == QueueDisposable.SYNC) {
                         sourceMode = m;
+                      	// 设置队列为 ScalarDisposable
                         queue = qd;
                         done = true;
-                       //downstream 即为 LambdaObserver，这里就调用了目标通知Observable的 onSubscribe
+                       	// downstream 即为 LambdaObserver，这里就调用了目标通知Observable的 onSubscribe
                         downstream.onSubscribe(this);
                         schedule();
+                      	// 到这里就直接return了
                         return;
                     }
                     if (m == QueueDisposable.ASYNC) {
@@ -353,5 +373,140 @@ ObserveOnObserver(Observer<? super T> actual, Scheduler.Worker worker, boolean d
                 worker.schedule(this);
             }
         }
+
+
 ```
 
+通过 worker.schedule(ObserveOnObserver) 就会直接运行 ObserveOnObserver.run ，只不过这时**切换了线程**。
+
+```java
+        @Override
+        public void run() {
+          // requestFusion 时，如果传入的是 ASYNC 则 outFused 为true，所以我们走 drainNormal 逻辑
+            if (outputFused) {
+                drainFused();
+            } else {
+                drainNormal();
+            }
+        }
+
+				void drainNormal() {
+            int missed = 1;
+						// onSubscribe 时设置了 queue 为我们的 ScalarDisposable ，就是 ObservableJust 的 subscribeActual 中创建的的那个 Disposable
+            final SimpleQueue<T> q = queue;
+            // a 就是我们的下游Observer ，即 LambdaObserver
+            final Observer<? super T> a = downstream;
+
+            for (;;) {
+                if (checkTerminated(done, q.isEmpty(), a)) {
+                    return;
+                }
+
+                for (;;) {
+                    boolean d = done;
+                    T v;
+
+                    try {
+                       // 取值,实际上就是 just(T) 中的 T value
+                        v = q.poll();
+                    } catch (Throwable ex) {
+                        Exceptions.throwIfFatal(ex);
+                        disposed = true;
+                        upstream.dispose();
+                        q.clear();
+                        a.onError(ex);
+                        worker.dispose();
+                        return;
+                    }
+                    boolean empty = v == null;
+
+                    if (checkTerminated(d, empty, a)) {
+                        return;
+                    }
+
+                    if (empty) {
+                        break;
+                    }
+										 // 然后调用了
+                    a.onNext(v);
+                }
+
+                missed = addAndGet(-missed);
+                if (missed == 0) {
+                    break;
+                }
+            }
+        }
+```
+
+总结在其他线程的调用序列：
+
+```java
+LambdaObserver.onNext(value)
+```
+
+##### onComplete
+
+```java
+@Override
+public void onComplete() {
+    if (done) {
+        return;
+    }
+    done = true;
+    schedule();
+}
+```
+
+这里设置了 done 标记，然后又通过schedule，在线程池中执行 drainNormal ，drainNormal中有一个checkTerminated方法使用到了done这个标记：
+
+
+
+```java
+         if (checkTerminated(done, q.isEmpty(), a)) {
+                    return;
+                }
+
+boolean checkTerminated(boolean d, boolean empty, Observer<? super T> a) {
+            if (disposed) {
+                queue.clear();
+                return true;
+            }
+            if (d) {
+                Throwable e = error;
+                if (delayError) {
+                    if (empty) {
+                        disposed = true;
+                        if (e != null) {
+                            a.onError(e);
+                        } else {
+                            a.onComplete();
+                        }
+                        worker.dispose();
+                        return true;
+                    }
+                } else {
+                    if (e != null) {
+                        disposed = true;
+                        queue.clear();
+                        a.onError(e);
+                        worker.dispose();
+                        return true;
+                    } else
+                    if (empty) {
+                        disposed = true;
+                        a.onComplete();
+                        worker.dispose();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+```
+
+然后在这个方法中，如果 done = true，则会执行 `LambdaObserver.onComplete` 或 `LambdaObserver.onError` ，而且此时动作执行在Scheduler对应的线程池之中。
+
+#### 总结
+
+observeOn会将其包装的 Observable 的的订阅 Observer 的通知方法（next, complete,error）运行到指定的线程之中。
