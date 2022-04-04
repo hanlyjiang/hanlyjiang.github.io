@@ -88,3 +88,270 @@
 
 ## 操作符
 
+## 线程切换
+
+### 概览
+
+线程切换的操作符解析。
+
+有如下几种类型的线程切换方式。
+
+1. 单独的线程切换操作符，有如下三种：
+
+   ```
+   observeOn()
+   subscribeOn()
+   unsubscribeOn()
+   ```
+
+2. 部分其他操作符自带的 Scheduler 参数的重载函数，有如下：（仅统计Observable）
+
+   - interval
+   - timer
+   - buffer
+   - concatMap/concatMapDelayError
+   - debounce
+   - delay
+   - replay
+   - sample
+   - skip/skipLast
+   - take/taskLast
+   - throttleFist/throtleLast/throttleLatest/throttleWithTimeout
+   - timeInterval
+   - timeout
+   - timestamp
+   - window
+
+### observeOn 分析
+
+#### 示例介绍
+
+示例代码如下，在 subscribe 调用前，每次调用都是对之前的Observable的包装，下面在注释中写出了每行调用之后返回的包装对象，或者 subscribe 最终的调用对象。
+
+```java
+Observable.just(1) 										 // 1. ObservableJust 
+          .observeOn(Schedulers.io()) // 2. ObservableObserveOn
+  				.subscribe();								 // 3. ObservableObserveOn#subscribe
+```
+
+- `observeOn` 的包装过程可参看下方源码：
+
+  ```java
+  public final Observable<T> observeOn(@NonNull Scheduler scheduler) {
+    return observeOn(scheduler, false, bufferSize());
+  }
+  
+  public final Observable<T> observeOn(@NonNull Scheduler scheduler, boolean delayError, int bufferSize) {
+    Objects.requireNonNull(scheduler, "scheduler is null");
+    ObjectHelper.verifyPositive(bufferSize, "bufferSize");
+    // 将 ObservableJust 传递给 ObservableObserveOn 
+    return RxJavaPlugins.onAssembly(new ObservableObserveOn<>(this, scheduler, delayError, bufferSize));
+  }
+  ```
+
+#### `ObservableJust` 
+
+实现非常简单，我们就直接先看了：
+
+```java
+public final class ObservableJust<T> extends Observable<T> implements ScalarSupplier<T> {
+
+    private final T value;
+    public ObservableJust(final T value) {
+        this.value = value;
+    }
+
+    @Override
+    protected void subscribeActual(Observer<? super T> observer) {
+        ScalarDisposable<T> sd = new ScalarDisposable<>(observer, value);
+      	// 做的事情很简单
+        observer.onSubscribe(sd);
+        sd.run();
+    }
+
+    @Override
+    public T get() {
+        return value;
+    }
+}
+
+public static final class ScalarDisposable<T>
+    extends AtomicInteger
+    implements QueueDisposable<T>, Runnable {
+
+        private static final long serialVersionUID = 3880992722410194083L;
+
+        final Observer<? super T> observer;
+
+        final T value;
+
+        static final int START = 0;
+        static final int FUSED = 1;
+        static final int ON_NEXT = 2;
+        static final int ON_COMPLETE = 3;
+
+        public ScalarDisposable(Observer<? super T> observer, T value) {
+            this.observer = observer;
+            this.value = value;
+        }
+
+        @Override
+        public void run() {
+            if (get() == START && compareAndSet(START, ON_NEXT)) {
+                observer.onNext(value);
+                if (get() == ON_NEXT) {
+                    lazySet(ON_COMPLETE);
+                    observer.onComplete();
+                }
+            }
+        }
+    }
+```
+
+我们铺开一下 just 的 `subscribeActual` 调用，实际上就是如下三个方法：
+
+```java
+observer.onSubscribe(ScalarDisposable);
+	ScalarDisposable.run
+		observer.onNext(value);
+		observer.onComplete();
+```
+
+####  入口：`ObservableObserveOn.subscribe`	
+
+```java
+// subscribe 方法为 Observable 的 final 方法，各种变体最终都调用到这个方法中来    
+public final Disposable subscribe(@NonNull Consumer<? super T> onNext, @NonNull Consumer<? super Throwable> onError,
+            @NonNull Action onComplete) {
+  			// 所有的通知函数都被包装成一个 LambdaObserver
+        LambdaObserver<T> ls = new LambdaObserver<>(onNext, onError, onComplete, Functions.emptyConsumer());
+        subscribe(ls);
+        return ls;
+}
+
+public final void subscribe(@NonNull Observer<? super T> observer) {
+        Objects.requireNonNull(observer, "observer is null");
+        try {
+          	// 正常情况下（没有设置hook），直接返回传入的 observer
+            observer = RxJavaPlugins.onSubscribe(this, observer);
+            // 最终调用的是 subscribeActual(LambdaObserver)
+            subscribeActual(observer);
+        } catch (NullPointerException e) { // NOPMD
+            throw e;
+        } catch (Throwable e) {
+            throw npe;
+        }
+}
+```
+
+所以调用序列如下：
+
+```java
+Observable.just(1).observeOn(Schedulers.io()).subscribe();
+	ObservableObserveOn.subscribe(LambdaObserver)
+  	ObservableObserveOn.subscribeActual(LambdaObserver)
+```
+
+其中 LambdaObserver 也就是最终用户关注的那些个通知函数（onNext，onError等）。
+
+#### `ObservableObserveOn.subscribeActual`
+
+```java
+		// observer 即为 LambdaObserver
+		// 这里的 source 为我们的 ObservableJust
+		@Override
+    protected void subscribeActual(Observer<? super T> observer) {
+        if (scheduler instanceof TrampolineScheduler) {
+            // 当前线程队列执行
+            source.subscribe(observer);
+        } else {
+          	// 一般情况获取 Scheduler 的worker，我们切换线程的，就走这个分支
+            Scheduler.Worker w = scheduler.createWorker();
+						// 然后又包装了一下 🧄
+            source.subscribe(new ObserveOnObserver<>(observer, w, delayError, bufferSize));
+        }
+    }
+```
+
+目前为止，调用序列如下：
+
+```java
+Observable.just(1).observeOn(Schedulers.io()).subscribe();
+	ObservableObserveOn.subscribe(LambdaObserver)
+  	ObservableObserveOn.subscribeActual(LambdaObserver)
+    	ObservableJust.subscribe(ObserveOnObserver(LambdaObserver,scheduler.createWorker()))
+```
+
+接下来就到了 `ObservableJust.subscribe` 了，根据我们之前的分析，实际上就是如下调用序列：
+
+```java
+observer.onSubscribe(ScalarDisposable);
+	ScalarDisposable.run
+		observer.onNext(value);
+		observer.onComplete();
+```
+
+也就是说重点来到了 `ObserveOnObserver` (ObserveOnObserver(LambdaObserver,scheduler.createWorker()))
+
+####  ObserveOnObserver
+
+```java
+ObserveOnObserver(Observer<? super T> actual, Scheduler.Worker worker, boolean delayError, int bufferSize) {
+    this.downstream = actual;
+    this.worker = worker;
+    this.delayError = delayError;
+    this.bufferSize = bufferSize;
+}
+```
+
+首先，通过查看其构造函数，我们可以看到 ：
+
+- `downstream` 指向原始的 Observer（LambdaObserver，也就是用户关心的那些个通知毁掉）
+- `worker` 指向 Scheduler 创建的 Worker
+
+接下来，我们按调用序列依次查看其实现：
+
+##### 1. observer.onSubscribe(ScalarDisposable);
+
+```java
+@Override
+        public void onSubscribe(Disposable d) {
+            if (DisposableHelper.validate(this.upstream, d)) {
+                this.upstream = d;
+              // 很明显，我们的 ScalarDisposable 是一个 QueueDisposable
+                if (d instanceof QueueDisposable) {
+                    @SuppressWarnings("unchecked")
+                    QueueDisposable<T> qd = (QueueDisposable<T>) d;
+
+                    int m = qd.requestFusion(QueueDisposable.ANY | QueueDisposable.BOUNDARY);
+										 // sd 返回 SYNC，走以下同步分支
+                    if (m == QueueDisposable.SYNC) {
+                        sourceMode = m;
+                        queue = qd;
+                        done = true;
+                       //downstream 即为 LambdaObserver，这里就调用了目标通知Observable的 onSubscribe
+                        downstream.onSubscribe(this);
+                        schedule();
+                        return;
+                    }
+                    if (m == QueueDisposable.ASYNC) {
+                        sourceMode = m;
+                        queue = qd;
+                        downstream.onSubscribe(this);
+                        return;
+                    }
+                }
+
+                queue = new SpscLinkedArrayQueue<>(bufferSize);
+
+                downstream.onSubscribe(this);
+            }
+        }
+
+        void schedule() {
+            if (getAndIncrement() == 0) {
+                worker.schedule(this);
+            }
+        }
+```
+
