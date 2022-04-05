@@ -509,4 +509,357 @@ boolean checkTerminated(boolean d, boolean empty, Observer<? super T> a) {
 
 #### 总结
 
-observeOn会将其包装的 Observable 的的订阅 Observer 的通知方法（next, complete,error）运行到指定的线程之中。
+- observeOn 会将其包装的 Observable 的的订阅 Observer 的通知方法（next, complete,error）运行到指定的线程之中。 影响的是其后续的通知，因为只有订阅它的时候才会触发对应的通知回调。
+- 一般的变换操作都需要在其实现中调用 source.subscribe 来触发事件流。所以此时就会调用对应的通知方法。
+
+### subscribeOn 分析
+
+实际上就是把 `source.subscribe(parent); ` 放到另外一个线程中
+
+如何保证其他的部分在原来的线程中？没有保证。所以如果默认情况下没有通过 observeOn 切换线程的话，那么通知也会在 subscribeOn 所指定的线程中进行操作。
+
+### doOnTerminate，doOnComplete 在何处执行？
+
+#### 分析
+
+通过 doOnTerminate， doOnComplete 等我们可以在对应的事件阶段添加其他的Action。那么这些Action怎么切换线程了？
+
+所有的 doOnXXX 的动作都是通过 ObservableDoOnEach 包装完成的。
+
+下面仅以 onNext 为例进行说明，其他的都类似。
+
+- 可以看到，只是简单包装了一下，让doOnNext 的 action 在包装的对象的OnNext中先执行，然后在调用downstream.onNext(t)
+- 所以，得到如下结论：
+  - doOnNext 的Action实际上也是在我们subscribe的 onNext 之前执行的；
+
+那么，我们有一个问题，doOnNext （onNext.accept(t)）和 onNext（downstream.onNext(t)） 一定是在一个线程中执行吗？
+
+- 答案是不一定，doOnNext 执行的时机决定于当前 Observer，而 onNext 执行的线程则决定与 downstream 在哪个线程执行。
+
+```java
+public final class ObservableDoOnEach<T> extends AbstractObservableWithUpstream<T, T> {
+    final Consumer<? super T> onNext;
+
+    public ObservableDoOnEach(ObservableSource<T> source, Consumer<? super T> onNext,
+                              Consumer<? super Throwable> onError,
+                              Action onComplete,
+                              Action onAfterTerminate) {
+        super(source);
+        this.onNext = onNext;
+    }
+
+    @Override
+    public void subscribeActual(Observer<? super T> t) {
+       // source 就是我们被包装的 Observable ，让其订阅 DoOnEachObserver
+        source.subscribe(new DoOnEachObserver<>(t, onNext, onError, onComplete, onAfterTerminate));
+    }
+
+    static final class DoOnEachObserver<T> implements Observer<T>, Disposable {
+        final Observer<? super T> downstream;
+        final Consumer<? super T> onNext;
+        Disposable upstream;
+        boolean done;
+        DoOnEachObserver(
+                Observer<? super T> actual,
+                Consumer<? super T> onNext,
+                Consumer<? super Throwable> onError,
+                Action onComplete,
+                Action onAfterTerminate) {
+            this.downstream = actual;
+            this.onNext = onNext;
+        }
+      
+        @Override
+        public void onNext(T t) {
+            if (done) {
+                return;
+            }
+            try {
+              	// doOnNext 的 Action
+                onNext.accept(t);
+            } catch (Throwable e) {
+                Exceptions.throwIfFatal(e);
+                upstream.dispose();
+                onError(e);
+                return;
+            }
+						// 实际的 Observer
+            downstream.onNext(t);
+        }
+}
+
+```
+
+#### 如何切换doOnSubscribe 执行的线程？
+
+而 subscribeOn 则是要把 Observer的 subscribe 方法放到指定的线程中去执行，而subscribe 动作是还没有发生的，只有我们调用subscribe时才会发生， 所以我们需要通过  .subscribeOn(Schedulers.io()) 去触发，所以subscribeOn需要放在后面调用。
+
+```java
+// 将 subscribeOn 放在 doOnSubscribe后面即可                
+.doOnSubscribe(disposable -> log("doOnSubscribe"))
+                .subscribeOn(Schedulers.io())
+```
+
+#### 如何切换 doOnNext/doOnComplete/doOnError/doOnTerminate 执行的线程？
+
+因为 observeOn 相当于把下游的 Observer 的通知函数抛到指定的线程中去执行，而这个执行只有在 subscribe（包括我们主动subscribe及变换操作时触发的subscribe）才会触发通知事件流，所以我们需要预先切换；
+
+每个转换动作都需要触发事件流，就是每个都需要调用 subscribe
+
+```java
+// 将 observeOn 放在doOnXXX 之后即可
+Observable.create((ObservableOnSubscribe<Integer>) emitter -> {
+                    log("subscribe");
+                    emitter.onNext(1);
+                    emitter.onComplete();
+                })
+                .observeOn(Schedulers.newThread())
+                .doOnNext(b -> log("doOnNext"))
+                .observeOn(Schedulers.computation())
+                .doOnSubscribe(disposable -> log("doOnSubscribe"))
+                .subscribeOn(Schedulers.io())
+                .doOnError(throwable -> log("doOnError"))
+                .observeOn(Schedulers.newThread())
+                .doOnComplete(() -> log("doOnComplete"))
+                .observeOn(Schedulers.newThread())
+                .doOnTerminate(countDownLatch::countDown)
+                .observeOn(Schedulers.newThread())
+                .subscribe(integer -> log("onNext"),
+                        throwable -> log("onError"),
+                        () -> log("onComplete"));
+
+// 输出
+RxCachedThreadScheduler-1|doOnSubscribe
+RxCachedThreadScheduler-1|subscribe
+RxNewThreadScheduler-1|doOnNext
+RxNewThreadScheduler-2|doOnComplete
+RxNewThreadScheduler-4|onNext
+RxNewThreadScheduler-4|onComplete
+```
+
+再看下面的例子：
+
+```java
+       Observable.create((ObservableOnSubscribe<Integer>) emitter -> {
+                    log("subscribe");
+                    emitter.onNext(1);
+                    emitter.onComplete();
+                })
+                .doOnSubscribe(disposable -> log("doOnSubscribe"))
+                .subscribeOn(Schedulers.io())
+
+                .observeOn(Schedulers.newThread())
+                .doOnNext(b -> log("doOnNext-" + (count.incrementAndGet()))) // RxNewThreadScheduler-1|doOnNext-1
+//                .observeOn(Schedulers.newThread())
+                .doOnNext(b -> log("doOnNext-" + (count.incrementAndGet()))) // RxNewThreadScheduler-1|doOnNext-2
+
+                .observeOn(Schedulers.newThread())
+                .doOnNext(b -> log("doOnNext-" + (count.incrementAndGet()))) // RxNewThreadScheduler-2|doOnNext-3
+
+                .observeOn(Schedulers.newThread())
+                .doOnNext(b -> log("doOnNext-" + (count.incrementAndGet()))) // RxNewThreadScheduler-3|doOnNext-4
+
+
+                .observeOn(Schedulers.newThread())
+                .doOnTerminate(countDownLatch::countDown)
+
+                .observeOn(Schedulers.newThread())
+                .subscribe(integer -> log("onNext"),
+                        throwable -> log("onError"),
+                        () -> log("onComplete"));
+
+// 输出
+RxCachedThreadScheduler-1|doOnSubscribe
+RxCachedThreadScheduler-1|subscribe
+  // 一个管下面两条
+RxNewThreadScheduler-1|doOnNext-1
+RxNewThreadScheduler-1|doOnNext-2
+  
+RxNewThreadScheduler-2|doOnNext-3
+RxNewThreadScheduler-3|doOnNext-4
+RxNewThreadScheduler-5|onNext
+RxNewThreadScheduler-5|onComplete
+```
+
+
+
+### 线程切换实例总结
+
+有如下测试代码：
+
+```java
+    public static void main(String[] args) {
+        RxJavaTest rxJavaTest = new RxJavaTest();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Disposable subscribe = Observable.create((ObservableOnSubscribe<Integer>) emitter -> {
+                    log("subscribe");
+                    emitter.onNext(1);
+                    emitter.onComplete();
+                })
+//                .observeOn(Schedulers.io())
+//                .subscribeOn(Schedulers.computation())
+                .doOnTerminate(countDownLatch::countDown)
+                .subscribe(integer -> log("onNext"),
+                        throwable -> log("onError"),
+                        () -> log("onComplete"));
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+```
+
+#### 单一Observable切换
+
+按不同的订阅方式，分别有如下线程切换表现：
+
+1. 不调用 observeOn subscribeOn
+    ```java
+      // 不调用 observeOn subscribeOn
+    // .observeOn(Schedulers.io())
+    // .subscribeOn(Schedulers.computation())
+    // 输出
+      main|subscribe
+      main|onNext
+      main|onComplete
+    ```
+
+2. 仅调用 observeOn
+
+   只会切换通知方法的调用线程，如下：
+
+   ```java
+   // 仅调用 observeOn
+      .observeOn(Schedulers.io())
+   // .subscribeOn(Schedulers.computation())
+   // 输出
+   	main|subscribe
+     RxCachedThreadScheduler-1|onNext
+     RxCachedThreadScheduler-1|onComplete
+   ```
+
+3. 仅调用  subscribeOn
+
+    可以看到，subscribe 及 通知方法都在 computation 线程中调用了。
+
+    ```java 
+    // 仅调用 subscribeOn
+    //  .observeOn(Schedulers.io())
+        .subscribeOn(Schedulers.computation())
+    // 输出
+    RxComputationThreadPool-1|subscribe
+    RxComputationThreadPool-1|onNext
+    RxComputationThreadPool-1|onComplete
+    ```
+
+4. 两者都调用
+
+    subscribe 在 computation ，通知在 io
+
+    ```java
+      .observeOn(Schedulers.io())
+      .subscribeOn(Schedulers.computation())
+    // 输出
+    RxComputationThreadPool-1|subscribe
+    RxCachedThreadScheduler-1|onNext
+    RxCachedThreadScheduler-1|onComplete
+    ```
+
+5. 多次调用subscribeOn
+
+    **前面**的生效
+
+    ```java
+    .subscribeOn(Schedulers.computation())
+      .observeOn(Schedulers.io())
+      .subscribeOn(Schedulers.newThread())
+    // 输出
+    RxComputationThreadPool-1|subscribe
+    RxCachedThreadScheduler-1|onNext
+    RxCachedThreadScheduler-1|onComplete
+                      
+    ```
+
+6. 多次 observeOn
+
+    **后面**的生效
+
+    ```java
+    .subscribeOn(Schedulers.computation())
+    .observeOn(Schedulers.io())
+    .observeOn(Schedulers.newThread())
+    // 输出 
+    RxComputationThreadPool-1|subscribe
+    RxNewThreadScheduler-1|onNext
+    RxNewThreadScheduler-1|onComplete
+    ```
+
+#### 变换操作切换
+
+对于变换的操作的线程切换，需要看变换是发生在 subscribe 还是通知上面。
+
+如 map 操作源代码如下：
+
+```java
+static final class MapObserver<T, U> extends BasicFuseableObserver<T, U> {
+        final Function<? super T, ? extends U> mapper;
+        MapObserver(Observer<? super U> actual, Function<? super T, ? extends U> mapper) {
+            super(actual);
+            this.mapper = mapper;
+        }
+        @Override
+        public void onNext(T t) {
+            if (done) {
+                return;
+            }
+
+            if (sourceMode != NONE) {
+                downstream.onNext(null);
+                return;
+            }
+
+            U v;
+
+            try {
+                // map 的转换操作是在onNext中，所以我们需要使用 observerOn 进行切换
+                v = Objects.requireNonNull(mapper.apply(t), "The mapper function returned a null value.");
+            } catch (Throwable ex) {
+                fail(ex);
+                return;
+            }
+            downstream.onNext(v);
+        }
+}
+```
+
+操作在 onNext 中，故如果需要切换，需要使用 observerOn 进行切换，如下测试代码
+
+```java
+public static void main(String[] args) {
+        RxJavaTest rxJavaTest = new RxJavaTest();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Disposable subscribe = Observable.create((ObservableOnSubscribe<Integer>) emitter -> {
+                    log("subscribe");
+                    emitter.onNext(1);
+                    emitter.onComplete();
+                })
+          // 注意顺序 observeOn在map操作前面，类似于map中的onNext等同于 subscribe 后的 next
+                .observeOn(Schedulers.newThread())
+                .map(integer -> {
+                    log("map");
+                    return true;
+                })
+                .doOnTerminate(countDownLatch::countDown)
+                .subscribe(integer -> log("onNext"),
+                        throwable -> log("onError"),
+                        () -> log("onComplete"));
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+```
+
+
+
