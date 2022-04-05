@@ -516,6 +516,8 @@ boolean checkTerminated(boolean d, boolean empty, Observer<? super T> a) {
 
 实际上就是把 `source.subscribe(parent); ` 放到另外一个线程中
 
+#### 分析
+
 如何保证其他的部分在原来的线程中？没有保证。所以如果默认情况下没有通过 observeOn 切换线程的话，那么通知也会在 subscribeOn 所指定的线程中进行操作。
 
 ```java
@@ -605,7 +607,9 @@ public final class ObservableSubscribeOn<T> extends AbstractObservableWithUpstre
 }
 ```
 
+#### 总结
 
+- 只能切换 subscribe 动作执行所在的线程，但是不会切换 downstream 的 onSubscribe 回调动作执行所在线程；
 
 ### doOnTerminate，doOnComplete 在何处执行？
 
