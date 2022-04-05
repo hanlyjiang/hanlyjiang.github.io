@@ -611,6 +611,60 @@ public final class ObservableSubscribeOn<T> extends AbstractObservableWithUpstre
 
 - 只能切换 subscribe 动作执行所在的线程，但是不会切换 downstream 的 onSubscribe 回调动作执行所在线程；
 
+
+
+#### 示例
+
+可以看到，
+
+- 调用 `.subscribeOn(Schedulers.io())` 之前的Obserable的onSubscribe回调是没有被切换线程执行的；
+- 后续的 doOnSubscribe 被切换了（因为doOnSubscribe返回的Obserable的subscribe方法调用线程被切换了）
+
+```java
+private static void testSubscribeOn() throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Observable.just(1)
+                .doOnTerminate(() -> {
+                    log("doOnTerminate");
+                    countDownLatch.countDown();
+                })
+                .doOnSubscribe(d -> log("doOnSubscribe"))
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<Integer>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        log("subscribe-onSubscribe");
+                    }
+
+                    @Override
+                    public void onNext(@NonNull Integer integer) {
+                        log("subscribe-onNext");
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        log("subscribe-onError");
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        log("subscribe-onComplete");
+                    }
+                });
+        countDownLatch.await();
+    }
+// 输出 
+main|subscribe-onSubscribe
+RxCachedThreadScheduler-1|doOnSubscribe
+RxCachedThreadScheduler-1|subscribe-onNext
+RxCachedThreadScheduler-1|doOnTerminate
+RxCachedThreadScheduler-1|subscribe-onComplete
+```
+
+
+
+
+
 ### doOnTerminate，doOnComplete 在何处执行？
 
 #### 分析
