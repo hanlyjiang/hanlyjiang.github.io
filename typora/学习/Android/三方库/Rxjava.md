@@ -518,6 +518,95 @@ boolean checkTerminated(boolean d, boolean empty, Observer<? super T> a) {
 
 如何保证其他的部分在原来的线程中？没有保证。所以如果默认情况下没有通过 observeOn 切换线程的话，那么通知也会在 subscribeOn 所指定的线程中进行操作。
 
+```java
+ public final Observable<T> subscribeOn(@NonNull Scheduler scheduler) {
+        Objects.requireNonNull(scheduler, "scheduler is null");
+   // 包装到 ObservableSubscribeOn 中
+        return RxJavaPlugins.onAssembly(new ObservableSubscribeOn<>(this, scheduler));
+    }
+
+public final class ObservableSubscribeOn<T> extends AbstractObservableWithUpstream<T, T> {
+    final Scheduler scheduler;
+
+    public ObservableSubscribeOn(ObservableSource<T> source, Scheduler scheduler) {
+        super(source);
+        this.scheduler = scheduler;
+    }
+
+    @Override
+    public void subscribeActual(final Observer<? super T> observer) {
+        final SubscribeOnObserver<T> parent = new SubscribeOnObserver<>(observer);
+				// observer = LambdaObserver（被包装的Observable的订阅者）
+      	// 原始的 Observer 的 onSubscribe还没有切换线程
+        observer.onSubscribe(parent);
+				// 自己的切换了线程，run =  source.subscribe(parent)
+      	// source = ObservableJust （被包装的Observable）
+        parent.setDisposable(scheduler.scheduleDirect(new SubscribeTask(parent)));
+    }
+  static final class SubscribeOnObserver<T> extends AtomicReference<Disposable> implements Observer<T>, Disposable {
+
+        private static final long serialVersionUID = 8094547886072529208L;
+        final Observer<? super T> downstream;
+
+        final AtomicReference<Disposable> upstream;
+
+        SubscribeOnObserver(Observer<? super T> downstream) {
+            this.downstream = downstream;
+            this.upstream = new AtomicReference<>();
+        }
+
+        @Override
+        public void onSubscribe(Disposable d) {
+            DisposableHelper.setOnce(this.upstream, d);
+        }
+
+        @Override
+        public void onNext(T t) {
+            downstream.onNext(t);
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            downstream.onError(t);
+        }
+
+        @Override
+        public void onComplete() {
+            downstream.onComplete();
+        }
+
+        @Override
+        public void dispose() {
+            DisposableHelper.dispose(upstream);
+            DisposableHelper.dispose(this);
+        }
+
+        @Override
+        public boolean isDisposed() {
+            return DisposableHelper.isDisposed(get());
+        }
+
+        void setDisposable(Disposable d) {
+            DisposableHelper.setOnce(this, d);
+        }
+    }
+   final class SubscribeTask implements Runnable {
+        private final SubscribeOnObserver<T> parent;
+
+        SubscribeTask(SubscribeOnObserver<T> parent) {
+            this.parent = parent;
+        }
+
+        @Override
+        public void run() {
+            source.subscribe(parent);
+        }
+    }
+}
+```
+
+
+
 ### doOnTerminate，doOnComplete 在何处执行？
 
 #### 分析
