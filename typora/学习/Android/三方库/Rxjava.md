@@ -536,9 +536,9 @@ public final class ObservableSubscribeOn<T> extends AbstractObservableWithUpstre
     @Override
     public void subscribeActual(final Observer<? super T> observer) {
         final SubscribeOnObserver<T> parent = new SubscribeOnObserver<>(observer);
-				// observer = LambdaObserver（被包装的Observable的订阅者）
+				// observer = LambdaObserver（被包装的Observer）
       	// 原始的 Observer 的 onSubscribe还没有切换线程
-        observer.onSubscribe(parent);
+        observer.onSubscribe(parent); // 触发downstream的onSubscribe回调
 				// 自己的切换了线程，run =  source.subscribe(parent)
       	// source = ObservableJust （被包装的Observable）
         parent.setDisposable(scheduler.scheduleDirect(new SubscribeTask(parent)));
