@@ -1,5 +1,24 @@
 # Rxjava
 
+## RX 是什么？
+- 观察者模式 + 迭代器 + 函数式编程
+- 避免 Callback 嵌套 （所以，如果使用了RxJava之后，还是有回调地狱，那么需要反思是否用的不对？）
+
+
+## 学习资源
+- [RxJava 线程切换](http://tomstechnicalblog.blogspot.hu/2016/02/rxjava-understanding-observeon-and.html)
+
+
+
+### 基础概念
+- Observer
+- Subscribes
+- Observable
+
+> In ReactiveX an observer subscribes to an Observable.
+
+![](media/16492591960001.png)
+
 ## **Observable 类别** 
 
 可用的 Observable 有如下几种：
@@ -85,6 +104,7 @@
   - 最后一次调用 `onNext` 之后调用，并且没有产生任何错误
 - 发射： `onNext`
 - 通知： `onError` ｜ `onCompleted`
+- 订阅： `subscribe`
 
 ## 操作符
 
@@ -1010,3 +1030,5 @@ public static void main(String[] args) {
 
 
 
+## 背压
+背压是响应式流的一个规范。比如，上游滔滔江水来，下游河道窄浅，一旦发生洪水，后果将不堪设想，为了减轻下游的压力，索性就建设大坝。回到响应式流，流中的元素会由生产者（Producer）在一端生产出来，而在另一端由消费者（Consumer）消费掉。一旦元素的生产速度超过了消费者的消费速度，就会造成产品的积压，即元素的积压。随着这种积压的不断增加，程序性能就会下降，直至程序“挂掉”。背压（Back Pressure）就是用来解决这个问题的，虽然它可能会增加元素的处理时间，但是它建立起了一个弹性机制，允许程序内部按需调节而不至于使程序崩溃。 具体来说就是，元素由发布者生产、发布，由订阅者或消费者在下游收集。接下来，消费者会根据需求发送一个信号给上游，以此来保证可以将所需元素安全地推送给消费者，而发送信号这个动作是异步进行的。对于订阅者来讲，其可以通过一个拉取策略来发送更多的请求以获取元素。
