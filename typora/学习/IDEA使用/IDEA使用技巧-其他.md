@@ -63,3 +63,42 @@ keytool -list -v -keystore $USER_HOME/.android/debug.keystore -alias androiddebu
 
 - CMD + Enter 从命令行调用UI任务执行
 - CMD + Enter + Shift ： debug gradle task
+
+
+
+## 代码模板配置
+
+### 文件头
+
+1. 打开设置
+
+<img src="/Users/hanlyjiang/Library/Application Support/typora-user-images/image-20220412222117224.png" alt="image-20220412222117224" style="zoom: 50%;" />
+
+2. 添加如下配置
+
+   ```java
+   /**
+   * 
+   * @author ${USER} at ${DATE} ${TIME}
+   * @version 1.0
+   */
+   ```
+
+   <img src="/Users/hanlyjiang/Library/Application Support/typora-user-images/image-20220412222305883.png" alt="image-20220412222305883" style="zoom:50%;" />
+   
+   ### Live  Templates
+   
+   配置如下：
+   
+   ![image-20220412222929017](/Users/hanlyjiang/Library/Application Support/typora-user-images/image-20220412222929017.png)
+
+<img src="/Users/hanlyjiang/Library/Application Support/typora-user-images/image-20220412222949569.png" alt="image-20220412222949569" style="zoom:50%;" />
+
+```java
+/**
+* 
+* @author $user$ at $date$ $time$
+* @version 1.0
+*/
+```
+

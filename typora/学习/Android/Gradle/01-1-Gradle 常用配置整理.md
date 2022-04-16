@@ -208,3 +208,36 @@ signing.secretKeyRingFile=/Users/hanlyjiang/.gnupg/secring.gpg
 #### 使用方式
 
 上面有介绍 不重复说明
+
+
+
+
+
+### 启用kotlin
+
+#### 手动添加配置
+
+```kotlin
+buildscript {
+    dependencies {
+        classpath "com.android.tools.build:gradle:7.1.2"
+        // 添加 kotlin gradle 插件 classpath
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.20'
+    }
+}
+```
+
+模块的配置
+
+```kotlin
+plugins {
+    id("com.android.application")
+    // 添加 kotlin-android 插件
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    compileSdk = 31
+}
+```
+
