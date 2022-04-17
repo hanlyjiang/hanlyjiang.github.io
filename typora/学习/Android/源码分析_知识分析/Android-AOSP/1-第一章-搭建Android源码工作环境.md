@@ -451,7 +451,7 @@ idegen.jar 在执行时会根据配置的规则自动写入这三种规则，其
 ```shell
 croot
 mkdir -p idea/aidl/src
-find out/soong/.intermediates/frameworks/base/api-stubs-docs-non-updatable/android_common/gen/aidl -name "*.srcjar" | xargs -I {} unzip {} -d idea/aidl/src
+find out/soong/.intermediates/frameworks/base/api-stubs-docs/android_common/gen/aidl -name "*.srcjar" | xargs -I {} unzip {} -d idea/aidl/src
 ```
 
 ##### 获取生成的资源
@@ -492,6 +492,9 @@ cp -R out/soong/.intermediates/frameworks/base/core/res/framework-res/android_co
    
    # 关于out其他的一些规则
    ^out/soong/.intermediates/(?!((frameworks)|(libcore)))
+   # 需要过滤的
+   # ^out/soong/.intermediates/module-lib-api/frameworks/base/module-lib-api
+   # ^out/soong/.intermediates/module-lib-api/frameworks/base/*-api-stubs-docs*
    # ./out/soong/.intermediates/frameworks/native/libs/binder/libbinder/android_x86_64_shared/gen/aidl/android/os/BnServiceManager.h
    # ^out/soong/.intermediates/.*
    ^out/target/.*
