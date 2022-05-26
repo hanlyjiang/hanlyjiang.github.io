@@ -1,0 +1,3846 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://hanlyjiang.github.io</id>
+    <title> HanlyJiang </title>
+    <updated>2022-05-26T14:49:49.988Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://hanlyjiang.github.io"/>
+    <link rel="self" href="https://hanlyjiang.github.io/atom.xml"/>
+    <subtitle>不断积累于优化经验</subtitle>
+    <logo>https://hanlyjiang.github.io/images/avatar.png</logo>
+    <icon>https://hanlyjiang.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2022,  HanlyJiang </rights>
+    <entry>
+        <title type="html"><![CDATA[Android Jacoco覆盖率统计配置]]></title>
+        <id>https://hanlyjiang.github.io/post/android-jacoco-gradle-config/</id>
+        <link href="https://hanlyjiang.github.io/post/android-jacoco-gradle-config/">
+        </link>
+        <updated>2022-03-19T14:29:12.000Z</updated>
+        <summary type="html"><![CDATA[<p>Android Jacoco 覆盖率统计Gradle配置，包括生成本地单元测试报告，仪器单元测试报告，合并两种测试的报告，合并两种测试的执行数据并在AndroidStudio的编辑器中查看每一行的覆盖率情况。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Android Jacoco 覆盖率统计Gradle配置，包括生成本地单元测试报告，仪器单元测试报告，合并两种测试的报告，合并两种测试的执行数据并在AndroidStudio的编辑器中查看每一行的覆盖率情况。</p>
+<!-- more -->
+<h2 id="如何让测试任务生成-jacoco-覆盖率统计数据">如何让测试任务生成 Jacoco 覆盖率统计数据？</h2>
+<p>这里我们仅仅从Gradle任务来说，不考虑 AndroidStudio/IDEA。</p>
+<h3 id="本地单元测试test">本地单元测试（Test）</h3>
+<p>对于本地单元测试来说，原先有一个 <code>testDebugUnitTest</code> 的测试任务，如果不做配置，该任务只会生成测试通过情况的报告。只要应用 jacoco 插件，然后运行 <code>testDebugUnitTest</code> 任务时，就会同时生成jacoco覆盖率统计<strong>执行数据文件</strong>。</p>
+<pre><code class="language-kotlin">// build.gradle 
+apply(plugin = &quot;jacoco&quot;)
+</code></pre>
+<p>之所以能这样是因为 jacoco 插件会给所有 Test 类型的任务添加 jacoco 的配置。</p>
+<p>可以通过如下方式输出其执行数据文件路径：</p>
+<pre><code class="language-kotlin">afterEvaluate {
+    tasks.getByName(&quot;testDebugUnitTest&quot;).apply {
+        doLast {
+            (this.extensions.getByName(&quot;jacoco&quot;) as JacocoTaskExtension).apply {
+                logger.lifecycle(&quot;testDebugUnitTest dest: ${this.destinationFile?.absolutePath}&quot;)
+            }
+        }
+    }
+}
+</code></pre>
+<p>执行情况如下：</p>
+<pre><code class="language-shell">testDebugUnitTest dest: /Users/hanlyjiang/Wksp/project/AndroidTestSample/app/build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec
+</code></pre>
+<h3 id="仪器单元测试androidtest">仪器单元测试（AndroidTest）</h3>
+<p>仪器单元测试覆盖率数据的统计需要打开<code>testCoverageEnabled</code>开关，然后会有一个<code>createDebugCoverageReport</code> 的任务生成，同时也会生成html的报告。</p>
+<pre><code class="language-groovy">// groovy
+android {
+    buildTypes {
+        debug {
+            testCoverageEnabled = true
+        }
+    }
+}
+
+// kotlin
+android {
+    buildTypes {
+        getByName(&quot;debug&quot;).apply {
+            isTestCoverageEnabled = true
+        }
+    }
+}
+</code></pre>
+<p>连接设备执行该任务即可生成对应的执行数据文件及对应的覆盖率报告。</p>
+<p>通过在build.gradle中添加如下配置可以在执行时输出其执行数据文件在本机的位置：</p>
+<pre><code class="language-kotlin">    tasks.withType(com.android.build.gradle.internal.coverage.JacocoReportTask::class.java) {
+        logger.lifecycle(&quot;-&gt; JacocoReportTask task : $name&quot;)
+        doFirst {
+            logger.lifecycle(&quot;-&gt; JacocoReportTask task : $name , ${jacocoConnectedTestsCoverageDir.get()})}&quot;)
+        }
+    }
+</code></pre>
+<p>然后执行<code>createDebugCoverageReport</code>, 输出如下 ：</p>
+<pre><code class="language-shell">&gt; Task :app:createDebugAndroidTestCoverageReport
+-&gt; JacocoReportTask task : createDebugAndroidTestCoverageReport , /Users/hanlyjiang/Wksp/project/AndroidTestSample/app/build/outputs/code_coverage/debugAndroidTest/connected)}
+
+&gt; Task :app:createDebugCoverageReport
+</code></pre>
+<h3 id="小结">小结</h3>
+<p>通过以上信息我们可知：</p>
+<ol>
+<li>应用 jacoco 插件之后，本地单元测试任务（<code>testDebugUnitTest</code>）就会生成 jacoco 覆盖率execution数据文件，但是不会生成html报告；</li>
+<li>开启 isTestCoverageEnabled 开关，会生成 <code>createDebugCoverageReport</code> 任务，该任务会执行仪器单元测试，同时生成execution数据文件，并生成html报告。</li>
+</ol>
+<h2 id="生成-html-报告">生成 HTML 报告</h2>
+<p>由于androidTest 已经生成了html报告，接下来我们需要要为我们的本地单元测试生成HTML报告。</p>
+<p>要生成html报告，我们需要一个类型为 JacocoReport 的任务，我们在gradle 中添加如下配置，用于生成 <code>jacocoTestDebugUnitTestReport</code> 任务</p>
+<pre><code class="language-kotlin">apply(plugin = &quot;jacoco&quot;)
+
+android {
+    buildTypes {
+        getByName(&quot;debug&quot;).apply {
+            isTestCoverageEnabled = true
+        }
+    }
+}
+afterEvaluate {
+	// 由于我们需要获取对应的源码及class目录，所以使用 android.applicationVariants forEach 来获取变体
+	android.applicationVariants.forEach { variant -&gt;
+        if (variant.buildType.isTestCoverageEnabled) {
+            val variantCapName = variant.name.capitalize();
+            tasks.register(
+                &quot;jacocoTest${variantCapName}UnitTestReport&quot;,
+                JacocoReport::class.java
+            ) {
+                group = &quot;jacoco&quot;
+              	// 依赖测试任务
+	              dependsOn(&quot;test${variantCapName}UnitTest&quot;)
+                
+              	// 根据执行数据生成报告，直接传输task即可
+                executionData(tasks.getByName(&quot;test${variantCapName}UnitTest&quot;))
+              	// 报告中会包含源码，可以查看源码的对应的覆盖情况
+                sourceDirectories.from(variant.sourceSets.flatMap { it.javaDirectories + it.kotlinDirectories })
+                // 没有 class 数据报告会是空的
+                classDirectories.from(variant.javaCompileProvider.get().destinationDirectory)
+              
+              	doLast {
+                    logger.lifecycle(reports.html.outputLocation.asFile.get().absolutePath)
+                }
+            }
+        }
+	}
+}
+</code></pre>
+<p>添加之后 sync gradle，即可生成一个 <code>jacocoTestDebugUnitTestReport</code> 的任务，执行它即可生成测试报告，生成的测试报告位于： <code>build/reports/jacoco/jacocoTestDebugUnitTestReport</code>中。</p>
+<p>下图就是我们生成的报告，可以看到StringUtils已经能够统计覆盖率了。而MainActivity还没有数据。</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192203816.png" alt="image-20220319220339791" style="zoom:50%;" />
+<h2 id="生成合并html报告">生成合并HTML报告</h2>
+<p>我们已经可以生成本地单元测试的覆盖率报告，现在我们需要生成androidTest + test 的合并报告。</p>
+<p>之前我们已经知道：</p>
+<ul>
+<li>createDebugCoverageReport 任务即可生成 execution 文件并且生成html报告</li>
+<li>我们已经添加了一个任务可以生成本地单元测试的报告。</li>
+</ul>
+<p>现在我们要做的是将它们合并，但是我们的合并并不是针对html报告，而是针对execution数据。</p>
+<p>让我们添加如下配置来生成一个合并报告的gradle任务：</p>
+<pre><code class="language-kotlin">apply(plugin = &quot;jacoco&quot;)
+
+android {
+    buildTypes {
+        getByName(&quot;debug&quot;).apply {
+            isTestCoverageEnabled = true
+        }
+    }
+}
+
+afterEvaluate {
+    android.applicationVariants.forEach { variant -&gt;
+        if (variant.buildType.isTestCoverageEnabled) {
+            val variantCapName = variant.name.capitalize();
+            tasks.register(&quot;mergedJacoco${variantCapName}TestReport&quot;, JacocoReport::class.java) {
+                group = &quot;jacoco&quot;
+                executionData(
+                    tasks.getByName(&quot;test${variantCapName}UnitTest&quot;),
+                )
+                val androidCoverageTask =
+                    tasks.getByName(&quot;create${variantCapName}AndroidTestCoverageReport&quot;)
+                if (androidCoverageTask is com.android.build.gradle.internal.coverage.JacocoReportTask) {
+                    executionData(androidCoverageTask.jacocoConnectedTestsCoverageDir.asFileTree)
+                }
+                sourceDirectories.from(variant.sourceSets.flatMap { it.javaDirectories + it.kotlinDirectories })
+                classDirectories.from(variant.javaCompileProvider.get().destinationDirectory)
+                dependsOn(
+                    &quot;test${variantCapName}UnitTest&quot;,
+                    &quot;create${variantCapName}AndroidTestCoverageReport&quot;
+                )
+              	doLast {
+                    logger.lifecycle(reports.html.outputLocation.asFile.get().absolutePath)
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<p>这样，我们便有了一个 <code>mergedJacocoDebugTestReport</code> 的任务，执行后即可在<code>build/reports/jacoco/mergedJacocoDebugTestReport/html</code> 目录中找到我们的 report 。</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192204139.png" alt="image-20220319220451116" style="zoom:50%;" />
+<p>现在可以看到，我们的MainActivity（AndroidTest）及StringUtils（test）可以在一份报告中显示覆盖率数据了。</p>
+<h2 id="生成合并-execution-数据文件">生成合并 Execution 数据文件</h2>
+<p>到现在为止，我们已经生成了HTML版本的合并报告，并且可以在其中看到源码没一行覆盖的情况。</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192206236.png" alt="image-20220319220605201" style="zoom:50%;" />
+<p>但是，我们希望能够在AndroidStudio的编辑器中显示覆盖率的情况，向下面这样👇：</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192215319.png" alt="image-20220319221553776" style="zoom:50%;" />
+<p>实际上，我们可以通过AndroidStudio的<code>Menu-Run-Show Covarage Data</code>加载 execution 文件，然后在AndroidStudio中显示覆盖率数据。</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192208217.png" alt="image-20220319220850184" style="zoom:50%;" />
+<p>执行的数据文件位于类似如下目录 ：</p>
+<ul>
+<li>build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec</li>
+<li>build/outputs/code_coverage/debugAndroidTest/connected/Pixel_5_API_Tiramisu(AVD) - 12/coverage.ec</li>
+</ul>
+<p>但是这里有两个问题：</p>
+<ol>
+<li>debugAndroidTest 目录中的 <code>.ec</code> 文件无法被AndroidStudio识别。</li>
+<li>这两个文件是分开的，每一个文件只包含一种测试的覆盖数据。</li>
+</ol>
+<p>现在，让我们添加一个合并任务：</p>
+<pre><code class="language-kotlin">
+afterEvaluate {
+    tasks.getByName(&quot;testDebugUnitTest&quot;).apply {
+        (this.extensions.getByName(&quot;jacoco&quot;) as JacocoTaskExtension).apply {
+            logger.lifecycle(&quot;testDebugUnitTest dest: ${this.destinationFile?.absolutePath}&quot;)
+        }
+    }
+    tasks.withType(org.gradle.api.tasks.testing.Test::class.java) {
+        logger.lifecycle(&quot;-&gt; test task : $name&quot;)
+    }
+    tasks.withType(JacocoReport::class.java) {
+        logger.lifecycle(&quot;-&gt; JacocoReport task : $name&quot;)
+    }
+    tasks.withType(com.android.build.gradle.internal.coverage.JacocoReportTask::class.java) {
+        logger.lifecycle(&quot;-&gt; JacocoReportTask task : $name&quot;)
+        doFirst {
+            logger.lifecycle(&quot;-&gt; JacocoReportTask task : $name , ${jacocoConnectedTestsCoverageDir.get()})}&quot;)
+        }
+    }
+    android.applicationVariants.forEach { variant -&gt;
+        if (variant.buildType.isTestCoverageEnabled) {
+            val variantCapName = variant.name.capitalize();
+            tasks.register(
+                &quot;jacocoTest${variantCapName}UnitTestReport&quot;,
+                JacocoReport::class.java
+            ) {
+                group = &quot;jacoco&quot;
+                executionData(tasks.getByName(&quot;test${variantCapName}UnitTest&quot;))
+                sourceDirectories.from(variant.sourceSets.flatMap { it.javaDirectories + it.kotlinDirectories })
+                classDirectories.from(variant.javaCompileProvider.get().destinationDirectory)
+                dependsOn(&quot;test${variantCapName}UnitTest&quot;)
+                doLast {
+                    logger.lifecycle(&quot;Jacoco Report: &quot; + reports.html.outputLocation.asFile.get().absolutePath)
+                }
+            }
+
+            tasks.register(&quot;mergedJacoco${variantCapName}TestReport&quot;, JacocoReport::class.java) {
+                group = &quot;jacoco&quot;
+                executionData(
+                    tasks.getByName(&quot;test${variantCapName}UnitTest&quot;),
+                )
+                val androidCoverageTask =
+                    tasks.getByName(&quot;create${variantCapName}AndroidTestCoverageReport&quot;)
+                if (androidCoverageTask is com.android.build.gradle.internal.coverage.JacocoReportTask) {
+                    executionData(androidCoverageTask.jacocoConnectedTestsCoverageDir.asFileTree)
+                }
+                sourceDirectories.from(variant.sourceSets.flatMap { it.javaDirectories + it.kotlinDirectories })
+                classDirectories.from(variant.javaCompileProvider.get().destinationDirectory)
+                dependsOn(
+                    &quot;test${variantCapName}UnitTest&quot;,
+                    &quot;create${variantCapName}AndroidTestCoverageReport&quot;
+                )
+                doLast {
+                    logger.lifecycle(&quot;Jacoco Report: &quot; + reports.html.outputLocation.asFile.get().absolutePath)
+                }
+            }
+
+            tasks.register(&quot;mergeJacoco${variantCapName}Execution&quot;, JacocoMerge::class.java) {
+                group = &quot;jacoco&quot;
+                executionData(
+                    tasks.getByName(&quot;test${variantCapName}UnitTest&quot;),
+                )
+                val androidCoverageTask =
+                    tasks.getByName(&quot;create${variantCapName}AndroidTestCoverageReport&quot;)
+                if (androidCoverageTask is com.android.build.gradle.internal.coverage.JacocoReportTask) {
+                    executionData(androidCoverageTask.jacocoConnectedTestsCoverageDir.asFileTree)
+                }
+                doLast {
+                    logger.lifecycle(&quot;Jacoco Execution: &quot; + destinationFile.absolutePath)
+                }
+            }
+
+        }
+    }
+}
+</code></pre>
+<p>执行之后位于：<code>build/jacoco/mergeJacocoDebugExecution.exec</code>, 通过AndroidStudio 加载之后，显示如下，两种测试的结果已经合并显示了。</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192219808.png" alt="image-20220319221952765" style="zoom:50%;" />
+<h2 id="完整配置文件">完整配置文件</h2>
+<p>请参考： <a href="https://github.com/hanlyjiang/AndroidTestSample/blob/main/app/build.gradle.kts">AndroidTestSample/build.gradle.kts at main · hanlyjiang/AndroidTestSample (github.com)</a></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[ AAR Java8 接口 NoSuchMethodError 错误解决记录]]></title>
+        <id>https://hanlyjiang.github.io/post/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/</id>
+        <link href="https://hanlyjiang.github.io/post/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/">
+        </link>
+        <updated>2022-03-13T15:18:16.000Z</updated>
+        <summary type="html"><![CDATA[<p>遇到一个初看时非常诡异的问题，现已解决，特记录一下解决过程。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>遇到一个初看时非常诡异的问题，现已解决，特记录一下解决过程。</p>
+<!-- more -->
+<h2 id="️-是什么问题">🙋‍♀️ 是什么问题？</h2>
+<h3 id="错误日志">错误日志</h3>
+<p>APP运行过程中，忽然报了一个莫名其妙的错误： <code>NoSuchMethodError</code>, 报错的地方是 rxjava3 的 <code>Disposable.disposed()</code></p>
+<pre><code class="language-shell">E/AndroidRuntime: FATAL EXCEPTION: main
+    Process: com.github.hanlyjiang.sample, PID: 7357
+    java.lang.NoSuchMethodError: No static method disposed()Lio/reactivex/rxjava3/disposables/Disposable; in class Lio/reactivex/rxjava3/disposables/Disposable; or its super classes (declaration of 'io.reactivex.rxjava3.disposables.Disposable' appears in /data/app/~~veR3ZUFYzXjZ48FDcAW0Nw==/com.github.hanlyjiang.sample-bhuZG0wVNdVKs_mfxOh5gg==/base.apk)
+        at com.github.hanlyjiang.lib_mod.ViewTest.disposable(ViewTest.java:8)
+        at com.github.hanlyjiang.sample.MainActivity.lambda$onCreate$0(MainActivity.java:15)
+        at com.github.hanlyjiang.sample.MainActivity$$ExternalSyntheticLambda0.onClick(Unknown Source:0)
+        at android.view.View.performClick(View.java:7456)
+        at com.google.android.material.button.MaterialButton.performClick(MaterialButton.java:1119)
+        at android.view.View.performClickInternal(View.java:7433)
+        at android.view.View.access$3700(View.java:836)
+        at android.view.View$PerformClick.run(View.java:28832)
+        at android.os.Handler.handleCallback(Handler.java:938)
+        at android.os.Handler.dispatchMessage(Handler.java:99)
+        at android.os.Looper.loopOnce(Looper.java:201)
+        at android.os.Looper.loop(Looper.java:288)
+        at android.app.ActivityThread.main(ActivityThread.java:7902)
+        at java.lang.reflect.Method.invoke(Native Method)
+        at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)
+        at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:933)
+</code></pre>
+<blockquote>
+<p><strong>⏰ Tip</strong></p>
+<p>实际上还有遇到过一个 <code>AbstractMethodError</code> 的错误</p>
+</blockquote>
+<h3 id="出现场景">出现场景</h3>
+<ul>
+<li>AAR 引入到APP模块</li>
+<li>打包APK（不通过AndroidStudio直接运行）</li>
+<li>安装并运行</li>
+</ul>
+<h2 id="解决方案">解决方案</h2>
+<p>对于需要解决问题的，可以直接参考尝试下面两种解决方案。</p>
+<h3 id="解法1">解法1</h3>
+<p><code>gradle.properties</code> 文件中添加属性：</p>
+<pre><code class="language-properties">android.enableDexingArtifactTransform.desugaring=false
+</code></pre>
+<h3 id="解法2">解法2</h3>
+<p>修改 aar 的依赖方式，将name+ext的方式修改为 files</p>
+<pre><code class="language-groovy">	implementation(name: 'libmod-release', ext: 'aar')
+</code></pre>
+<p>修改之后</p>
+<pre><code class="language-groovy">	implementation(files('libs/libmod-release.aar'))
+</code></pre>
+<h2 id="案例观察">案例观察</h2>
+<p>根据错误信息，找到我们的代码，得到如下调用关系：</p>
+<pre><code class="language-java">ViewTest.disposable -&gt; Disposable.disposed()
+</code></pre>
+<p>为了方便分析及演示，我编写了一个测试工程位于： <a href="https://github.com/colorless-hanly/NoSuchMethodError">colorless-hanly/NoSuchMethodError: NoSuchMethodError (github.com)</a>，运行此工程能复现该问题。</p>
+<h3 id="class字节码没有问题">class字节码没有问题</h3>
+<p>我们的AAR提供给APP模块时，是以 class 类文件提供的，通过反编译查看其内容，没有任何问题。</p>
+<p>所以我们看看最后运行的APK对应的DEX，并通过AndroidStudio 查看其对应的字节码。</p>
+<h3 id="viewtestdisposable"><code>ViewTest.disposable</code></h3>
+<p>首先我们根据报错信息找到出错的<code>ViewTest.disposable</code>类，并查看其字节码</p>
+<p><strong>Java 代码：</strong></p>
+<pre><code class="language-java">public class ViewTest {
+
+    public static Disposable disposable() {
+        return Disposable.disposed();
+    }
+}
+</code></pre>
+<p><strong>字节码：</strong></p>
+<pre><code class="language-java">.class public Lcom/github/hanlyjiang/lib_mod/ViewTest;
+.super Ljava/lang/Object;
+.source &quot;ViewTest.java&quot;
+
+
+# direct methods
+.method public constructor &lt;init&gt;()V
+    .registers 1
+
+    .line 5
+    invoke-direct {p0}, Ljava/lang/Object;-&gt;&lt;init&gt;()V
+
+    return-void
+.end method
+
+.method public static disposable()Lio/reactivex/rxjava3/disposables/Disposable;
+    .registers 1
+
+    .line 8
+    invoke-static {}, Lio/reactivex/rxjava3/disposables/Disposable;-&gt;disposed()Lio/reactivex/rxjava3/disposables/Disposable;
+
+    move-result-object v0
+
+    return-object v0
+.end method
+</code></pre>
+<p>看起来没有任何问题。</p>
+<h3 id="disposabledisposed"><code>Disposable.disposed()</code></h3>
+<p>我们继续查看 Disposable 接口的字节码，发现居然<strong>没有我们调用的 disposed 方法</strong>。</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/05/26/m2OoeUC3WaEuySc.png" alt="202203132238351" loading="lazy"></figure>
+<p>但是，很快就在有一个叫做 <code>Disposable$-CC</code> 的类中找到了我们的 <code>disposed</code> 方法，同时其中还包括了 <code>Disposable</code> 接口中的所有静态方法</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/05/26/ljBCpFPid92AczY.png" alt="202203132240481" loading="lazy"></figure>
+<p>这里我们粘贴下 Disposable 接口的定义，可以看到其中有两个接口方法定义，还有若干static方法的定义及实现。而我们的静态方法全部位于字节码中 <code>Disposable$-CC</code> 这个类中，而两个接口方法还保留在 <code>Disposable</code> 类中。</p>
+<pre><code class="language-java">public interface Disposable {
+
+    void dispose();
+    boolean isDisposed();
+
+    static Disposable fromRunnable(@NonNull Runnable run) {
+        Objects.requireNonNull(run, &quot;run is null&quot;);
+        return new RunnableDisposable(run);
+    }
+    static Disposable fromAction(@NonNull Action action) {
+        Objects.requireNonNull(action, &quot;action is null&quot;);
+        return new ActionDisposable(action);
+    }
+    static Disposable fromFuture(@NonNull Future&lt;?&gt; future) {
+        Objects.requireNonNull(future, &quot;future is null&quot;);
+        return fromFuture(future, true);
+    }
+    static Disposable fromFuture(@NonNull Future&lt;?&gt; future, boolean allowInterrupt) {
+        Objects.requireNonNull(future, &quot;future is null&quot;);
+        return new FutureDisposable(future, allowInterrupt);
+    }
+    static Disposable fromSubscription(@NonNull Subscription subscription) {
+        Objects.requireNonNull(subscription, &quot;subscription is null&quot;);
+        return new SubscriptionDisposable(subscription);
+    }
+    static Disposable fromAutoCloseable(@NonNull AutoCloseable autoCloseable) {
+        Objects.requireNonNull(autoCloseable, &quot;autoCloseable is null&quot;);
+        return new AutoCloseableDisposable(autoCloseable);
+    }
+    static AutoCloseable toAutoCloseable(@NonNull Disposable disposable) {
+        Objects.requireNonNull(disposable, &quot;disposable is null&quot;);
+        return disposable::dispose;
+    }
+    static Disposable empty() {
+        return fromRunnable(Functions.EMPTY_RUNNABLE);
+    }
+    static Disposable disposed() {
+        return EmptyDisposable.INSTANCE;
+    }
+}
+</code></pre>
+<h3 id="正确的viewtestdisposable字节码">正确的<code>ViewTest.disposable</code>字节码</h3>
+<p>前面我们发现，我们字节码中调用的方法是 <code>Disposable;-&gt;disposed()</code>，而实际上该方法位于 <code>Disposable$-CC;-&gt;disposed()</code>,现在我们看下正常的可以运行通过的apk中dex对应的字节码。</p>
+<ul>
+<li>经过对比，发现Disposable 还是被拆分为了 Disposable 和 Disposable$-CC</li>
+<li>而 ViewTest.disposable 对应的字节码却有区别，正常可以调用通过的字节码和异常的对比如下：</li>
+</ul>
+<pre><code class="language-java">// 正确的
+invoke-static {}, Lio/reactivex/rxjava3/disposables/Disposable$-CC;-&gt;disposed()Lio/reactivex/rxjava3/disposables/Disposable;
+
+// 错误的
+invoke-static {}, Lio/reactivex/rxjava3/disposables/Disposable;-&gt;disposed()Lio/reactivex/rxjava3/disposables/Disposable;
+</code></pre>
+<p>可以发现，能正常运行的方法调用确实指向了 <code>Disposable$-CC;-&gt;disposed()</code>。</p>
+<h3 id="总结">总结</h3>
+<p>也就是说在编译的过程中：</p>
+<ul>
+<li>Disposable 会被拆分为 <code>Disposable</code> 和 <code>Disposable$-CC</code>
+<ul>
+<li><code>Disposable</code> 包含了接口方法的声明</li>
+<li><code>Disposable$-CC</code> 中则包含了静态方法的声明及实现</li>
+</ul>
+</li>
+<li>对于调用到 Disposable 的静态方法的部分，最终编译完成后，会替换为指向<code>Disposable$-CC</code></li>
+</ul>
+<p>而我们出错的情况下，是没有正确指向的，所以确实会出现找不到对应的方法的情况。</p>
+<h2 id="原因分析">原因分析</h2>
+<h3 id="class-dex-java8-语言特性支持">class -&gt; dex &amp; Java8 语言特性支持</h3>
+<p>以下为Android 官方文档上的相关描述：</p>
+<blockquote>
+<ul>
+<li><strong><a href="https://developer.android.google.cn/studio/write/java8-support">使用 Java 8 语言功能和 API</a></strong></li>
+</ul>
+<p>Android Gradle 插件对使用某些 Java 8 语言功能以及利用这些功能的第三方库提供内置支持。如图 所示，默认工具链实现新语言功能的方法是在<strong>使用 D8/R8 将类文件编译成 dex 代码的过程中执行字节码转换，这种转换称为 <code>desugar</code></strong>。</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/05/26/PLiSGTwhZADqjFm.png" alt="202203132254856" loading="lazy"></figure>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong><a href="https://developer.android.google.cn/studio/write/java8-support#library-desugaring">Java 8 及更高版本 API 脱糖支持（Android Gradle 插件 4.0.0 及更高版本）</a></strong></li>
+</ul>
+<p>如果您使用 Android Gradle 插件 4.0.0 或更高版本构建应用，插件扩展了对使用多种 Java 8 语言 API 的支持，而无需为应用设置最低 API 级别。</p>
+<p>之所以能够实现对较低平台版本的这种额外支持，是因为脱糖引擎经过插件 4.0.0 及更高版本扩展后，也能使 Java 语言 API 脱糖。因此，您可以在支持较低 Android 版本的应用中添加过去仅在最新 Android 版本中可用的标准语言 API（如 <code>java.util.streams</code>）。</p>
+<p>使用 Android Gradle 插件 4.0.0 或更高版本构建应用时，支持下面一组 API：</p>
+<ul>
+<li>顺序流 (<code>java.util.stream</code>)</li>
+<li><code>java.time</code> 的子集</li>
+<li><code>java.util.function</code></li>
+<li><code>java.util.{Map,Collection,Comparator}</code> 的最近新增内容</li>
+<li>可选内容（<code>java.util.Optional</code>、<code>java.util.OptionalInt</code> 和 <code>java.util.OptionalDouble</code>）以及对上述 API 很有用的一些其他新类</li>
+<li><code>java.util.concurrent.atomic</code> 的一些新增内容（<code>AtomicInteger</code>、<code>AtomicLong</code> 和 <code>AtomicReference</code> 的新方法）</li>
+<li><code>ConcurrentHashMap</code>（包含 Android 5.0 的问题修复）</li>
+</ul>
+<p>如需查看受支持的 API 的完整列表，请参阅<a href="https://developer.android.google.cn/studio/write/java8-support-table">通过脱糖获得 Java 8 及更高版本 API</a>。</p>
+<p>为了支持这些语言 API，插件编译了一个单独的 DEX 文件（其中包含缺失 API 的实现），并将其添加到您的应用中。脱糖过程会重新编写应用的代码，以便在运行时改用此库。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong><a href="https://developer.android.google.cn/studio/command-line/d8">编译使用了 Java 8 语言功能的字节码</a></strong></li>
+</ul>
+<p><code>d8</code> 通过一个叫做“脱糖”的编译过程，使您能够在代码中<a href="https://developer.android.google.cn/studio/write/java8-support">使用 Java 8 语言功能</a>，此过程会将这些实用的语言功能转换为可以在 Android 平台上运行的字节码。</p>
+<p>Android Studio 和 Android Gradle 插件包含了 <code>d8</code> 为您启用脱糖所需的类路径资源。</p>
+<p>Android Studio 和 Android Gradle 插件包含了 <code>d8</code> 为您启用脱糖所需的类路径资源。不过，从命令行使用 <code>d8</code> 时，您需要手动添加这些资源。</p>
+<p>其中一个资源就是目标 Android SDK 中的 <code>android.jar</code>。此资源包含一组 Android 平台 API，您可以使用 <code>--lib</code> 标记来指定该资源的路径。</p>
+<p>另一个资源是您项目的部分已编译的 Java 字节码，您目前不打算将这部分字节码编译为 DEX 字节码，但在将其他类编译为 DEX 字节码时需要用到这些字节码。例如，如果代码使用<a href="https://docs.oracle.com/javase/tutorial/java/IandI/defaultmethods.html">默认和静态接口方法</a>（一种 Java 8 语言功能），则您需要使用此标记来指定您项目的所有 Java 字节码的路径，即使您不打算将所有 Java 字节码都编译为 DEX 字节码也是如此。<strong>这是因为 <code>d8</code> 需要根据这些信息来理解您项目的代码并解析对接口方法的调用</strong>。</p>
+</blockquote>
+<p>通过以上描述我们可以知道：</p>
+<ul>
+<li>Android 通过 D8 将 class 转换为可在Android平台上执行的dex，这个过程称为 <strong>desugar （脱糖）</strong>。</li>
+<li>脱糖过程中，可能会重新编写应用的代码。</li>
+<li>脱糖时需要指定脱糖所需要的类路径资源。</li>
+</ul>
+<h3 id="对应我们的问题">对应我们的问题</h3>
+<blockquote>
+<p>待补充</p>
+<p>通过 d8 手动对class进行dex转换，然后观察转换差异。</p>
+</blockquote>
+<pre><code class="language-shell">d8 MainActivity.class --intermediate --file-per-class --output ~/build/intermediate/dex
+--lib android_sdk/platforms/api-level/android.jar
+--classpath ~/build/javac/debug
+</code></pre>
+<p>将类文件编译成 dex 代码的过程中执行字节码转换，这种转换称为 <code>desugar</code>。AGP 使用 D8 完成desugar ，为了能正确的处理class，需要根据POM依赖信息来寻找对应的依赖，然后将所有依赖项目都加入到 desurge classpath，然后才能正确处理。而 aar 引入时不具备这些POM依赖信息，所以无法还原。</p>
+<h2 id="进一步了解">进一步了解</h2>
+<ul>
+<li><a href="https://developer.android.google.cn/studio/command-line/d8">d8  | Android 开发者  | Android Developers (google.cn)</a></li>
+<li><a href="https://developer.android.google.cn/studio/write/java8-support">使用 Java 8 语言功能和 API  | Android 开发者  | Android Developers (google.cn)</a></li>
+<li><a href="https://developer.android.google.cn/studio/write/java8-support#library-desugaring">使用 Java 8 语言功能和 API  | Android 开发者  | Android Developers (google.cn)</a></li>
+<li><a href="https://developer.android.google.cn/studio/releases/gradle-plugin">Android Gradle 插件版本说明  | Android 开发者  | Android Developers (google.cn)</a></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Dagger 在Android库(SDK)模块中的使用实践]]></title>
+        <id>https://hanlyjiang.github.io/post/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/</id>
+        <link href="https://hanlyjiang.github.io/post/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/">
+        </link>
+        <updated>2022-03-06T07:11:54.000Z</updated>
+        <summary type="html"><![CDATA[<p>本文主要描述如何使用Dagger解决实际项目中遇到的问题，这两个问题是：</p>
+<ol>
+<li>如何在库（SDK）模块中使用Dagger依赖注入？</li>
+<li>MVP中的Dagger依赖注入如何实现无感注入？</li>
+</ol>
+<p>本文不会介绍如何使用Dagger，只专注于描述如上两个问题的解决的前因后果及解决方案。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>本文主要描述如何使用Dagger解决实际项目中遇到的问题，这两个问题是：</p>
+<ol>
+<li>如何在库（SDK）模块中使用Dagger依赖注入？</li>
+<li>MVP中的Dagger依赖注入如何实现无感注入？</li>
+</ol>
+<p>本文不会介绍如何使用Dagger，只专注于描述如上两个问题的解决的前因后果及解决方案。</p>
+<!-- more -->
+<h2 id="背景">背景</h2>
+<p>接手开发一个SDK，大致情况如下：</p>
+<ul>
+<li>该SDK内部有若干界面，包括Activity，Fragment等</li>
+<li>使用MVP架构</li>
+</ul>
+<p>逐渐发现内部依赖混乱，在得空后，遂对其依赖部分进行重构改造。</p>
+<h3 id="为什么使用依赖注入进行改造">为什么使用依赖注入进行改造？</h3>
+<p>主要是依赖混乱，单例的滥用导致依赖关系不明显，无法管理，无法测试</p>
+<p>某些对象，我们在很多类中都需要使用，如 Retrofit 的请求对象，代表信息的标识字段等，此时为了避免通过构造函数或者setter方法来传递，就直接起了个单例，还有很多其他类似的情况，最终导致单例有10多个，调用单例 getInstance 的地方更是数不胜数。</p>
+<p>导致我们要对对应的代码进行单元测试做mock操作异常困难，</p>
+<ol>
+<li>因为依赖关系太不明显，几乎得一行行找才能找到类或方法到底依赖了哪些对象</li>
+<li>同时mock的过程也变得麻烦，由于没有作为类成员，所以无法简单通过mock替换对应成员；</li>
+</ol>
+<h3 id="依赖注入改造的问题点">依赖注入改造的问题点</h3>
+<p>主要有如下问题：</p>
+<p style="color:red;">1. 没有Application。该模块为SDK，我们并不能直接修改Application对象，Application为集成方自行编写。</p>
+<p style="color:red;">2. MVP的绑定。MVP绑定中模板代码较多，我们希望能尽可能的实现无感的注入。</p>
+<p>之所以提第一个问题，是因为Google 针对Android，在Dagger的基础上针对性的构建了一个Hilt 的依赖注入框架，能够减少Android中直接使用Dagger的模板代码。但是Hilt的使中有要求：</p>
+<blockquote>
+<p><strong>所有使用 Hilt 的应用都必须包含一个带有 <code>@HiltAndroidApp</code> 注释的 <code>Application</code> 类。</strong></p>
+<p>参考： <a href="https://developer.android.google.cn/training/dependency-injection/hilt-android">使用 Hilt 实现依赖项注入  | Android 开发者  | Android Developers (google.cn)</a></p>
+</blockquote>
+<p>也就是必须能控制住Application，如上所述，我们作为一个SDK的提供方：</p>
+<ol>
+<li>是没有机会修改Application的代码的</li>
+<li>而且，我们也不能要求使用方去做这种限制；同时，如果使用方有使用 Hilt 呢，我们的代码是否会对其产生影响？</li>
+</ol>
+<p><strong>故，我们只能直接使用Dagger。</strong></p>
+<p>而另外一个问题在于MVP的架构限制，P 层需要持有V层的引用，也就是P依赖V，而V通常是Activity或者Fragment，而Activity及Fragment的创建过程由Android系统控制，所以在使用Dagger时我们需要添加一些模板代码（下方会说明），将 Activity及Fragment对象注入到 Dagger 的依赖图谱中。</p>
+<h2 id="没有-application-的问题解决">没有 Application 的问题解决</h2>
+<p>首先，我们要解决的是没有Application的问题，那么没有Application会给我们带来哪些问题呢？</p>
+<ol>
+<li>无法使用 Hilt</li>
+<li>无法直接使用 dagger-android</li>
+</ol>
+<p>这两个问题实际上是类似的，Hilt及Dagger-Android都是用于解决 Android 组件（Activity，Fragment，Service，BroadcastReceiver 等）的依赖注入的。但是他们都要求我们必须使用 Application。</p>
+<h3 id="为什么一定要application">为什么一定要Application？</h3>
+<p>首先，让我们看下 dagger-android 的使用方式，这里参考 [Google 的示例](<a href="https://github.com/android/architecture-components-samples/tree/master/GithubBrowserSample">architecture-components-samples/GithubBrowserSample at master · android/architecture-components-samples</a>) 进行说明。</p>
+<h4 id="dagger-android-的使用">Dagger-Android 的使用</h4>
+<p>这里我们省略 gradle 依赖的引入部分，直接解释代码。</p>
+<h5 id="1-application-进行改造">1. Application 进行改造</h5>
+<p>如下代码所述，主要有如下修改：</p>
+<ol>
+<li>令 Application 实现 <code>HasActivityInjector</code> 接口；</li>
+<li>Application 中注入一个类型为 <code>DispatchingAndroidInjector&lt;Activity&gt;</code> 的成员，同时通过HasActivityInjector接口定义的重载方法 <code>activityInjector()</code> 返回该成员。</li>
+<li>在 <code>Application.onCreate</code> 中调用 <code>AppInjector.init(this)</code> 执行注入操作。</li>
+</ol>
+<p>至此，准备工作就完毕了，之后就可以使用Dagger 无感注入Activity或者Fragment了。</p>
+<pre><code class="language-kotlin">class GithubApp : Application(), HasActivityInjector {
+    @Inject
+    lateinit var dispatchingAndroidInjector: DispatchingAndroidInjector&lt;Activity&gt;
+
+    override fun onCreate() {
+        super.onCreate()
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+        AppInjector.init(this)
+    }
+
+    override fun activityInjector() = dispatchingAndroidInjector
+}
+</code></pre>
+<p>AppInjector.init 的实现也很简单，实际上就是：</p>
+<ul>
+<li>在 Activity Create 的时候调用 <code>AndroidInjection.inject(activity)</code> 及</li>
+<li>在 Fragment Create 的时候调用 <code>AndroidSupportInjection.inject(f)</code></li>
+</ul>
+<pre><code class="language-kotlin">object AppInjector {
+    fun init(githubApp: GithubApp) {
+        DaggerAppComponent.builder().application(githubApp)
+            .build().inject(githubApp)
+        githubApp
+            .registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+                override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                    handleActivity(activity)
+                }
+            })
+    }
+
+    private fun handleActivity(activity: Activity) {
+        if (activity is HasSupportFragmentInjector) {
+            AndroidInjection.inject(activity)
+        }
+        if (activity is FragmentActivity) {
+            activity.supportFragmentManager
+                .registerFragmentLifecycleCallbacks(
+                    object : FragmentManager.FragmentLifecycleCallbacks() {
+                        override fun onFragmentCreated(fm: FragmentManager,f: Fragment,savedInstanceState: Bundle?
+                        ) {
+                            if (f is Injectable) {
+                                AndroidSupportInjection.inject(f)
+                            }
+                        }
+                    }, true
+                )
+        }
+    }
+}
+</code></pre>
+<blockquote>
+<p><code>AndroidInjection.inject</code> 及 <code>AndroidSupportInjection.inject</code>为 dagger-android 提供的接口，我们后续进行分析。</p>
+</blockquote>
+<h5 id="2-使用">2. 使用</h5>
+<p>再完成上述准备工作之后，要想让Activity或者Fragment能够自动注入，只需要进行如下操作（我们同样还是参考<a href="https://github.com/android/architecture-components-samples/blob/master/GithubBrowserSample/app/src/main/java/com/android/example/github/di/MainActivityModule.kt">Google示例代码</a>）</p>
+<ol>
+<li>在 Module 中使用<code>@ContributesAndroidInjector</code> 标记一个返回对应Activity（如MainActivity）的方法</li>
+</ol>
+<pre><code class="language-kotlin">// https://github.com/android/architecture-components-samples/blob/master/GithubBrowserSample/app/src/main/java/com/android/example/github/di/MainActivityModule.kt
+@Module
+abstract class MainActivityModule {
+    @ContributesAndroidInjector(modules = [FragmentBuildersModule::class])
+    abstract fun contributeMainActivity(): MainActivity
+}
+</code></pre>
+<ol start="2">
+<li>当然还需要将这个Module包含到 AppComponent中（同时 AppComponent中需要包含 <code>AndroidInjectionModule</code>这个 dagger-android 提供的module）</li>
+</ol>
+<pre><code class="language-kotlin">// https://github.com/android/architecture-components-samples/blob/master/GithubBrowserSample/app/src/main/java/com/android/example/github/di/AppComponent.kt
+@Singleton
+@Component(
+    modules = [
+        AndroidInjectionModule::class,
+        MainActivityModule::class]
+)
+interface AppComponent {
+    // 删除其他部分
+}
+</code></pre>
+<h5 id="3-总结">3. 总结</h5>
+<p>也就是说，使用dagger-android时，在完成了准备动作之后，<strong>后续只需要添加一个 <code>@ContributesAndroidInjector</code> 注解的方法，就可以让你的Activity支持自动依赖注入。</strong></p>
+<h3 id="为什么需要-application">为什么需要 Application</h3>
+<p>上面介绍了 dagger-android 的使用方式，实际上是为了展示在使用Dagger-Android之后，我们<strong>可以无需对Activity进行修改，就可以自动向其中注入依赖</strong>。 这里的修改实际上指的是手动在每个Activity 的 onCreate 方法调用Dagger组件的注入方法。</p>
+<p>但是我们的问题并没有得到回答，即：</p>
+<p><b><span style="color:red;">为什么需要Application？</span></b></p>
+<p>现在，让我们看下 <code>AndroidInjection.inject(activity)</code> 的实现：(AndroidInjection 为dagger-android 库提供的辅助工具类)</p>
+<pre><code class="language-kotlin">public static void inject(Activity activity) {
+    checkNotNull(activity, &quot;activity&quot;);
+    Application application = activity.getApplication();
+    if (!(application instanceof HasActivityInjector)) {
+      throw new RuntimeException(
+          String.format(
+              &quot;%s does not implement %s&quot;,
+              application.getClass().getCanonicalName(),
+              HasActivityInjector.class.getCanonicalName()));
+    }
+
+    AndroidInjector&lt;Activity&gt; activityInjector =
+        ((HasActivityInjector) application).activityInjector();
+    checkNotNull(activityInjector, &quot;%s.activityInjector() returned null&quot;, application.getClass());
+
+    activityInjector.inject(activity);
+  }
+</code></pre>
+<p>从代码中我们可以看到，执行了如下步骤：</p>
+<ol>
+<li><strong>由Activity获取Application</strong>；</li>
+<li>判断 Application 是否实现了 HasActivityInjector</li>
+<li>从 Application 获取 <code>AndroidInjector&lt;Activity&gt;</code>，然后使用此对象执行对目标Activity的注入。</li>
+</ol>
+<p>另外，AndroidInjection 类还有对 Service，Fragment等的注入辅助方法，过程中也都类似对Activity的注入，会获取 Application 对象，然后从Application对象中获取AndroidInejctor，再用此对象进行目标组件的依赖注入。</p>
+<p>所以，我们现在知道了为什么一定要Application了：</p>
+<ol>
+<li><strong>实际上，是需要其中的 AndroidInjector ；</strong></li>
+<li><strong>在各种Android组件中（Activity，Service，等）我们都能直接通过其获取到Application对象，这样就能找到存在于Application中的 AndroidInjector，然后执行注入操作。</strong></li>
+</ol>
+<h3 id="扩展-androidinjector-哪里来的">扩展 - AndroidInjector 哪里来的？</h3>
+<p>通过上面的分析，我们知道了为什么 dagger-android 一定需要Application，是为了获取其中的AndroidInjector 用来执行目标Android组件的注入操作。</p>
+<p>那么，<strong>这个 AndroidInjector 是哪里来的呢？</strong></p>
+<p>由前面的GithubApp代码中我们看到，这个 AndroidInject 就是Application中使用了 <code>@Inject</code> 标记的类型为<code> DispatchingAndroidInjector&lt;Activity&gt;</code> 的对象</p>
+<pre><code class="language-kotlin">// AndroidInjection.inject(activity)
+AndroidInjector&lt;Activity&gt; activityInjector =
+        ((HasActivityInjector) application).activityInjector();    
+
+// GithubApp
+@Inject
+lateinit var dispatchingAndroidInjector: DispatchingAndroidInjector&lt;Activity&gt;
+override fun activityInjector() = dispatchingAndroidInjector
+</code></pre>
+<p>我们去Dagger 的生成代码中( <code>DaggerAppComponent</code> )中查找对应的类型 <code>DispatchingAndroidInjector&lt;Activity&gt;</code></p>
+<pre><code class="language-java">// DaggerAppComponent.java  
+	private DispatchingAndroidInjector&lt;Activity&gt; getDispatchingAndroidInjectorOfActivity() {
+    return DispatchingAndroidInjector_Factory.newDispatchingAndroidInjector(
+        getMapOfClassOfAndProviderOfFactoryOf());
+  }
+
+  private GithubApp injectGithubApp(GithubApp instance) {
+    GithubApp_MembersInjector.injectDispatchingAndroidInjector(
+        instance, getDispatchingAndroidInjectorOfActivity());
+    return instance;
+  }
+ 
+	@Override
+  public void inject(GithubApp githubApp) {
+    injectGithubApp(githubApp);
+  }
+
+// GithubApp_MembersInjector.java
+  @Override
+  public void injectMembers(GithubApp instance) {
+    injectDispatchingAndroidInjector(instance, dispatchingAndroidInjectorProvider.get());
+  }
+
+  public static void injectDispatchingAndroidInjector(
+      GithubApp instance, DispatchingAndroidInjector&lt;Activity&gt; dispatchingAndroidInjector) {
+    instance.dispatchingAndroidInjector = dispatchingAndroidInjector;
+  }
+</code></pre>
+<p>可以看到 DaggerAppComponent中在注入<code>inject(GithubApp)</code>时，会将<code>DispatchingAndroidInjector&lt;Activity&gt;</code> 类型的依赖注入到 GithubApp 中。</p>
+<blockquote>
+<p><strong>更多细节：</strong></p>
+<ol>
+<li>
+<p>dagger-android-processor  处理其会根据 <code>@ContributesAndroidInjector</code> 自动生成一个Module的代码，内容如下：</p>
+<pre><code class="language-java">@Module(subcomponents = MainActivityModule_ContributeMainActivity.MainActivitySubcomponent.class)
+public abstract class MainActivityModule_ContributeMainActivity {
+  private MainActivityModule_ContributeMainActivity() {}
+
+  @Binds
+  @IntoMap
+  @ActivityKey(MainActivity.class)
+  abstract AndroidInjector.Factory&lt;? extends Activity&gt; bindAndroidInjectorFactory(
+      MainActivitySubcomponent.Builder builder);
+
+  @Subcomponent(modules = FragmentBuildersModule.class)
+  public interface MainActivitySubcomponent extends AndroidInjector&lt;MainActivity&gt; {
+    @Subcomponent.Builder
+    abstract class Builder extends AndroidInjector.Builder&lt;MainActivity&gt; {}
+  }
+}
+</code></pre>
+<ul>
+<li>此模块中定义了 <code>bindAndroidInjectorFactory</code> 方法，使用 <code>@Binds @IntoMap</code>生成  <code>Map&lt;Class&lt;? extends T&gt;, Provider&lt;AndroidInjector.Factory&lt;? extends T&gt;&gt;&gt;</code> 类型的Map</li>
+<li>在这里注入到Map中的内容就是 <code>(MainActivity.class, MainActivitySubcomponent.Builder builder)</code>, 其中 <code>MainActivitySubcomponent.Builder</code>  用于构建 <code>MainActivitySubcomponent</code></li>
+<li><code>MainActivitySubcomponent</code> 继承了 <code>AndroidInjector&lt;MainActivity&gt;</code> 类，所以会有一个 <code>inject(MainActivity instance)</code>的方法，这个方法就是最中实现对 MainActivity 依赖注入的实现入口；</li>
+</ul>
+</li>
+<li>
+<p>同时 <code>dagger-android</code> 中的<code>DispatchingAndroidInjector</code> 类中，会声明对 类型<code>Map&lt;Class&lt;? extends T&gt;, Provider&lt;AndroidInjector.Factory&lt;? extends T&gt;&gt;&gt;</code> 的依赖，所以上面的<code>(MainActivity.class, MainActivitySubcomponent.Builder builder)</code>会自动被注入到 <code>DispatchingAndroidInjector</code> 对象中</p>
+<pre><code class="language-java"> public final class DispatchingAndroidInjector&lt;T&gt; implements AndroidInjector&lt;T&gt; {
+     private final Map&lt;Class&lt;? extends T&gt;, Provider&lt;AndroidInjector.Factory&lt;? extends T&gt;&gt;&gt;
+      injectorFactories;
+   
+     @Inject
+      DispatchingAndroidInjector(
+        Map&lt;Class&lt;? extends T&gt;, Provider&lt;AndroidInjector.Factory&lt;? extends T&gt;&gt;&gt; injectorFactories) {
+        this.injectorFactories = injectorFactories;
+      }
+ }
+</code></pre>
+</li>
+<li>
+<p>而这个 <code>DispatchingAndroidInjector&lt;Activity&gt;</code> 在 GithubApp中被声明为依赖，所以也会被自动注入，从而我们能在GithubApp中通过 AndroidInjection 获取到 <code>DispatchingAndroidInjector&lt;Activity&gt;</code>, 然后调用其 <code>MainActivitySubcomponent</code> ，然后调用其 inject 方法完成注入</p>
+<pre><code class="language-java">public final class DispatchingAndroidInjector&lt;T&gt; implements AndroidInjector&lt;T&gt; { 
+	public boolean maybeInject(T instance) {
+    Provider&lt;AndroidInjector.Factory&lt;? extends T&gt;&gt; factoryProvider =
+      // instance 类型为 MainActivity，所以可以获取到 Provider&lt;MainActivitySubcomponent.Builder&gt;
+        injectorFactories.get(instance.getClass());
+		// 这里就通过 MainActivitySubcomponent.Builder 获取到 factory = MainActivitySubcomponent.Builder
+    AndroidInjector.Factory&lt;T&gt; factory = (AndroidInjector.Factory&lt;T&gt;) factoryProvider.get();
+    try {
+      AndroidInjector&lt;T&gt; injector =
+          checkNotNull(
+              factory.create(instance), &quot;%s.create(I) should not return null.&quot;, factory.getClass());
+			// 上面调用  factory.create(instance) 就是调用 MainActivitySubcomponent.Builder.create 方法创建 MainActivitySubcomponent
+      // 这里的 inejctor 就是 MainActivitySubcomponent
+      // 然后通过 MainActivitySubcomponent 的 inejct(MainActivity) 方法来实现对 MainActivity 的注入
+      injector.inject(instance);
+      return true;
+    } catch (ClassCastException e) {
+      throw new InvalidInjectorBindingException(
+          String.format(
+              &quot;%s does not implement AndroidInjector.Factory&lt;%s&gt;&quot;,
+              factory.getClass().getCanonicalName(), instance.getClass().getCanonicalName()),
+          e);
+    }
+  }
+}
+</code></pre>
+</li>
+</ol>
+</blockquote>
+<h3 id="总结">总结</h3>
+<p>现在，我们对前面的内容总结一下：</p>
+<p><strong>dagger-android 为了实现对于Activity等Android组件的无感注入，将Activity等注入的实现Component放在了Application的成员变量中</strong></p>
+<h3 id="解决方案">解决方案</h3>
+<p>之所以选择Application对象，是因为其生命周期比较持久，和应用一致。而为了对Activity实现无感注入，使用到的只是被注入到Application中的 DispatchingAndroidInjector 对象。</p>
+<p>故我们可以将Application替换为任意一个静态的对象即可，类似如下：</p>
+<pre><code class="language-java">public class SdkContainer implements HasAndroidInjector {
+    @Inject
+    protected DispatchingAndroidInjector&lt;Object&gt; androidInjector;
+
+    @Override
+    public AndroidInjector&lt;Object&gt; androidInjector() {
+        return androidInjector;
+    }
+}
+
+public class SdkInjector {
+    private static final String TAG = &quot;SdkInjector&quot;;
+
+    private static SdkContainer sSdkContainer;
+
+    public static SdkContainer getSdkContainer() {
+        return sSdkContainer;
+    }
+
+    public static void init(Application application) {
+        if (sSdkContainer != null) {
+            return;
+        }
+        SdkComponent sSdkComponent = DaggerSdkComponent.builder()
+                .application(application)
+                .build();
+        SdkInjector.sSdkContainer = new SdkContainer(sSdkComponent);
+        sSdkComponent.inject(sSdkContainer);
+    }
+}
+
+@Singleton
+@Component(
+        modules = {  AndroidInjectionModule.class,}
+)
+public interface SdkComponent {
+    void inject(SdkContainer sdkContainer);
+    @Component.Builder
+    interface Builder {
+        @BindsInstance
+        Builder application(Application application);
+        SdkComponent build();
+    }
+}
+</code></pre>
+<h2 id="mvp-架构的注入问题">MVP 架构的注入问题</h2>
+<h3 id="mvp-中的注入问题">MVP 中的注入问题？</h3>
+<p>一个 Presenter 的一般构造方式如下：</p>
+<pre><code class="language-java">public class TestDiMvpActivityPresenter {
+  public TestDiMvpActivityPresenter(TestDiView view) {}
+}
+
+public class TestDiMvpActivity extends Activity implements TestDiView {
+}
+</code></pre>
+<p>可以看到Presenter构造时需要一个TestDiView，而这个TestDiView实际上是 TestDiMvpActivity，而我们无法手动构造 TestDiMvpActivity 的实例，只能等系统创建之后才能获取实例，然后进行注入，所以<strong>一般MVP的注入写法如下</strong>：</p>
+<h4 id="mvp-注入的一般写法">MVP 注入的一般写法</h4>
+<ol>
+<li><strong>定义子组件及模块</strong></li>
+</ol>
+<pre><code class="language-java">// 修改点1⃣️    
+@Module(
+          subcomponents = TestDiMvpActivityModule.MvpComponent.class
+    )
+    public interface TestDiMvpActivityModule {
+  
+      @Module
+      class MvpModule {
+          TestDiMvpActivityPresenter.TestDiView testDiView;
+  
+          public MvpModule(TestDiMvpActivityPresenter.TestDiView testDiView) {
+              this.testDiView = testDiView;
+          }
+  
+          @Provides
+          public TestDiMvpActivityPresenter.TestDiView providerView() {
+              return testDiView;
+          }
+      }
+  
+      @Subcomponent(modules = MvpModule.class)
+      interface MvpComponent {
+  
+          void inject(TestDiMvpActivity activity);
+  
+          @Subcomponent.Builder
+          interface Builder {
+              MvpComponent build();
+  
+              Builder module(MvpModule mvpModule);
+          }
+      }
+    }
+</code></pre>
+<ol start="2">
+<li><strong>在 RootComponent 中注册模块并提供Builder获取函数</strong></li>
+</ol>
+<pre><code class="language-java">   @Singleton
+   @Component(
+           modules = {
+             			 //  修改点2⃣️
+                   TestDiMvpActivityModule.class,
+           }
+   )
+   public interface SdkComponent {
+	     // 修改点3⃣️
+       TestDiMvpActivityModule.MvpComponent.Builder testDiMvpActivityMComponentBuilder();
+   
+       @Component.Builder
+       interface Builder {
+       }
+   }
+</code></pre>
+<ol start="3">
+<li><strong>使用时在 TestDiMvpActivity.onCreate</strong> 中</li>
+</ol>
+<pre><code class="language-java">   public class TestDiMvpActivity extends Activity implements TestDiMvpActivityPresenter.TestDiView {
+   
+       @Override
+       protected void onCreate(@Nullable  Bundle savedInstanceState) {
+          // 修改点4⃣️
+   				SdkInjector.getSdkComponent().testDiMvpActivityMComponentBuilder()
+                   .module(new TestDiMvpActivityModule.MvpModule(this)).build()
+                   .inject(this);
+          super.onCreate(savedInstanceState);
+       }
+   }
+</code></pre>
+<p><span style="color:green"><strong>其实现原理在于：</strong></span></p>
+<p><span style="color:green">1. 在Activity被系统初始化之后，在其onCreate中获取其实例 </span></p>
+<p><span style="color:green">2. 将Activity实例传入到MvpModule中，然后由MvpModule中的 providers 方法来提供 View 层对象 </span></p>
+<p><span style="color:green">3. 将 MvpModule作为参数构造MvpComponent，然后使用MvpComponent 的inject 方法对TestDiMvpActivity 执行注入动作。</span></p>
+<h4 id="mvp-注入一般写法的问题">MVP 注入一般写法的问题</h4>
+<p><span style="color:red;"><strong>这里的的问题在于：</strong></span></p>
+<p><span style="color:red;">1. 每添加一个Mvp的组件，都修改四个地方，添加起来非常麻烦，容易漏掉； </span></p>
+<p><span style="color:red;">2. 每次添加组件都都需要修改顶层的 Root Component（示例代码中的SdkComponent）； </span></p>
+<p><span style="color:red;">3. 需要在每个具体Mvp组件的生命周期方法（如MvpActiviy的onCreate）中添加注入代码，导致具体的实现知道了注入细节； </span></p>
+<h3 id="解决方案-2">解决方案</h3>
+<p>上面提到的问题就是新增一个支持注入的MVP组件太麻烦，我们希望使用一种修改点少的方案，而且对于组件无感的方案。就像 dagger-android 一样。</p>
+<p><strong>现在我们先给出方案，以便能够快速的查看解决方案的全貌效果，然后再说明其中的关键细节</strong>。</p>
+<p>整体方案由如下主要流程：</p>
+<h4 id="提供统一的mvp模块及组件声明">提供统一的Mvp模块及组件声明</h4>
+<p>我们希望最终增加一个组件时，只修改一个地方，不用修改 Dagger 父组件，故我们用一个统一的MvpModule来定义，在下面的例子中，我们添加了两个需要支持Mvp的组件，其中一个为Activity，一个为Fragment。增加一个Mvp 的Activity或者Fragment时，我们只需要在MvpProvider中添加两个方法即可，一个<code>@Provider</code>标记，另外一个 <code>@ContributesAndroidInjector</code> 标记</p>
+<p>注意其中用到了我们自定义的一个AndroidProvider 的类，后面我们会说明此类的作用：</p>
+<pre><code class="language-java">@Module(subcomponents = {
+        MvpModule.MvpComponent.class,
+})
+public interface MvpModule {
+    @Module
+    abstract class MvpProvider {
+
+        @MvpScope
+        @Provides
+        static TestDiMvpActivityPresenter.TestDiView bindTestDiView(@Nullable AndroidProvider&lt;Activity&gt; activityProvider) {
+            if (activityProvider != null) {
+                return (TestDiMvpActivityPresenter.TestDiView) activityProvider.get();
+            } else {
+                throw new NullPointerException(&quot;Please provider activity provider when build component!&quot;);
+            }
+        }
+
+        @ContributesAndroidInjector
+        abstract TestDiMvpActivity contributeTestDiMvpActivity();
+
+        @MvpScope
+        @Provides
+        static TestDiMvpFragmentPresenter.View bindTestTestDiMvpFragmentView(@Nullable AndroidProvider&lt;Fragment&gt; fragmentAndroidProvider) {
+            // May delete null check to keep code clean since we provide Fragment correctly
+//            if (fragmentAndroidProvider != null) {
+            return (TestDiMvpFragmentPresenter.View) fragmentAndroidProvider.get();
+//            } else {
+//                throw new NullPointerException(&quot;Please provider Fragment provider when build component!&quot;);
+//            }
+        }
+
+        /**
+         * 提供 TestDiMvpFragment 的注入接口
+         *
+         * @return TestDiMvpFragment
+         */
+        @ContributesAndroidInjector
+        abstract TestDiMvpFragment contributeTestDiMvpFragment();
+
+    }
+
+
+    @MvpScope
+    @Subcomponent(modules = {
+            AndroidInjectionModule.class,
+            MvpProvider.class,
+    })
+    interface MvpComponent {
+
+        MvpContainer inject(MvpContainer mvpContainer);
+
+        @Subcomponent.Builder
+        interface Builder {
+            @BindsInstance
+            Builder activityProvider(@Nullable AndroidProvider&lt;Activity&gt; activityProvider);
+
+            @BindsInstance
+            Builder fragmentProvider(@Nullable AndroidProvider&lt;Fragment&gt; fragmentProvider);
+
+            MvpComponent build();
+        }
+    }
+
+}
+
+/**
+ * Android 组件提供等，主要用于延迟提供
+ * @param &lt;T&gt; 组件类型（Activity，Fragment）等
+ */
+public class AndroidProvider&lt;T&gt; implements Provider&lt;T&gt; {
+
+    private final T item;
+
+    public AndroidProvider(T item) {
+        this.item = item;
+    }
+
+    @Override
+    public T get() {
+        return item;
+    }
+
+}
+</code></pre>
+<h4 id="注册到-root-component">注册到 Root Component</h4>
+<p>我们只需要这么注册一次即可，后续添加组件时无需再修改。</p>
+<pre><code class="language-java">@Singleton
+@Component(
+        modules = {
+          			// ...
+                // MVP 组件
+                MvpModule.class
+        }
+)
+public interface SdkComponent {
+
+    // ...
+    MvpModule.MvpComponent.Builder mvpComponentBuilder();
+
+    @Component.Builder
+    interface Builder {
+			// ...
+    }
+
+}
+</code></pre>
+<h4 id="注入过程封装隐藏">注入过程封装隐藏</h4>
+<p>在之前描述的一般的MVP Activity 的注入过程中，我们是在每个具体的MvpActivity中的onCreate 方法中进行注册的，现在我们将注入的流程隐藏起来，放置到 ActivityLifeCycleCallbacks 中。</p>
+<pre><code class="language-java">public class SdkInjector {
+
+    private static final String TAG = &quot;SdkInjector&quot;;
+
+    private static SdkContainer sSdkContainer;
+
+    public static SdkComponent getSdkComponent() {
+        return sSdkContainer.getSdkComponent();
+    }
+
+    public static SdkContainer getSdkContainer() {
+        return sSdkContainer;
+    }
+
+    /**
+     * 初始化 DI
+     *
+     * @param application Application
+     */
+    public static void init(Application application) {
+        if (sSdkContainer != null) {
+            return;
+        }
+        SdkComponent sSdkComponent = DaggerSdkComponent.builder()
+                .application(application)
+                .build();
+        SdkInjector.sSdkContainer = new SdkContainer(sSdkComponent);
+        sSdkComponent.inject(sSdkContainer);
+        sSdkContainer.testInject();
+        application.registerActivityLifecycleCallbacks(new BasicActivityLifeCycleCallbacks() {
+            @Override
+            public void onActivityPreCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
+                injectActivity(activity, savedInstanceState);
+                super.onActivityPreCreated(activity, savedInstanceState);
+            }
+        });
+    }
+
+    private static void injectActivity(@NotNull Activity activity, @Nullable Bundle savedInstanceState) {
+        if (activity instanceof MvpInjectable) {
+            // MVP 的 Activity 注入
+            MvpModule.MvpComponent mvpActivityComponent = SdkInjector.getSdkComponent()
+                    .mvpComponentBuilder().activityProvider(new AndroidProvider&lt;&gt;(activity)).build();
+            MvpContainer mvpContainer = new MvpContainer(mvpActivityComponent);
+            mvpActivityComponent.inject(mvpContainer);
+            SdkAndroidInjection.inject(activity, mvpContainer);
+        } else if (activity instanceof Injectable) {
+            SdkAndroidInjection.inject(activity);
+        } else {
+            Log.w(TAG, &quot;Warning! You Activity &quot; + activity.getClass().getSimpleName() + &quot;is not injectable! &quot;);
+        }
+        if (activity instanceof FragmentActivity) {
+            final FragmentManager.FragmentLifecycleCallbacks lifecycleCallbacks = new FragmentManager.FragmentLifecycleCallbacks() {
+                @Override
+                public void onFragmentAttached(@NonNull @NotNull FragmentManager fm, @NonNull @NotNull Fragment f, @NonNull @NotNull Context context) {
+                    super.onFragmentAttached(fm, f, context);
+                    injectFragment(f, activity);
+                }
+            };
+            ((FragmentActivity) activity).getSupportFragmentManager()
+                    .registerFragmentLifecycleCallbacks(lifecycleCallbacks, true);
+        }
+    }
+
+    private static void injectFragment(@NotNull Fragment f, @NotNull Activity activity) {
+        if (f instanceof Injectable) {
+            SdkAndroidInjection.inject(f);
+        } else if (f instanceof MvpInjectable) {
+            // MVP 的 Fragment 注入
+            MvpModule.MvpComponent mvpComponent = SdkInjector.getSdkComponent()
+                    .mvpComponentBuilder()
+                    .activityProvider(new AndroidProvider&lt;&gt;(activity))
+                    .fragmentProvider(new AndroidProvider&lt;&gt;(f))
+                    .build();
+            MvpContainer mvpContainer = mvpComponent.inject(new MvpContainer(mvpComponent));
+            SdkAndroidInjection.inject(f, mvpContainer);
+        } else {
+            Log.w(TAG, &quot;Warning! You fragment  &quot; + f.getClass().getSimpleName() + &quot; is not injectable!&quot;);
+        }
+    }
+}
+</code></pre>
+<h3 id="解决方案关键点说明">解决方案关键点说明</h3>
+<p>我们考虑下普通的MVP注入过程中为什么需要如此多的模板代码。</p>
+<ol>
+<li>
+<p>由于P层依赖V，而 V 层是Activity，是系统生成的，所以，我们只能在onCreate 回调中获取到Activity，然后将其塞到Dagger的依赖对象的图谱中，也就是如下代码所做的</p>
+<p>即，必须提<strong>供一个Module来接收Activity</strong>将其放入到Dagger对象Graph中，同时也必须在onCreate中你才能获取到Activity。</p>
+<pre><code class="language-java">			@Module
+      class MvpModule {
+          TestDiMvpActivityPresenter.TestDiView testDiView;
+  
+          public MvpModule(TestDiMvpActivityPresenter.TestDiView testDiView) {
+              this.testDiView = testDiView;
+          }
+  
+          @Provides
+          public TestDiMvpActivityPresenter.TestDiView providerView() {
+              return testDiView;
+          }
+      }
+
+
+@Override
+protected void onCreate(@Nullable  Bundle savedInstanceState) {
+			SdkInjector.getSdkComponent().testDiMvpActivityMComponentBuilder()
+        						// 将Activity塞进依赖Graph
+                   .module(new TestDiMvpActivityModule.MvpModule(this)).build()
+                   .inject(this);
+}
+</code></pre>
+</li>
+<li>
+<p>对于无法自动注入的对象，必须要通过 Component 提供一个 <strong>inject 方法</strong>，然后调用inject方法完成对其的手动注入，也就是上面onCreate方法中所写的部分。</p>
+</li>
+</ol>
+<h4 id="注入逻辑移动到activitylifecyclecallback回调及遇到的问题">注入逻辑移动到ActivityLifecycleCallback回调及遇到的问题</h4>
+<p>实际上，通过向Application注册ActivityLifecycleCallback回调，我们可以将具体MvpActivity中的onCreate里的注入代码隐藏起来，我们在仔细研究下onCreate 中的注入逻辑，考虑可能会遇到的问题：</p>
+<pre><code class="language-java">@Override
+protected void onCreate(@Nullable  Bundle savedInstanceState) {
+			SdkInjector.getSdkComponent()
+        .testDiMvpActivityMComponentBuilder()
+        // 将Activity塞进依赖Graph
+        // 1⃣️  塞入
+        .module(new TestDiMvpActivityModule.MvpModule(this)).build()
+        // 2⃣️  注入
+        .inject(this);
+}
+</code></pre>
+<p>考虑如下两个地方：</p>
+<ol>
+<li>塞入：在构造TestDiMvpActivityModule.MvpModule时，我们必须要传入一个具体类型（TestDiMvpActivity），而如果我们移动到ActivityLifecycleCallback中之后，这个具体的类型信息会丢失；</li>
+<li>注入：在inject时，我们的Component中定义的方法也是需要具体类型信息（TestDiMvpActivity）的，因为这样Dagger才能根据具体类型获取其依赖哪些信息，生成正确的注入代码，而移动到 ActivityLifecycleCallback 中之后，这个信息也会丢失；</li>
+</ol>
+<p>也就是说，移动到 ActivityLifecycleCallback中之后，具体的类型信息丢失了，导致我们无法正确的调用塞入方法和注入方法。</p>
+<h4 id="使用-dagger-android-生成-inject-模板代码">使用 Dagger-Android 生成 inject 模板代码</h4>
+<p>对于inject方法来说，我们实际上可以使用 Dagger-Android 的 <code>@ContributesAndroidInjector</code> 来帮助我们解决；</p>
+<h4 id="使用包装类型避免dagger类型检查使用provider方法还原类型信息">使用包装类型避免Dagger类型检查，使用provider方法还原类型信息</h4>
+<p>在塞入的过程中，由于丢失了Activity的具体类型信息，我们将无法通过类型检查，所以我们创建了一个名为 AndroidProvider 的包装类型，我们在构造组件时，原先需要TestDiMvpActivity这个具体类型，现在我们只需要传入我们的包装类型，可以做到代码统一。</p>
+<pre><code class="language-java">// MVP 的 Activity 注入
+            MvpModule.MvpComponent mvpActivityComponent = SdkInjector.getSdkComponent()
+              // TestDiMvpActivity -&gt;  new AndroidProvider&lt;Activity&gt;(activity)
+                    .mvpComponentBuilder().activityProvider(new AndroidProvider&lt;&gt;(activity)).build();
+            MvpContainer mvpContainer = new MvpContainer(mvpActivityComponent);
+            mvpActivityComponent.inject(mvpContainer);
+            SdkAndroidInjection.inject(activity, mvpContainer);
+</code></pre>
+<p>那么我们何时将其还原呢？</p>
+<p>在提供对应TestDiView时，我们直接对其进行强制转换，然后提供为 TestDiView 类型</p>
+<pre><code class="language-java"> @Module
+    abstract class MvpProvider {
+        @Provides
+        static TestDiMvpActivityPresenter.TestDiView bindTestDiView(@Nullable AndroidProvider&lt;Activity&gt; activityProvider) {
+            if (activityProvider != null) {
+                return (TestDiMvpActivityPresenter.TestDiView) activityProvider.get();
+            } else {
+                throw new NullPointerException(&quot;Please provider activity provider when build component!&quot;);
+            }
+        }
+}
+</code></pre>
+<h2 id="示例代码">示例代码</h2>
+<p>具体实施过程中还有一些细节，可以参考Github中对应示例模块的源码。</p>
+<ul>
+<li><a href="https://github.com/hanlyjiang/android-libraries/tree/master/lib_di_sample">android-libraries/lib_di_sample at master · hanlyjiang/android-libraries (github.com)</a></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[使用Kotlin编写gradle脚本]]></title>
+        <id>https://hanlyjiang.github.io/post/shi-yong-kotlin-bian-xie-gradle-jiao-ben/</id>
+        <link href="https://hanlyjiang.github.io/post/shi-yong-kotlin-bian-xie-gradle-jiao-ben/">
+        </link>
+        <updated>2022-02-24T14:29:04.000Z</updated>
+        <summary type="html"><![CDATA[<p>将gradle 脚本从 groovy 迁移到 kotlin dsl。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>将gradle 脚本从 groovy 迁移到 kotlin dsl。</p>
+<!-- more -->
+<h2 id="概述">概述</h2>
+<h3 id="ide-支持">IDE 支持</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:center">Build import</th>
+<th style="text-align:center">Syntax highlighting <sub>1</sub></th>
+<th style="text-align:center">Semantic editor <sub>2</sub></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">IntelliJ IDEA</td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center"><strong>✓</strong></td>
+</tr>
+<tr>
+<td style="text-align:right">Android Studio</td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center"><strong>✓</strong></td>
+</tr>
+<tr>
+<td style="text-align:right">Eclipse IDE</td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center">✖</td>
+</tr>
+<tr>
+<td style="text-align:right">CLion</td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center">✖</td>
+</tr>
+<tr>
+<td style="text-align:right">Apache NetBeans</td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center">✖</td>
+</tr>
+<tr>
+<td style="text-align:right">Visual Studio Code (LSP)</td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center">✖</td>
+</tr>
+<tr>
+<td style="text-align:right">Visual Studio</td>
+<td style="text-align:center"><strong>✓</strong></td>
+<td style="text-align:center">✖</td>
+<td style="text-align:center">✖</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>Gradle Kotlin DSL scripts 中的Kotlin语法高亮</li>
+<li>Gradle Kotlin DSL scripts 中支持代码补全，导航到源码，文档查看，重构等等；</li>
+</ol>
+<h3 id="kotlin-dsl-脚本命名">Kotlin DSL 脚本命名</h3>
+<h4 id="命名">命名</h4>
+<p>Groovy DSL script 文件使用 <code>.gradle</code> 扩展文件名</p>
+<p>Kotlin DSL script 文件使用 <code>.gradle.kts</code> 扩展文件名</p>
+<h4 id="激活并使用-kotlin-dsl">激活并使用 kotlin dsl</h4>
+<ul>
+<li>将脚本文件命名为 <code>.gradle.kts</code> 即可激活。也适用于 <a href="https://docs.gradle.org/current/userguide/build_lifecycle.html#sec:settings_file">settings file</a>（ <code>settings.gradle.kts</code>)和 <a href="https://docs.gradle.org/current/userguide/init_scripts.html#init_scripts">initialization scripts</a>.</li>
+<li>为了得到更好的IDE支持，建议使用如下命名约定：
+<ul>
+<li>Settings脚本命名为 <code>*.settings.gradle.kts</code>（包括所有从settings脚本中引入的脚本）</li>
+<li><a href="https://docs.gradle.org/current/userguide/init_scripts.html#init_scripts">initialization scripts</a> 按 <code>*.init.gradle.kts</code>的命名模式命名，或者简单的取名为 <code>init.gradle.kts</code>。</li>
+</ul>
+</li>
+<li>kotlin DSL 构建脚本隐式的导入了如下内容：
+<ul>
+<li><a href="https://docs.gradle.org/current/userguide/writing_build_scripts.html#script-default-imports">default Gradle API imports</a></li>
+<li>在<code>org.gradle.kotlin.dsl</code> 和 <code>org.gradle.kotlin.dsl.plugins.dsl</code> 包中的Kotlin DSL API</li>
+</ul>
+</li>
+</ul>
+<h3 id="kotlin中读取运行时属性">kotlin中读取运行时属性</h3>
+<blockquote>
+<p><a href="https://docs.gradle.org/current/userguide/kotlin_dsl.html#kotdsl:properties">Gradle Kotlin DSL Primer</a></p>
+</blockquote>
+<p>gradle 拥有两种运行时属性:</p>
+<ol>
+<li><a href="https://docs.gradle.org/current/userguide/build_environment.html#sec:project_properties"><em>project properties</em></a></li>
+<li><a href="https://docs.gradle.org/current/userguide/writing_build_scripts.html#sec:extra_properties"><em>extra properties</em></a></li>
+</ol>
+<h4 id="项目属性">项目属性</h4>
+<p>可以通过kotlin的代理属性来访问:</p>
+<p><strong>build.gradle.kts</strong></p>
+<pre><code class="language-kotlin">// 属性必须存在
+val myProperty: String by project  
+// 属性可以不存在
+val myNullableProperty: String? by project 
+</code></pre>
+<h4 id="extra-属性">extra 属性</h4>
+<p>extra属性在任意实现了<a href="https://docs.gradle.org/current/dsl/org.gradle.api.plugins.ExtensionAware.html#org.gradle.api.plugins.ExtensionAware">ExtensionAware</a> 接口的对象上都可以访问;</p>
+<p><strong>build.gradle.kts</strong></p>
+<pre><code class="language-kotlin">val myNewProperty by extra(&quot;initial value&quot;)   // ❶
+val myOtherNewProperty by extra { &quot;calculated initial value&quot; }   //❷ 
+
+val myProperty: String by extra   // ❸
+val myNullableProperty: String? by extra   // ❹
+</code></pre>
+<p>❶ 在当前上下文(当前为project中)创建一个名为<code>myNewProperty</code>新的extra属性,并且初始化其值为 &quot;initial value&quot;</p>
+<p>❷ 同 ❶ ，不过属性的初始值是通过lamdba表达式来计算的;</p>
+<p>❸ 绑定当前上下文(当前为project)中的属性到myProperty属性中;</p>
+<p>❹ 同 ❸ ，不过允许值为null；</p>
+<h4 id="在子项目中访问rootproject的属性">在子项目中访问rootProject的属性</h4>
+<pre><code class="language-kotlin">val myNewProperty: String by rootProject.extra
+</code></pre>
+<blockquote>
+<p><code>by</code>是kotlin的关键字，表示 provided by ，即属性由某个其他的对象代理</p>
+</blockquote>
+<h4 id="在任务中定义和使用属性">在任务中定义和使用属性</h4>
+<p>任务也继承了ExtensionAware，所以我们也可以在任务中使用extra属性</p>
+<pre><code class="language-kotlin">tasks {
+    test {
+        val reportType by extra(&quot;dev&quot;)  
+        doLast {
+            // Use 'suffix' for post processing of reports
+        }
+    }
+
+    register&lt;Zip&gt;(&quot;archiveTestReports&quot;) {
+        val reportType: String by test.get().extra  
+        archiveAppendix.set(reportType)
+        from(test.get().reports.html.destination)
+    }
+}
+</code></pre>
+<h4 id="通过map格式定义和访问extra属性">通过map格式定义和访问extra属性</h4>
+<pre><code class="language-kotlin">extra[&quot;myNewProperty&quot;] = &quot;initial value&quot;   // ❶
+
+tasks.create(&quot;myTask&quot;) {
+    doLast {
+        println(&quot;Property: ${project.extra[&quot;myNewProperty&quot;]}&quot;)  // ❷ 
+    }
+}
+</code></pre>
+<h2 id="迁移gradle构建逻辑到kotlin">迁移gradle构建逻辑到Kotlin</h2>
+<blockquote>
+<p>参考文档：</p>
+<ol>
+<li><a href="https://docs.gradle.org/current/userguide/migrating_from_groovy_to_kotlin_dsl.html">Migrating build logic from Groovy to Kotlin (gradle.org)</a></li>
+<li><a href="https://www.cnblogs.com/mengdd/p/android-gradle-migrate-from-groovy-to-kotlin.html">Android Gradle脚本从Groovy迁移到Kotlin DSL - 圣骑士wind - 博客园 (cnblogs.com)</a></li>
+</ol>
+</blockquote>
+<h3 id="准备groovy脚本">准备groovy脚本</h3>
+<ol>
+<li>引号统一为双引号</li>
+<li>方法调用加上括号</li>
+<li>赋值操作加上等号</li>
+</ol>
+<h4 id="引号统一">引号统一</h4>
+<ul>
+<li>
+<p>通过<mark>⌘⇧R</mark>快捷键调出查找替换工具窗，将文件匹配设置为 <code>.gradle</code> ，然后将所有单引号替换为双引号。</p>
+</li>
+<li>
+<p>完成之后重新使用gradle文件同步项目，查看是否有错误</p>
+</li>
+</ul>
+<h4 id="赋值和属性修改">赋值和属性修改</h4>
+<ul>
+<li>将所有的赋值操作添加上等号</li>
+<li>所有的函数调用操作添加括号</li>
+</ul>
+<p>这里就需要根据实际情况进行调整了。</p>
+<h3 id="重命名文件">重命名文件</h3>
+<p>将 <code>.gradle</code>文件重命名为<code>.gradle.kts</code>，通过如下命令可以完成重命名操作</p>
+<pre><code class="language-shell">find . -name &quot;*.gradle&quot; -type f | xargs -I {} mv {} {}.kts
+</code></pre>
+<h3 id="其他常见修改">其他常见修改</h3>
+<h4 id="在kotlin-rootproject脚本中访问-gradle-属性">在kotlin rootProject脚本中访问 gradle 属性</h4>
+<pre><code class="language-kotlin">allprojects {
+    repositories {
+        maven {
+            name = &quot;Sonatype-Snapshots&quot;
+            setUrl(&quot;https://oss.sonatype.org/content/repositories/snapshots&quot;)
+            credentials(PasswordCredentials::class.java) {
+                username = property(&quot;ossrhUsername&quot;).toString()
+                password = property(&quot;ossrhPassword&quot;).toString()
+            }
+        }
+        google()
+        jcenter()
+        mavenCentral()
+    }
+}
+</code></pre>
+<h4 id="定义任务">定义任务</h4>
+<pre><code class="language-kotlin">tasks.register(&quot;clean&quot;, Delete::class.java) {
+    group = &quot;build&quot;
+    delete(rootProject.buildDir)
+}
+</code></pre>
+<h2 id="迁移配置实例">迁移配置实例</h2>
+<h3 id="rootproject-kotlin-dsl-build脚本模板">rootProject kotlin dsl build脚本模板</h3>
+<pre><code class="language-kotlin">// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    // 定义extra 属性
+    val kotlin_version by extra(&quot;1.4.32&quot;)
+    val android_gradle_build_version by extra(&quot;4.1.3&quot;)
+    repositories {
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/gradle-plugin&quot;) }
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/jcenter&quot;) }
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/google&quot;) }
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/public&quot;) }
+        google()
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath(&quot;com.android.tools.build:gradle:$android_gradle_build_version&quot;)
+        classpath(&quot;org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version&quot;)
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/jcenter&quot;) }
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/google&quot;) }
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/gradle-plugin&quot;) }
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/public&quot;) }
+        // 加入项目临时仓库，方便测试
+        maven {
+            name = &quot;ProjectLocal-Snapshots&quot;
+            setUrl(File(rootProject.rootDir, &quot;local-maven-repo${File.separator}snapshots&quot;))
+        }
+        maven {
+            name = &quot;ProjectLocal-Release&quot;
+            setUrl(File(rootProject.rootDir, &quot;local-maven-repo${File.separator}release&quot;))
+        }
+
+        // 加入 maven snapshot 仓库及 release 仓库
+        maven {
+            name = &quot;Sonatype-Snapshots&quot;
+            setUrl(&quot;https://oss.sonatype.org/content/repositories/snapshots&quot;)
+        }
+        maven {
+            name = &quot;Sonatype-Staging&quot;
+            setUrl(&quot;https://oss.sonatype.org/service/local/staging/deploy/maven2/&quot;)
+            credentials(PasswordCredentials::class.java) {
+                username = property(&quot;ossrhUsername&quot;).toString()
+                password = property(&quot;ossrhPassword&quot;).toString()
+            }
+        }
+        google()
+        mavenCentral()
+        jcenter()
+    }
+}
+
+tasks.register(&quot;clean&quot;, Delete::class.java) {
+    group = &quot;build&quot;
+    delete(rootProject.buildDir)
+}
+</code></pre>
+<h3 id="模块-buildgradle-模块build脚本模板">模块 build.gradle 模块build脚本模板</h3>
+<pre><code class="language-kotlin">plugins {
+    id(&quot;com.android.library&quot;)
+    id(&quot;signing&quot;)
+    // 等同于 id(&quot;&quot;)
+    `maven-publish`
+    kotlin(&quot;android&quot;)
+    kotlin(&quot;android.extensions&quot;)
+
+    // 引入三方Gradle插件
+    id(&quot;com.github.hanlyjiang.android_maven_pub&quot;) version (&quot;0.0.9&quot;) apply (false)
+}
+
+android {
+    compileSdkVersion(30)
+    buildToolsVersion(&quot;30.0.3&quot;)
+
+    defaultConfig {
+        minSdkVersion(22)
+        targetSdkVersion(30)
+        versionCode(1)
+        versionName(&quot;1.0.0&quot;)
+
+        testInstrumentationRunner(&quot;androidx.test.runner.AndroidJUnitRunner&quot;)
+        consumerProguardFiles(&quot;consumer-rules.pro&quot;)
+    }
+
+    buildTypes {
+        getByName(&quot;release&quot;) {
+            minifyEnabled(false)
+            proguardFiles(
+                getDefaultProguardFile(&quot;proguard-android-optimize.txt&quot;),
+                &quot;proguard-rules.pro&quot;
+            )
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility(JavaVersion.VERSION_1_8)
+        targetCompatibility(JavaVersion.VERSION_1_8)
+    }
+}
+
+dependencies {
+    implementation(&quot;org.jetbrains:annotations:21.0.1&quot;)
+    testImplementation(&quot;junit:junit:4.13.2&quot;)
+    androidTestImplementation(&quot;androidx.test.ext:junit:1.1.3&quot;)
+    androidTestImplementation(&quot;androidx.test.espresso:espresso-core:3.4.0&quot;)
+    
+    // StringRes 注解
+    implementation(&quot;androidx.appcompat:appcompat:1.3.1&quot;)
+    // 注解库 https://developer.android.com/jetpack/androidx/releases/annotation#annotation-1.2.0
+    implementation(&quot;androidx.annotation:annotation:1.2.0&quot;)
+}
+
+// 创建自定义任务
+tasks.create(&quot;showGitRepoInfo&quot;) {
+    group = &quot;help&quot;
+    doLast {
+        println(&quot;${getGitBranch()}/${getGitRevision()}&quot;)
+    }
+}
+
+// 扩展函数
+fun String.execute(): String {
+    val process = Runtime.getRuntime().exec(this)
+    return with(process.inputStream.bufferedReader()) {
+        readText()
+    }
+}
+
+/**
+ * Get git revision with work tree status
+ *
+ * @return
+ */
+fun getGitRevision(): String {
+    val rev = &quot;git rev-parse --short HEAD&quot;.execute().trim()
+    val stat = &quot;git diff --stat&quot;.execute().trim()
+    return if (stat.isEmpty()) {
+        rev
+    } else {
+        &quot;$rev-dirty&quot;
+    }
+}
+
+/**
+ * Get git branch name
+ *
+ * @return
+ */
+fun getGitBranch(): String {
+    return &quot;git rev-parse --abbrev-ref HEAD&quot;.execute().trim()
+}
+</code></pre>
+<h3 id="702-版本agp插件配置实例-模块build脚本">7.0.2 版本AGP插件配置实例-模块build脚本</h3>
+<pre><code class="language-kotlin">plugins {
+    id(&quot;com.android.application&quot;)
+}
+
+android {
+    compileSdk = 31
+
+    defaultConfig {
+        applicationId = &quot;com.github.hanlyjiang.sample&quot;
+        minSdk = 21
+        targetSdk = 31
+        versionCode = 1
+        versionName = &quot;1.0&quot;
+
+        testInstrumentationRunner = &quot;androidx.test.runner.AndroidJUnitRunner&quot;
+    }
+
+    buildTypes {
+        getByName(&quot;release&quot;) {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile(&quot;proguard-android-optimize.txt&quot;),
+                &quot;proguard-rules.pro&quot;
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility(JavaVersion.VERSION_1_8)
+        targetCompatibility(JavaVersion.VERSION_1_8)
+    }
+
+}
+
+dependencies {
+    implementation(files(&quot;../libs/lib-mod-release.aar&quot;))
+
+    // https://mvnrepository.com/artifact/io.reactivex.rxjava3/rxjava
+    implementation(&quot;io.reactivex.rxjava3:rxjava:3.1.3&quot;)
+
+    implementation(&quot;androidx.appcompat:appcompat:1.2.0&quot;)
+    implementation(&quot;com.google.android.material:material:1.3.0&quot;)
+    implementation(&quot;androidx.constraintlayout:constraintlayout:2.1.3&quot;)
+    testImplementation(&quot;junit:junit:4.+&quot;)
+    androidTestImplementation(&quot;androidx.test.ext:junit:1.1.2&quot;)
+    androidTestImplementation(&quot;androidx.test.espresso:espresso-core:3.3.0&quot;)
+}
+</code></pre>
+<h3 id="702-root-build-gradle-脚本配置">7.0.2 root Build gradle 脚本配置</h3>
+<pre><code class="language-kotlin">dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        jcenter() // Warning: this repository is going to shut down soon
+        flatDir {
+            dir(&quot;libs&quot;)
+        }
+    }
+}
+rootProject.name = &quot;NoSuchMethodError&quot;
+include ':app'
+include ':lib-mod'
+</code></pre>
+<h2 id="限制不足">限制/不足</h2>
+<p>在 kotlin dsl 脚本中引入其他独立的 kotlin 的dsl 脚本不方便，会存在无法识别相关依赖对象的问题，部分情况下还是得导入使用 groovy 编写的 gradle 脚本。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[CLion搭建Arduino开发环境]]></title>
+        <id>https://hanlyjiang.github.io/post/clion-da-jian-arduino-kai-fa-huan-jing/</id>
+        <link href="https://hanlyjiang.github.io/post/clion-da-jian-arduino-kai-fa-huan-jing/">
+        </link>
+        <updated>2021-12-02T06:16:46.000Z</updated>
+        <summary type="html"><![CDATA[<p>记录下使用Clion配置Arduino开发环境的过程。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>记录下使用Clion配置Arduino开发环境的过程。</p>
+<!-- more -->
+<p>Arduino 开发的环境有下面几种：</p>
+<ol>
+<li>Arduino IDE：目前有1.8.x 和 2.0.0 Beta版本；</li>
+<li>VSCode + PlatformIO；</li>
+<li>CLion + PlatformIO；</li>
+</ol>
+<p>目前已经试过了前面两种，都感觉不是很满意。</p>
+<ul>
+<li>Arduino IDE对代码跳转的支持不是很好，2.0支持，1.8不支持，2.0的选择Arduino的开发板还正常，但是选择esp32的板子一直显示红色的警告，无法跳转。</li>
+</ul>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202112021303012.png" alt="image-20211202130350932" style="zoom: 50%;" />
+<ul>
+<li>VSCode 则是实在用不习惯。（主要是一直用AndroidStudio，操作熟络了，不愿意学😫）</li>
+</ul>
+<p>所以准备尝试下CLion。测试之后，感觉到了熟悉的味道😋。</p>
+<h2 id="环境说明">环境说明</h2>
+<ul>
+<li>macOS 12.0.1</li>
+<li>CLion 2021.2.3</li>
+</ul>
+<h2 id="安装-platformio">安装 PlatformIO</h2>
+<h3 id="安装clion插件">安装CLion插件</h3>
+<ul>
+<li>安装插件，安装完成之后，重启下CLion。</li>
+</ul>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202112021310220.png" alt="image-20211202131036194" style="zoom:50%;" />
+<p>重启完成之后，新建项目时选择会发现提示需要安装PlatformIO Core CLI</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202112021318583.png" alt="image-20211202131833556" style="zoom:50%;" />
+<h3 id="安装platform-core-cli">安装Platform Core CLI</h3>
+<p>macOS上直接使用 brew 安装即可</p>
+<pre><code class="language-shell">brew install platformio
+
+# 测试一下
+pio home
+# 打开一个网页 http://127.0.0.1:8008
+</code></pre>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202112021512524.png" alt="image-20211202151220500" style="zoom:50%;" />
+<h2 id="运行示例">运行示例</h2>
+<h3 id="新建项目">新建项目</h3>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202112021404249.png" alt="image-20211202140453212" style="zoom:50%;" />
+<blockquote>
+<p>初次初始化的某种板子的时候需要下载一些工具链，此时可能会失败，保证网络良好的情况下多试几次-选中 <code>platformio.ini</code> 文件右键，然后选择 <code>PlatformIO</code>-<code>Re-Init</code>。</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202112021408296.png" alt="image-20211202140817270" style="zoom:50%;" />
+</blockquote>
+<h3 id="运行">运行</h3>
+<p>选择PlatformIO Upload 的运行配置，点击小锤子即可编译，点击运行按钮即可上传到开发板运行（会自动选择串口）。</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202112021412112.png" alt="image-20211202141206079" style="zoom:50%;" />
+<h3 id="串口连接">串口连接</h3>
+<ul>
+<li>找到<code>Serial Monitor</code>工具窗口</li>
+<li>点击🔧进行串口配置端口及波特率，点击🔌图标进行连接。</li>
+</ul>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202112021414501.png" alt="image-20211202141439470" style="zoom:50%;" />
+<h2 id="三方库导入">三方库导入</h2>
+<p>直接在 <code>platformio.ini</code>文件中添加依赖的配置即可，如：</p>
+<pre><code class="language-ini">[env:uno]
+platform = atmelavr
+board = uno
+framework = arduino
+lib_deps =
+    Wire @ ^1.0
+    fmalpartida/LiquidCrystal @ ^1.5.0
+</code></pre>
+<p>导入了 LiquidCrystal 的库（依赖Wire），配置添加完成之后 <code>ReInit</code> 一下即可。</p>
+<p>那么去哪里查找这些库的名称及版本信息呢？打开 <code>pio home</code> ,在网页中即可查询，然后直接复制粘贴即可。</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202112021511824.png" alt="image-20211202151143802" style="zoom:50%;" />
+<h2 id="体验">体验</h2>
+<ul>
+<li>编写代码简直不要太流畅。</li>
+<li>很方便的在符号之间跳转。</li>
+</ul>
+<h2 id="参考">参考</h2>
+<ul>
+<li><a href="https://docs.platformio.org/en/latest//integration/ide/clion.html#installation">CLion — PlatformIO latest documentation</a></li>
+<li><a href="https://docs.platformio.org/en/latest/core/index.html">PlatformIO Core (CLI) — PlatformIO latest documentation</a></li>
+<li>PlatformIO 依赖库查找框架：<a href="https://docs.platformio.org/en/latest/librarymanager/ldf.html">Library Dependency Finder (LDF) — PlatformIO latest documentation</a></li>
+<li><a href="https://docs.platformio.org/en/latest/plus/debug-tools/esp-prog.html#debugging-tool-esp-prog">ESP-Prog — PlatformIO latest documentation</a></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[鸿蒙开发基础知识]]></title>
+        <id>https://hanlyjiang.github.io/post/hong-meng-kai-fa-ru-men/</id>
+        <link href="https://hanlyjiang.github.io/post/hong-meng-kai-fa-ru-men/">
+        </link>
+        <updated>2021-11-30T02:13:11.000Z</updated>
+        <summary type="html"><![CDATA[<p>基于官方文档整理的鸿蒙开发的基础知识</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>基于官方文档整理的鸿蒙开发的基础知识</p>
+<!-- more -->
+<h1 id="ability框架">Ability框架</h1>
+<h2 id="简介">简介</h2>
+<h3 id="整体内容">整体内容</h3>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202111301012735.png" alt="image-20211028145037926" style="zoom: 50%;" />
+<p>同<code>Android</code> 对比关系：</p>
+<ul>
+<li><code>FeatureAbility</code> - <code>Activity</code></li>
+<li><code>ServiceAbility</code> - <code>Service</code></li>
+<li><code>DataAbility</code> - <code>ContentProvider</code></li>
+<li><code>CES</code> - 广播</li>
+<li><code>ANS</code> - 通知</li>
+<li>线程通信
+<ul>
+<li><code>InnerEvent</code> - <code>Message</code></li>
+<li><code>EventHandler</code> - <code>Handler</code></li>
+<li><code>EventRunner</code> - <code>Looper</code></li>
+<li><code>EventQueue</code> - <code>MessageQueue</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="ability说明">Ability说明</h3>
+<p>同Android 单独提供 Activity，Service，ContentProvider 的基类不一样，鸿蒙这三个组件全都是继承自 Ability，那么如何区分一个Ability到底是哪种组件呢？</p>
+<ul>
+<li>
+<p>继承后实现时选择性实现对应组件的生命周期方法；</p>
+</li>
+<li>
+<p>在 <code>config.json</code> 中定义ability时，需要声明对应的类型（page-FA；service - ServiceAbility； data - DataAbility）</p>
+<pre><code class="language-json">{
+    &quot;name&quot;: &quot;com.hanlyjiang.ohosdemo.MainJSAbility2&quot;,
+    &quot;icon&quot;: &quot;$media:icon&quot;,
+    &quot;description&quot;: &quot;$string:mainjsability2_description&quot;,
+    &quot;label&quot;: &quot;$string:entry_MainJSAbility2&quot;,
+    &quot;type&quot;: &quot;page&quot;,
+    &quot;launchType&quot;: &quot;standard&quot;,
+},
+{
+    &quot;name&quot;: &quot;com.hanlyjiang.ohosdemo.ServiceAbility&quot;,
+    &quot;icon&quot;: &quot;$media:icon&quot;,
+    &quot;description&quot;: &quot;$string:serviceability_description&quot;,
+    &quot;type&quot;: &quot;service&quot;
+},
+{
+    &quot;name&quot;: &quot;com.hanlyjiang.ohosdemo.DataAbility&quot;,
+    &quot;icon&quot;: &quot;$media:icon&quot;,
+    &quot;description&quot;: &quot;$string:dataability_description&quot;,
+    &quot;type&quot;: &quot;data&quot;,
+    &quot;uri&quot;: &quot;dataability://com.hanlyjiang.ohosdemo.DataAbility&quot;
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="fafeatureability">FA（FeatureAbility）</h2>
+<h3 id="fa-生命周期">FA 生命周期</h3>
+<table>
+<thead>
+<tr>
+<th>生命周期回调</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>onStart</td>
+<td>首次创建触发，仅执行一次 需要setMainRoute</td>
+</tr>
+<tr>
+<td>onActive</td>
+<td>进入前台可交互状态后调用</td>
+</tr>
+<tr>
+<td>onInactive</td>
+<td>Page失去焦点时调用</td>
+</tr>
+<tr>
+<td>onBackground</td>
+<td>Page不再可见 资源释放及耗时保存操作</td>
+</tr>
+<tr>
+<td>onForeground</td>
+<td>重新回到前台（获得焦点 重新申请资源</td>
+</tr>
+<tr>
+<td>onStop</td>
+<td>销毁页面时调用 释放系统资源</td>
+</tr>
+</tbody>
+</table>
+<p>同<code>Android</code>对比，关系如下：</p>
+<figure data-type="image" tabindex="1"><img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202111301012429.png" alt="image-20211028144542021" loading="lazy"></figure>
+<table>
+<thead>
+<tr>
+<th>鸿蒙</th>
+<th>安卓</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>onStart</td>
+<td>onCreate</td>
+</tr>
+<tr>
+<td>onActive</td>
+<td>onResume</td>
+</tr>
+<tr>
+<td>onInactive</td>
+<td>onPause</td>
+</tr>
+<tr>
+<td>onBackground</td>
+<td>onStop</td>
+</tr>
+<tr>
+<td>onForeground</td>
+<td>onRestart</td>
+</tr>
+<tr>
+<td>onStop</td>
+<td>onDestory</td>
+</tr>
+</tbody>
+</table>
+<h2 id="service-ability">Service Ability</h2>
+<p>同 Android Service，没有界面，可后台运行；</p>
+<p>但是鸿蒙可以启动/绑定远程设备上的服务（指定设备ID）。</p>
+<figure data-type="image" tabindex="2"><img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202111301012611.jpg" alt="点击放大" loading="lazy"></figure>
+<h1 id="ui开发框架">UI开发框架</h1>
+<h2 id="arkui">ArkUI</h2>
+<blockquote>
+<p>官方文档： <a href="https://developer.harmonyos.com/cn/docs/documentation/doc-guides/ui-js-fa-overview-0000000000585484">JS FA概述</a></p>
+</blockquote>
+<h2 id="arkui-js-ui">ArkUI-JS UI</h2>
+<blockquote>
+<p>了解更多：</p>
+<ul>
+<li><a href="https://developer.harmonyos.com/cn/docs/documentation/doc-guides/project_overview-0000001053822398">HarmonyOS应用开发-服务开发-工具-HUAWEI DevEco Studio使用指南-工程管理-HarmonyOS工程介绍</a></li>
+<li>JS API 参考：<a href="https://developer.harmonyos.com/cn/docs/documentation/doc-references/js-framework-file-0000000000611396">HarmonyOS应用开发-服务开发-JS API参考-手机、平板、智慧屏和智能穿戴开发-基于JS扩展的类Web开发范式-框架说明-文件组织</a></li>
+</ul>
+</blockquote>
+<p>整体上类似 VUE &amp; 微信小程序</p>
+<h3 id="关键词">关键词</h3>
+<ul>
+<li><code>AceAbility</code>：加载JS的Ability的基类实现</li>
+<li><code>setInstanceName</code>： 指定AceAbility加载的js目录（加载多个通过此方法指定js目录）</li>
+</ul>
+<h3 id="项目结构">项目结构</h3>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202111301012153.png" alt="image-20211027164638077" style="zoom:67%;" />
+<ul>
+<li><code>AceAbility</code> 子类（上面对应的是<code>MainJSAbility</code>）</li>
+<li><code>default</code> 目录
+<ul>
+<li><code>app.js</code> ： 全局的JavaScript逻辑文件和应用的生命周期管理</li>
+<li><code>pages/index.js</code> : JS FA(JS 界面) - <mark>可以有多个page</mark></li>
+</ul>
+</li>
+<li><code>config.json</code>： js 声明</li>
+</ul>
+<h3 id="appjs">app.js</h3>
+<p>应用生命周期回调</p>
+<pre><code class="language-js">export default {
+    onCreate() {
+        console.info('AceApplication onCreate');
+    },
+    onDestroy() {
+        console.info('AceApplication onDestroy');
+    }
+};
+</code></pre>
+<h3 id="indexjsjs-fa">index.js(JS FA)</h3>
+<ul>
+<li>页面生命生命周期回调</li>
+<li>页面业务逻辑(数据绑定，事件处理等)</li>
+</ul>
+<pre><code class="language-js">export default {
+    data: {
+        title: &quot;&quot;
+    },
+    onInit() {
+        console.log(&quot;JS Page onInit&quot;)
+    },
+    onActive(){
+        console.log(&quot;JS Page onActive&quot;)
+    },
+    onInactive(){
+        console.log(&quot;JS Page onInactive&quot;)
+    },
+    onShow(){
+        console.log(&quot;JS Page onShow&quot;)
+    },
+    onHide(){
+        console.log(&quot;JS Page onHide&quot;)
+    },
+    onDestroy(){
+        console.log(&quot;JS Page onDestroy&quot;)
+    }
+}
+</code></pre>
+<h3 id="生命周期">生命周期</h3>
+<p>详细参考： <a href="https://developer.harmonyos.com/cn/docs/documentation/doc-references/js-framework-lifecycle-0000001113708038">HarmonyOS应用开发-服务开发-JS API参考-手机、平板、智慧屏和智能穿戴开发-基于JS扩展的类Web开发范式-框架说明-生命周期</a></p>
+<figure data-type="image" tabindex="3"><img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202111301012303.png" alt="img" loading="lazy"></figure>
+<pre><code class="language-shell">OHSO_DEMO:  Application initialized
+OHSO_DEMO:  MainAbility onStart
+OHSO_DEMO:  MainAbility onActive
+
+// 打开JS PAGE
+OHSO_DEMO:  MainAbility onInactive
+OHSO_DEMO:  MainJSAbility onStart
+JSApp:  app Log: AceApplication onCreate（app.js）
+OHSO_DEMO:  MainJSAbility onActive
+JSApp:  app Log: JS Page onInit
+JSApp:  app Log: JS Page onActive
+JSApp:  app Log: JS Page onShow
+OHSO_DEMO:  MainAbility onBackground
+
+// 切换最近任务
+OHSO_DEMO:  MainJSAbility onInactive
+JSApp:  app Log: JS Page onInactive
+OHSO_DEMO:  MainJSAbility onBackground
+JSApp:  app Log: JS Page onHide
+
+// 恢复
+OHSO_DEMO:  MainJSAbility onForeground
+JSApp:  app Log: JS Page onShow
+OHSO_DEMO:  MainJSAbility onActive
+JSApp:  app Log: JS Page onActive
+
+// 回退（退出JS PAGE）
+JSApp:  app Log: JS Page onHide
+JSApp:  app Log: JS Page onDestroy
+OHSO_DEMO:  MainJSAbility onInactive
+OHSO_DEMO:  MainAbility onInactive
+OHSO_DEMO:  MainAbility onActive
+OHSO_DEMO:  MainJSAbility onBackground
+OHSO_DEMO:  MainJSAbility onStop
+JSApp:  app Log: AceApplication onDestroy （app.js）
+</code></pre>
+<ul>
+<li>JS 的生命周期在Java Ability的内部。</li>
+</ul>
+<h3 id="hml">HML</h3>
+<blockquote>
+<p>HML（HarmonyOS Markup Language）是一套类HTML的标记语言。通过组件、事件构建出页面的内容。页面具备数据绑定、事件绑定、列表渲染、条件渲染等高级能力。</p>
+</blockquote>
+<p>具体可参考： <a href="https://developer.harmonyos.com/cn/docs/documentation/doc-references/js-framework-syntax-hml-0000000000611413">HarmonyOS应用开发-服务开发-JS API参考-手机、平板、智慧屏和智能穿戴开发-基于JS扩展的类Web开发范式-框架说明-语法-HML语法参考</a></p>
+<h3 id="indexcss">index.CSS</h3>
+<p>参考： <a href="https://developer.harmonyos.com/cn/docs/documentation/doc-references/js-framework-syntax-css-0000000000611425">HarmonyOS应用开发-服务开发-JS API参考-手机、平板、智慧屏和智能穿戴开发-基于JS扩展的类Web开发范式-框架说明-语法-CSS语法参考</a></p>
+<h1 id="鸿蒙特性">鸿蒙特性</h1>
+<p>鸿蒙特有的功能和特性，主要包括：服务卡片，流转，华为分享及平行视界。</p>
+<h2 id="服务卡片">服务卡片</h2>
+<p>服务卡片（以下简称“卡片”）是<a href="https://developer.harmonyos.com/cn/docs/documentation/doc-guides/glossary-0000000000029587#section5406185415236">FA</a>的一种界面展示形式，将FA的重要信息或操作前置到卡片，以达到服务直达，减少体验层级的目的。服务卡片也是一个FA，只不过是显示在其他应用中的界面。</p>
+<p>卡片常用于嵌入到其他应用（当前只支持系统应用）中作为其界面的一部分显示，并支持拉起页面，发送消息等基础的交互功能。卡片使用方负责显示卡片。</p>
+<figure data-type="image" tabindex="4"><img src="https://alliance-communityfile-drcn.dbankcdn.com/FileServer/getFile/cmtyPub/011/111/111/0000000000011111111.20210729150026.11448964563455945776572720158002:50520728101546:2800:FB99718B0883EC644C7B007DADE0F73F9A35B89CB4A68390F037D3A25D19B8B5.png?needInitFileName=true?needInitFileName=true" alt="img" loading="lazy"></figure>
+<p>Java/JS卡片场景能力差异如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>Java卡片</th>
+<th>JS卡片</th>
+<th>支持的版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>实时刷新（类似时钟）</td>
+<td>Java使用ComponentProvider做实时刷新代价比较大</td>
+<td>JS可以做到端侧刷新，但是需要定制化组件</td>
+<td>HarmonyOS 2.0及以上</td>
+</tr>
+<tr>
+<td>开发方式</td>
+<td>Java UI在卡片提供方需要同时对数据和组件进行处理，生成ComponentProvider远端渲染</td>
+<td>JS卡片在使用方加载渲染，提供方只要处理数据、组件和逻辑分离</td>
+<td>HarmonyOS 2.0及以上</td>
+</tr>
+<tr>
+<td>组件支持</td>
+<td>Text、Image、DirectionalLayout、PositionLayout、DependentLayout</td>
+<td>div、list、list-item、swiper、stack、image、text、span、progress、button（定制：chart 、clock、calendar）</td>
+<td>HarmonyOS 2.0及以上</td>
+</tr>
+<tr>
+<td>卡片内动效</td>
+<td>不支持</td>
+<td>暂不开放</td>
+<td>HarmonyOS 2.0及以上</td>
+</tr>
+<tr>
+<td>阴影模糊</td>
+<td>不支持</td>
+<td>支持</td>
+<td>HarmonyOS 2.0及以上</td>
+</tr>
+<tr>
+<td>动态适应布局</td>
+<td>不支持</td>
+<td>支持</td>
+<td>HarmonyOS 2.0及以上</td>
+</tr>
+<tr>
+<td>自定义卡片跳转页面</td>
+<td>不支持</td>
+<td>支持</td>
+<td>HarmonyOS 2.0及以上</td>
+</tr>
+</tbody>
+</table>
+<p>综上所述，<mark>JS卡片比Java卡片支持的控件和能力都更丰富</mark>：</p>
+<ul>
+<li>Java卡片：适合作为一个直达入口，没有复杂的页面和事件。</li>
+<li>JS卡片：适合有复杂界面的卡片。</li>
+</ul>
+<h3 id="卡片开发link">卡片开发（<a href="https://developer.harmonyos.com/cn/docs/documentation/doc-guides/ability-service-widget-provider-js-0000001150602175">link</a>）</h3>
+<p>需要通过一些参数进行配置。</p>
+<ol>
+<li>配置；</li>
+<li>FA中实现特定的回调方法用来处理卡片的界面相关事件</li>
+</ol>
+<blockquote>
+<p>待补充</p>
+</blockquote>
+<h2 id="服务流转">服务流转</h2>
+<blockquote>
+<p><a href="https://developer.harmonyos.com/cn/docs/documentation/doc-guides/hop-architecture-0000001143104837">HarmonyOS应用开发-服务开发-专题-流转-流转架构</a></p>
+</blockquote>
+<p>两种类型：</p>
+<ul>
+<li>跨端迁移</li>
+<li>多端协同</li>
+</ul>
+<h3 id="基本概念">基本概念</h3>
+<ul>
+<li>流转：在HarmonyOS中泛指多设备分布式操作。流转能力打破设备界限，多设备联动，使用户应用程序可分可合、可流转，实现如邮件跨设备编辑、多设备协同健身、多屏游戏等分布式业务。流转为开发者提供更广的使用场景和更新的产品视角，强化产品优势，实现体验升级。流转按照体验可分为<strong>跨端迁移</strong>和<strong>多端协同</strong>。</li>
+<li><strong>跨端迁移</strong>：一种实现用户应用程序流转的技术方案，指在A端运行的FA迁移到B端上，完成迁移后， B端FA继续任务，而A端应用退出。在用户使用设备的过程中，当使用情境发生变化时（例如：从室内走到户外或者周围有更合适的设备等），之前使用的设备可能已经不适合继续当前的任务，此时，用户可以选择新的设备来继续当前的任务。常见的跨端迁移场景实例：
+<ul>
+<li>视频来电时从手机迁移到智慧屏，视频聊天体验更佳，手机视频应用退出。</li>
+<li>手机上阅读应用浏览文章，迁移到平板上继续查看，手机阅读应用退出。</li>
+</ul>
+</li>
+<li><strong>多端协同</strong>：一种实现用户应用程序流转的技术方案，指多端上的不同FA/PA同时运行、或者交替运行实现完整的业务；或者，多端上的相同FA/PA同时运行实现完整的业务。多个设备作为一个整体为用户提供比单设备更加高效、沉浸的体验。例如：用户通过智慧屏的应用A拍照后，A可调用手机的应用B进行人像美颜，最终将美颜后的照片保存在智慧屏的应用A。常见的多端协同场景实例还有：
+<ul>
+<li>手机侧应用A做游戏手柄，智慧屏侧应用B做游戏显示，为用户组成一个全新的游戏体验。</li>
+<li>平板侧应用A做答题板，智慧屏侧应用B做直播，为用户组成一个全新的上网课体验。</li>
+</ul>
+</li>
+</ul>
+<h4 id="任务流转管理服务">任务流转管理服务</h4>
+<p>在流转发起端，接受用户应用程序注册，提供流转入口、状态显示、退出流转等管理能力。流转任务管理服务提供的注册、解注册、显示设备列表、上报业务状态是实现跨端迁移的前提。</p>
+<p><em>任务流转管理服务</em>由一个实现了流转 <code>IContinuationRegisterManager</code> 接口的管理器提供，包括如下接口：</p>
+<ul>
+<li><code>register</code>：注册并连接到流转任务管理服务。</li>
+<li><code>showDeviceList</code>：显示组网内可选择设备列表信息。</li>
+<li><code>updateConnectStatus</code>：通知流转任务管理服务更新当前用户程序的连接状态，并在流转任务管理服务界面展示给用户。</li>
+<li><code>disconnect</code>：在应用退出时，主动调用断开和流转任务管理服务的连接。</li>
+<li><code>unregister</code>：从流转任务管理服务解注册。</li>
+</ul>
+<p>一般流程是: FA start时注册，然后显示设备列表，用户选择设备后更新连接状态。页面销毁时断开连接并解除注册。</p>
+<p><strong>部分设备上有内置的流转管理服务，部分设备没有。</strong></p>
+<ul>
+<li>当前仅手机、平板设备支持流转任务管理服务。</li>
+<li>如果没有内置的流转任务管理服务，则需要开发者自行通过 DeviceManager 实现流转任务管理</li>
+</ul>
+<h4 id="跨端迁移流程"><a href="https://developer.harmonyos.com/cn/docs/documentation/doc-guides/hop-architecture-0000001143104837">跨端迁移流程：</a></h4>
+<figure data-type="image" tabindex="5"><img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20211101142614.png" alt="点击放大" loading="lazy"></figure>
+<blockquote>
+<p><strong>说明</strong></p>
+<p>跨端迁移后，设备A上的应用需要自行退出。</p>
+</blockquote>
+<h4 id="多端协同流程"><a href="https://developer.harmonyos.com/cn/docs/documentation/doc-guides/hop-architecture-0000001143104837">多端协同流程</a></h4>
+<figure data-type="image" tabindex="6"><img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20211101142633.png" alt="点击放大" loading="lazy"></figure>
+<blockquote>
+<p><strong>说明</strong></p>
+<p>设备A和B进行多端协同后，设备A和设备C重复如上流程，可实现设备A、B、C进行多端协同，此时设备A是中心控制点。</p>
+</blockquote>
+<h3 id="跨端迁移开发流程">跨端迁移开发流程</h3>
+<h4 id="流程">流程</h4>
+<p>整体流程如下：</p>
+<img src="https://alliance-communityfile-drcn.dbankcdn.com/FileServer/getFile/cmtyPub/011/111/111/0000000000011111111.20211009142428.92713305432234037812857590541318:50521008090619:2800:FA3F702E046589CA52C8B1239687350203E8377D522BB15B8B25BF2F4F6BC475.png?needInitFileName=true?needInitFileName=true" alt="img" style="zoom:67%;" />
+<h4 id="限制">限制</h4>
+<ul>
+<li>每个应用注册流转任务管理服务的<code>Ability</code>数量上限为5个，后续新增注册的Ability会将最开始注册的覆盖。</li>
+<li>一个应用可能包含多个FA，仅需要在支持跨端迁移的FA及其所包含的<code>AbilitySlice</code>中，调用或实现相关接口。</li>
+<li>跨端迁移不支持两个设备之间分别登录不同的帐号，也就是要求多个设备是同帐号。</li>
+<li><strong>跨端迁移不支持对PA的迁移，只支持对FA的迁移</strong>。</li>
+<li>跨端迁移完成时，系统不会主动关闭发起迁移的FA，开发者可以根据业务需要，主动调用<code>terminateAbility</code>或<code>stopAbility</code>关闭FA，并调用<code>updateConnectStatus()</code>更新设备的连接状态。</li>
+<li>通过<code>continueAbility</code>进行跨端迁移过程中，远端FA首先接收到发起端FA传输的数据，再执行启动，即<code>onRestoreData()</code>发生在<code>onStart()</code>之前。</li>
+<li><strong>跨端迁移的数据大小限制200KB以内，即<code>onSaveData</code>只能传递200KB以内的数据。</strong></li>
+<li>迁移传输的数据，当前仅支持基础类型数据传递和系统<code>Sequenceable</code>对象，不支持自定义对象及文件数据传递。</li>
+<li>FA流转过程中，在流转未完成时再次调用<code>continueAbility</code>发起流转，接口将会抛出状态异常，应用需要加以限制处理。</li>
+<li>跨端迁移要求HarmonyOS 2.0以上版本才能支持，注册到流转任务管理服务时jsonParams中需要增加<code>{&quot;harmonyVersion&quot;:&quot;2.0.0&quot;}</code>过滤条件。</li>
+</ul>
+<h3 id="多端协同开发流程">多端协同开发流程</h3>
+<h4 id="流程-2">流程</h4>
+<p>相对跨端迁移，多了 DeviceManager 的参与，用于初始化和关闭分布式环境。另外，跨端迁移只涉及FA，而多端协同需要PA参与。</p>
+<figure data-type="image" tabindex="7"><img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20211102112816.png" alt="img" loading="lazy"></figure>
+<p>协同实际上的流程就是，通过startAbility 启动FA，及PA，通过connectAbility连接到PA，然后通过远程PA来进行协作。</p>
+<h4 id="限制-2">限制</h4>
+<ul>
+<li>每个应用注册流转任务管理服务的Ability数量上限为5个，后续新增注册的Ability会将最开始注册的覆盖。</li>
+<li><strong>startAbility、connectAbility中跨设备传递的intent数据大小限制200KB以内。</strong></li>
+<li>不支持使用connectAbility触发远端PA的免安装。</li>
+<li><strong>connectAbility中跨设备传递的remoteObject数据大小限制200KB以内。</strong></li>
+<li>多端协同要求HarmonyOS 2.0以上版本才能支持，注册到流转任务管理服务时jsonParams中需要增加{&quot;harmonyVersion&quot;:&quot;2.0.0&quot;}过滤条件。</li>
+<li>stopAbility不支持两个设备之间分别登录不同的帐号，也就是要求多个设备是同帐号。</li>
+</ul>
+<h3 id="示例">示例</h3>
+<p>参考官方示例：</p>
+<ul>
+<li><a href="https://gitee.com/harmonyos/harmonyos_app_samples/tree/master/ability/DistributedScheduler">ability/DistributedScheduler · HarmonyOS/harmonyos_app_samples - 码云 - 开源中国 (gitee.com)</a></li>
+<li><a href="https://developer.harmonyos.com/cn/docs/documentation/doc-guides/hop-multi-device-collaboration-guidelines-0000001139737211#section27065313575">HarmonyOS应用开发-服务开发-专题-流转-HarmonyOS端发起多端协同-多端协同开发指导</a></li>
+</ul>
+<h1 id="其他">其他</h1>
+<h2 id="日志输出">日志输出</h2>
+<h3 id="hilog">HiLog</h3>
+<pre><code class="language-java">    static final HiLogLabel label = new HiLogLabel(HiLog.LOG_APP, MY_MODULE, &quot;MY_TAG&quot;); //MY_MODULE=0x00201
+    HiLog.warn(label, &quot;Failed to visit %{private}s, reason:%{public}d.&quot;, url, errno);
+</code></pre>
+<p>输出如下：</p>
+<pre><code class="language-shell">Result: 05-26 11:01:06.870 1051 1051 W 00201/test: Failed to visit &lt;private&gt;, reason:503.
+</code></pre>
+<blockquote>
+<p>注意： <private> 隐藏了本该被输出的 url</p>
+</blockquote>
+<h2 id="对应概念类">对应概念/类</h2>
+<ul>
+<li><code>LayoutBoost</code> -&gt; <code>LayoutInflater</code></li>
+</ul>
+<h2 id="常见问题">常见问题</h2>
+<h3 id="隐藏-actionbar">隐藏 ActionBar</h3>
+<p>将如下配置段添加到 module 中，或者添加到 ability 中。</p>
+<pre><code class="language-json">	&quot;metaData&quot;: {
+          &quot;customizeData&quot;: [
+            {
+              &quot;name&quot;: &quot;hwc-theme&quot;,
+              &quot;value&quot;: &quot;androidhwext:style/Theme.Emui.Light.NoTitleBar&quot;
+            }
+          ]
+    }
+</code></pre>
+<blockquote>
+<p>按理应该提供直接对Ability设置主题的配置方式，但是不知道配置项。</p>
+</blockquote>
+<h2 id="hdc-使用">HDC 使用</h2>
+<p>hdc 路径： <code>$USER_HOME/Library/Huawei/sdk/toolchains/</code></p>
+<ul>
+<li>
+<p>查看帮助： <code>hdc help</code></p>
+<p>一般用法如下：</p>
+<pre><code class="language-shell">hdc [options] &lt;command&gt; [arguments]
+</code></pre>
+</li>
+<li>
+<p>查看设备列表： <code>hdc list targets -v </code></p>
+</li>
+<li>
+<p>查看日志： hilog</p>
+<pre><code>hdc hilog | grep com.hanlyjiang.ohosdemo
+</code></pre>
+</li>
+<li>
+<p>查看可调试应用PID列表： <code>hdc listpid</code></p>
+</li>
+</ul>
+<h3 id="使用手机内的android命令">使用手机内的<code>android</code>命令</h3>
+<p>使用 hdc shell 进入手机shell环境，然后可执行对应的android命令</p>
+<p>如下，通过<code>dumpsys activity services -p com.hanlyjiang.ohosdemo</code>可以看到实际上 鸿蒙为我们的 <code>com.hanlyjiang.ohosdemo.pa.ServiceAbility</code> 生成了一个对应的shellService（<code>com.hanlyjiang.ohosdemo/.pa.ServiceAbilityShellService</code>）</p>
+<pre><code class="language-shell">$ dumpsys activity services -p com.hanlyjiang.ohosdemo
+ACTIVITY MANAGER SERVICES (dumpsys activity services)
+  User 0 active services:
+  * ServiceRecord{b2375c9 u0 com.hanlyjiang.ohosdemo/.pa.ServiceAbilityShellService}
+    intent={pkg=com.hanlyjiang.ohosdemo cmp=com.hanlyjiang.ohosdemo/.pa.ServiceAbilityShellService}
+    packageName=com.hanlyjiang.ohosdemo
+    processName=com.hanlyjiang.ohosdemo
+    baseDir=/data/app/com.hanlyjiang.ohosdemo-XmLCnshi-zSpv76TYXTvwA==/base.apk
+    dataDir=/data/user/0/com.hanlyjiang.ohosdemo
+    app=ProcessRecord{b340b59 7888:com.hanlyjiang.ohosdemo/u0a191}
+    createTime=-10m43s889ms startingBgTimeout=--
+    lastActivity=-10m43s889ms restartTime=-10m43s889ms createdFromFg=true
+    startRequested=true delayedStop=false stopIfKilled=true callStart=true lastStartId=1
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Arduino LCD库安装与使用]]></title>
+        <id>https://hanlyjiang.github.io/post/arduino-lcd-ku-an-zhuang-yu-shi-yong/</id>
+        <link href="https://hanlyjiang.github.io/post/arduino-lcd-ku-an-zhuang-yu-shi-yong/">
+        </link>
+        <updated>2021-11-30T01:43:24.000Z</updated>
+        <summary type="html"><![CDATA[<p>从github下载 LiquidCrystal 的库，安装到Arduino IDE，并点亮1602 LCD。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>从github下载 LiquidCrystal 的库，安装到Arduino IDE，并点亮1602 LCD。</p>
+<!-- more -->
+<p>准备使用Arduino UNO点亮一个LCD1602，发现ArduinoIDE（我用的2.0Beta版本）中默认没有安装 LiquidCrystal 的库，所以需要手动进行安装。</p>
+<h2 id="安装">安装</h2>
+<p>第一种安装方式是从Arduino IDE的 Library Manager中搜索🔍并安装。另外就是手动安装，这里我们采取手动安装的方式。</p>
+<ol>
+<li>
+<p>访问其github仓库（https://github.com/arduino-libraries/LiquidCrystal），下载为zip包，下载完毕后就是 <code>LiquidCrystal-master.zip</code></p>
+</li>
+<li>
+<p>按如下路径找到添加 ZIP 库的菜单</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202111300938313.png" alt="image-20211130093814250" style="zoom:50%;" />
+</li>
+<li>
+<p>选择我们的  <code>LiquidCrystal-master.zip</code> 文件，安装完毕后重启一下 Arduino IDE。</p>
+</li>
+<li>
+<p>重新打开IDE，即可看到示例中多了LiquidCrystal 的示例</p>
+<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202111300940469.png" alt="image-20211130093952928" style="zoom:50%;" />
+</li>
+</ol>
+<h2 id="运行示例">运行示例</h2>
+<p>开一个 Blink 的示例，按如下方式接线。</p>
+<figure data-type="image" tabindex="1"><img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202111300942772.png" alt="image-20211130094241742" loading="lazy"></figure>
+<p>运行之后效果：</p>
+<p><em>待补图。</em> 可参考： http://www.taichi-maker.com/homepage/reference-index/arduino-library-index/liquidcrystal-library/</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[简化Android库上传到Maven仓库的gradle配置]]></title>
+        <id>https://hanlyjiang.github.io/post/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/</id>
+        <link href="https://hanlyjiang.github.io/post/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/">
+        </link>
+        <updated>2021-06-01T02:26:00.000Z</updated>
+        <summary type="html"><![CDATA[<p>配置 android 上传到 maven 中心仓库，发现配置的代码有点多，而且如果有多个库模块需要上传，则需要复制粘贴不少重复的配置代码，于是编写了一个 gradle 插件用于简化提取这个配置过程；</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>配置 android 上传到 maven 中心仓库，发现配置的代码有点多，而且如果有多个库模块需要上传，则需要复制粘贴不少重复的配置代码，于是编写了一个 gradle 插件用于简化提取这个配置过程；</p>
+<!-- more -->
+<h2 id="插件用途及效果">插件用途及效果</h2>
+<p>本插件用于简化Android库上传到Maven中心仓库的配置，避免每个project的gradle中都放置一份重复较多的配置；</p>
+<p>插件有如下功能：</p>
+<ol>
+<li>简化 maven-publish 插件的配置流程；</li>
+<li>添加上传到Maven中心仓库的 publish 任务；</li>
+<li>支持配置上传时是否包含 javadoc 及源码；</li>
+</ol>
+<h3 id="直接使用maven-publish插件的配置">直接使用maven-publish插件的配置：</h3>
+<pre><code class="language-kotlin">import org.gradle.api.publish.maven.MavenPom
+
+plugins {
+    id(&quot;com.android.library&quot;)
+    id(&quot;signing&quot;)
+    `maven-publish`
+}
+
+android {
+    defaultConfig {
+        versionName(&quot;1.0.0-SNAPSHOT&quot;)
+    }
+}
+
+dependencies {
+   // 
+}
+
+tasks.register(&quot;javadoc&quot;, Javadoc::class.java) {
+    group = &quot;publishing&quot;
+    dependsOn(&quot;assemble&quot;)
+    source = android.sourceSets[&quot;main&quot;].java.getSourceFiles()
+    classpath += project.files(android.bootClasspath + File.pathSeparator)
+    if (JavaVersion.current().isJava9Compatible) {
+        (options as StandardJavadocDocletOptions).addBooleanOption(&quot;html5&quot;, true)
+    }
+    android.libraryVariants.forEach { libraryVariant -&gt;
+        classpath += libraryVariant.javaCompileProvider.get().classpath
+    }
+    options.apply {
+        encoding(&quot;UTF-8&quot;)
+        charset(&quot;UTF-8&quot;)
+        isFailOnError = false
+
+        (this as StandardJavadocDocletOptions).apply {
+//            addStringOption(&quot;Xdoclint:none&quot;)
+            links?.add(&quot;https://developer.android.google.cn/reference/&quot;)
+            links?.add(&quot;http://docs.oracle.com/javase/8/docs/api/&quot;)
+        }
+    }
+}
+
+tasks.register(&quot;jarSource&quot;, Jar::class.java) {
+    group = &quot;publishing&quot;
+    from(android.sourceSets[&quot;main&quot;].java.srcDirs)
+    archiveClassifier.set(&quot;sources&quot;)
+}
+
+tasks.register(&quot;jarJavadoc&quot;, Jar::class.java) {
+    group = &quot;publishing&quot;
+    dependsOn(&quot;javadoc&quot;)
+    val javadoc: Javadoc = tasks.getByName(&quot;javadoc&quot;) as Javadoc
+    from(javadoc.destinationDir)
+    archiveClassifier.set(&quot;javadoc&quot;)
+}
+
+fun getMyPom(): Action&lt;in MavenPom&gt; {
+    return Action&lt;MavenPom&gt; {
+        name.set(&quot;Android Common Utils Lib&quot;)
+        description.set(&quot;Android Common Utils Library For HJ&quot;)
+        url.set(&quot;https://github.com/hanlyjiang/lib_common_utils&quot;)
+        licenses {
+            license {
+                name.set(&quot;The Apache License, Version 2.0&quot;)
+                url.set(&quot;http://www.apache.org/licenses/LICENSE-2.0.txt&quot;)
+            }
+        }
+        developers {
+            developer {
+                id.set(&quot;hanlyjiang&quot;)
+                name.set(&quot;Hanly Jiang&quot;)
+                email.set(&quot;hanlyjiang@outlook.com&quot;)
+            }
+        }
+        scm {
+            connection.set(&quot;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&quot;)
+            developerConnection.set(&quot;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&quot;)
+            url.set(&quot;https://github.com/hanlyjiang/lib_common_utils&quot;)
+        }
+    }
+}
+
+
+afterEvaluate {
+    publishing {
+        publications {
+            create&lt;MavenPublication&gt;(&quot;release&quot;) {
+                from(components.getByName(&quot;release&quot;))
+                groupId = &quot;com.github.hanlyjiang&quot;
+                artifactId = &quot;android_common_utils&quot;
+                version = android.defaultConfig.versionName
+                pom(getMyPom())
+                // 添加javadoc
+                artifact(tasks.getByName(&quot;jarJavadoc&quot;) as Jar)
+                // 添加source
+                artifact(tasks.getByName(&quot;jarSource&quot;) as Jar)
+            }
+        }
+
+        repositories {
+            val ossrhCredentials = Action&lt;PasswordCredentials&gt; {
+                username = properties[&quot;ossrhUsername&quot;].toString()
+                password = properties[&quot;ossrhPassword&quot;].toString()
+            }
+            // sonar的仓库，地址根据项目的版本号来确定是snapshot还是正式仓库
+            maven {
+                name = &quot;Sonartype&quot;
+
+                val releasesRepoUrl = uri(&quot;https://oss.sonatype.org/service/local/staging/deploy/maven2&quot;)
+                val snapshotsRepoUrl = uri(&quot;https://oss.sonatype.org/content/repositories/snapshots/&quot;)
+                url = if (android.defaultConfig.versionName.toString().endsWith(&quot;SNAPSHOT&quot;)) snapshotsRepoUrl else releasesRepoUrl
+                credentials(ossrhCredentials)
+                // snapshot的地址：
+                // https://oss.sonatype.org/content/repositories/snapshots/com/github/hanlyjiang/android_common_utils/
+            }
+            // 项目本地的仓库
+            maven {
+                name = &quot;ProjectLocal&quot;
+
+                val releasesRepoUrl = uri(layout.buildDirectory.dir(&quot;repos/releases&quot;))
+                val snapshotsRepoUrl = uri(layout.buildDirectory.dir(&quot;repos/snapshots&quot;))
+                url = if (android.defaultConfig.versionName.toString().endsWith(&quot;SNAPSHOT&quot;)) snapshotsRepoUrl else releasesRepoUrl
+            }
+        }
+    }
+
+    signing {
+        sign(publishing.publications.getByName(&quot;release&quot;))
+    }
+
+}
+</code></pre>
+<h3 id="使用androidmavenpubplugin简化后的配置">使用AndroidMavenPubPlugin简化后的配置：</h3>
+<pre><code class="language-kotlin">import org.gradle.api.publish.maven.MavenPom
+
+
+plugins {
+    id(&quot;com.android.library&quot;)
+    id(&quot;signing&quot;)
+    `maven-publish`
+    // 引入我们本地仓库中的gradle插件
+    id(&quot;com.github.hanlyjiang.android_maven_pub&quot;) version (&quot;0.0.5&quot;) apply (false)
+}
+
+android {
+    defaultConfig {
+        versionName(&quot;1.0.1-SNAPSHOT&quot;)
+    }
+}
+
+dependencies {
+  // 
+}
+
+apply(plugin = &quot;com.github.hanlyjiang.android_maven_pub&quot;)
+
+configure&lt;io.hanlyjiang.gradle.android.AndroidMavenPubPluginExtension&gt; {
+    groupId.set(&quot;com.github.hanlyjiang&quot;)
+    artifactId.set(&quot;android-common-utils&quot;)
+    projectLocalRepoPath.set(&quot;local-maven-repo&quot;)
+    mavenPomAction.set(Action&lt;MavenPom&gt; {
+        name.set(&quot;Android Common Utils Lib&quot;)
+        description.set(&quot;Android Common Utils Library For HJ&quot;)
+        url.set(&quot;https://github.com/hanlyjiang/lib_common_utils&quot;)
+        properties.set(
+            mapOf(
+                &quot;myProp&quot; to &quot;value&quot;,
+                &quot;prop.with.dots&quot; to &quot;anotherValue&quot;
+            )
+        )
+        licenses {
+            license {
+                name.set(&quot;The Apache License, Version 2.0&quot;)
+                url.set(&quot;http://www.apache.org/licenses/LICENSE-2.0.txt&quot;)
+            }
+        }
+        developers {
+            developer {
+                id.set(&quot;hanlyjiang&quot;)
+                name.set(&quot;Hanly Jiang&quot;)
+                email.set(&quot;hanlyjiang@outlook.com&quot;)
+            }
+        }
+        scm {
+            connection.set(&quot;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&quot;)
+            developerConnection.set(&quot;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&quot;)
+            url.set(&quot;https://github.com/hanlyjiang/lib_common_utils&quot;)
+        }
+    })
+}
+</code></pre>
+<h2 id="使用步骤">使用步骤</h2>
+<h3 id="引入插件">引入插件</h3>
+<p>在需要使用的模块的build脚本中，引入我们的插件，同时引入 <code>maven-publish</code> 插件和<code> signing</code> 插件。</p>
+<h4 id="kotlinkts-脚本写法">kotlin.kts 脚本写法</h4>
+<pre><code class="language-kotlin">plugins {
+    id(&quot;com.android.library&quot;)
+    
+    // 引入signing插件
+    id(&quot;signing&quot;)
+    // 引入maven-publish插件
+    `maven-publish`
+    // 引入 android_maven_pub 插件，注意这里设置 apply 为 false，表示引入但是不应用，我们需要放在android配置段定义之后再应用
+    id(&quot;com.github.hanlyjiang.android_maven_pub&quot;) version (&quot;0.0.5&quot;) apply (false)
+}
+</code></pre>
+<h4 id="groovy-的写法">groovy 的写法</h4>
+<pre><code class="language-groovy">plugins {
+    id 'com.android.library'
+    id 'signing'
+    id 'maven-publish'
+    id(&quot;com.github.hanlyjiang.android_maven_pub&quot;) version(&quot;0.0.5&quot;) apply(false)
+}
+</code></pre>
+<h3 id="配置-gradle">配置 gradle</h3>
+<p>在引入  AndroidMavenPubPlugin 插件之后，我们可以对插件进行配置。 建议将脚本转换为 kotlin dsl 的写法，能有对应的自动提示；</p>
+<h4 id="kotlin-dsl-写法">kotlin dsl 写法</h4>
+<pre><code class="language-kotlin">android {
+    
+}
+
+// 需要先应用插件，在android配置完成之后，建议放在脚本最下方
+apply(plugin = &quot;com.github.hanlyjiang.android_maven_pub&quot;)
+
+configure&lt;io.hanlyjiang.gradle.android.AndroidMavenPubPluginExtension&gt; {
+    groupId.set(&quot;com.github.hanlyjiang&quot;)
+    artifactId.set(&quot;android_common_utils&quot;)
+    mavenPomAction.set(Action&lt;MavenPom&gt; {
+        name.set(&quot;Android Common Utils Lib&quot;)
+        description.set(&quot;Android Common Utils Library For HJ&quot;)
+        url.set(&quot;https://github.com/hanlyjiang/lib_common_utils&quot;)
+        properties.set(
+            mapOf(
+                &quot;myProp&quot; to &quot;value&quot;,
+                &quot;prop.with.dots&quot; to &quot;anotherValue&quot;
+            )
+        )
+        licenses {
+            license {
+                name.set(&quot;The Apache License, Version 2.0&quot;)
+                url.set(&quot;http://www.apache.org/licenses/LICENSE-2.0.txt&quot;)
+            }
+        }
+        developers {
+            developer {
+                id.set(&quot;hanlyjiang&quot;)
+                name.set(&quot;Hanly Jiang&quot;)
+                email.set(&quot;hanlyjiang@outlook.com&quot;)
+            }
+        }
+        scm {
+            connection.set(&quot;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&quot;)
+            developerConnection.set(&quot;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&quot;)
+            url.set(&quot;https://github.com/hanlyjiang/lib_common_utils&quot;)
+        }
+    })
+}
+</code></pre>
+<h4 id="groovy-脚本写法">groovy 脚本写法</h4>
+<pre><code class="language-groovy">apply plugin: &quot;com.github.hanlyjiang.android_maven_pub&quot;
+
+android_maven_pub {
+    groupId.set(&quot;com.github.hanlyjiang&quot;)
+    artifactId.set(&quot;android-common-utils&quot;)
+    mavenPomAction.set({ pom -&gt;
+        pom.with {
+            name.set('HJ Android Plugin Framework')
+            description.set(&quot;A Android Plugin Framework&quot;)
+            url.set(&quot;https://github.com/hanlyjiang/apf-library&quot;)
+            licenses {
+                license {
+                    name = 'The Apache Software License, Version 2.0'
+                    url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                }
+            }
+            developers {
+                developer {
+                    id = 'hanlyjiang'
+                    name = 'hanly jiang'
+                    email = 'hanlyjiang@outlook.com'
+                }
+            }
+            scm {
+                connection = 'https://github.com/hanlyjiang/apf-library'
+                developerConnection = 'https://github.com/hanlyjiang/apf-library.git'
+                url = 'https://github.com/hanlyjiang/apf-library'
+            }
+        }
+    } as Action&lt;MavenPom&gt;)
+}
+
+</code></pre>
+<blockquote>
+<p>⚠️<strong>注意</strong>：</p>
+<ul>
+<li>
+<p>可以看到我们这里并没有定义版本号，版本号从 <code>android.defaultConfig.versionName</code> 中取 ；</p>
+</li>
+<li>
+<p>同时，如果版本号结尾为 <code>-SNAPSHOT</code>，则会发布到 snapshot 仓库，如果没有，则发布到 release 仓库；</p>
+</li>
+</ul>
+</blockquote>
+<h3 id="maven仓库的属性文件配置">maven仓库的属性文件配置</h3>
+<p>上传到maven center中心仓库需要进行一些账号申请和key的生成操作，可以参考<a href="https://xie.infoq.cn/article/e2345e367a139f37fc2fc0bbb">Jcenter 停止服务，说一说我们的迁移方案 - InfoQ 写作平台</a> 来完成，我们需要将最后获取到的认证信息：</p>
+<p>按如下配置，将对应的 value 的值更改为自己的账号及 key 的对应值，然后填入到 <code> ~/.gradle/gradle.properties</code> 中即可</p>
+<pre><code class="language-properties"># 配置maven中心仓库访问账号
+ossrhUsername=sonatype jira 账号的用户名
+ossrhPassword=sonatype jira 账号的密码
+
+# 配置签名信息
+signing.keyId=公钥 ID 的后 8 位
+signing.password=钥匙串的密码
+signing.secretKeyRingFile=导出的 gpg 文件路径 如： /Users/hanlyjiang/.gnupg/secring.gpg 
+</code></pre>
+<blockquote>
+<p>⚠️注意： 这里的 key 是固定的，不要修改</p>
+</blockquote>
+<h3 id="执行上传任务">执行上传任务</h3>
+<p>经过上面的配置，我们同步下 gradle ，对应引入了插件的项目中会生成若干任务：</p>
+<figure data-type="image" tabindex="1"><img src="https://img-blog.csdnimg.cn/20210531175716679.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21vc3B1aXRv,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" loading="lazy"></figure>
+<p>其中：</p>
+<ul>
+<li><code>jarJavadoc</code>, <code>jarSource</code>,<code>javadoc</code> 为我们生成的辅助任务</li>
+<li><code>publish</code> 及 <code>generate</code> 开头的为 <code>mave-publish</code> 插件生成的任务，我们执行 <code>publish</code> 相关的任务即可发布 maven 库；</li>
+</ul>
+<p><code>publish </code> 相关的任务有如下几个：</p>
+<table>
+<thead>
+<tr>
+<th>Task Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>publish</td>
+<td>等于执行了下面的所有任务</td>
+</tr>
+<tr>
+<td>publishAllPublicationsToProjectLocalRepository</td>
+<td>将由此项目产生的所有Maven库发布到 ProjectLocal 存储库。 ProjectLocal 定义为当前项目的 build 目录的 <code>mavenRepos</code> 目录中，有两个子目录 <code>snapshots</code>及 <code>release</code>， 方便查看将要发布的生成物及进行本地测试；</td>
+</tr>
+<tr>
+<td>publishAllPublicationsToSonartypeRepository</td>
+<td>将由此项目产生的所有 Maven 库发布到 Sonartype 存储库。</td>
+</tr>
+<tr>
+<td>publishReleasePublicationToMavenLocal</td>
+<td>将由此项目产生的名为<code>release</code>的 Maven库发布到本机 maven 缓存库。</td>
+</tr>
+<tr>
+<td>publishReleasePublicationToProjectLocalRepository</td>
+<td>将由此项目产生的名为<code>release</code>的 Maven库发布到本机 ProjectLocal 库。</td>
+</tr>
+<tr>
+<td>publishReleasePublicationToSonartypeRepository</td>
+<td>将由此项目产生的名为<code>release</code>的 Maven库发布到本机 Sonartype 库。</td>
+</tr>
+<tr>
+<td>publishToMavenLocal</td>
+<td>将由此项目产生的所有 Maven 库发布到 本机 maven 缓存库。</td>
+</tr>
+</tbody>
+</table>
+<p><strong>说明：</strong></p>
+<p>上面的任务由 <code>maven-publish</code> 的插件生成，该插件生成任务的规则使用 Publications 和 Repo 来组合实现，其中：</p>
+<ul>
+<li>publication 是我们定义的发布库；<code>android_maven_pub</code> 插件中，我们定义了一个名为<code>release</code> 的配置；</li>
+<li>repo 是我们定义的 maven 仓库的位置，<code>android_maven_pub</code> 定义了两个仓库的位置，分别名为 ProjectLocal 和 Sonartype ，另外<code>maven-publish</code>会给我们加上一个 MavenLocal 的配置（指向本机 maven 仓库缓存目录）
+<ul>
+<li>其中 ProjectLocal 指向引入了该插件的项目（模块）的 <code>build/repos</code> 目录</li>
+<li><code>Sonartype</code> 则默认指向 maven 中心仓库的地址，可以通过配置来更改；</li>
+</ul>
+</li>
+</ul>
+<h2 id="可配置项目说明">可配置项目说明</h2>
+<table>
+<thead>
+<tr>
+<th>配置字段</th>
+<th>说明</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>groupId</td>
+<td>maven 的 group id，需要设置为自己申请的</td>
+<td>无默认值-必需填写</td>
+</tr>
+<tr>
+<td>artifactId</td>
+<td>library 的 id</td>
+<td>无默认值-必需填写</td>
+</tr>
+<tr>
+<td>mavenPomAction</td>
+<td>用于配置 pom 信息的字段</td>
+<td>无默认值-必需填写</td>
+</tr>
+<tr>
+<td>fromAndroidPubName</td>
+<td>表示发布的 android 的 aar 的类型，<code>release</code> 或 <code>debug</code></td>
+<td><code>release</code></td>
+</tr>
+<tr>
+<td>releasesRepoUrl</td>
+<td>maven release 仓库的上传地址</td>
+<td><code>https://oss.sonatype.org/service/local/staging/deploy/maven2</code></td>
+</tr>
+<tr>
+<td>snapshotsRepoUrl</td>
+<td>maven snapshots 仓库的上传地址</td>
+<td><code>https://oss.sonatype.org/content/repositories/snapshots/</code></td>
+</tr>
+<tr>
+<td>includeSourceJar</td>
+<td>是否上传源码</td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td>includeJavadocJar</td>
+<td>是否上传 javadoc</td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td>projectLocalRepoPath</td>
+<td>本地仓库的目录，相对于rootProject的目录，如：<code>local-maven-repo</code></td>
+<td>默认位于根项目的 <code>build/mavenRepos</code> 目录中</td>
+</tr>
+</tbody>
+</table>
+<h2 id="常见问题">常见问题</h2>
+<h3 id="发布到-snapshot">发布到 snapshot</h3>
+<p>我们根据版本号来选择发布到的是 snapshot 还是 release 仓库，版本号从 <code>android-&gt;defaultConfig - versionName</code> 中读取，如：</p>
+<pre><code class="language-kotlin">android {
+    compileSdkVersion(30)
+    buildToolsVersion(&quot;30.0.3&quot;)
+
+    defaultConfig {
+        minSdkVersion(22)
+        targetSdkVersion(30)
+        versionCode(1)
+        versionName(&quot;1.0.0-SNAPSHOT&quot;)
+    }
+}
+</code></pre>
+<h3 id="发布到本地并进行测试">发布到本地并进行测试</h3>
+<p>首先我们通过 <code>projectLocalRepoPath</code> 来改变 ProjectLocal 仓库的目录，下面的示例中将其设置为 rootProject 的 local-maven-repo 目录中</p>
+<pre><code class="language-kotlin">apply(plugin = &quot;com.github.hanlyjiang.android_maven_pub&quot;)
+
+configure&lt;io.hanlyjiang.gradle.android.AndroidMavenPubPluginExtension&gt; {
+    groupId.set(&quot;com.github.hanlyjiang&quot;)
+    artifactId.set(&quot;android-common-utils&quot;)
+    projectLocalRepoPath.set(&quot;local-maven-repo&quot;)
+	// ...
+}
+</code></pre>
+<p>接下来我们定义本地的 Repo ，见下方名为 <code>ProjectLocal-Snapshots</code> 及 <code>ProjectLocal-Release</code> 的仓库。</p>
+<pre><code class="language-kotlin">allprojects {
+    repositories {
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/jcenter&quot;) }
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/google&quot;) }
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/gradle-plugin&quot;) }
+        maven { setUrl(&quot;https://maven.aliyun.com/repository/public&quot;) }
+        // 定义本地repo路径
+        maven {
+            name = &quot;ProjectLocal-Snapshots&quot;
+            setUrl(File(rootProject.rootDir, &quot;local-maven-repo${File.separator}snapshots&quot;))
+        }
+        maven {
+            name = &quot;ProjectLocal-Release&quot;
+            setUrl(File(rootProject.rootDir, &quot;local-maven-repo${File.separator}release&quot;))
+        }
+        maven {
+            name = &quot;Sonatype-Snapshots&quot;
+            setUrl(&quot;https://oss.sonatype.org/content/repositories/snapshots&quot;)
+//            setUrl(&quot;https://s01.oss.sonatype.org/content/repositories/snapshots&quot;)
+            // snapshot可以不用用户名密码
+            // 查看自己的snapshot版本： https://oss.sonatype.org/content/repositories/snapshots/com/github/hanlyjiang/
+            credentials(PasswordCredentials::class.java) {
+                username = property(&quot;ossrhUsername&quot;).toString()
+                password = property(&quot;ossrhPassword&quot;).toString()
+            }
+        }
+        maven {
+            name = &quot;Sonatype-Staging&quot;
+            setUrl(&quot;https://oss.sonatype.org/service/local/staging/deploy/maven2/&quot;)
+//            setUrl(&quot;https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/&quot;)
+            credentials(PasswordCredentials::class.java) {
+                username = property(&quot;ossrhUsername&quot;).toString()
+                password = property(&quot;ossrhPassword&quot;).toString()
+            }
+        }
+    }
+}
+</code></pre>
+<!-- more -->
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Gitlab持续集成与持续部署-实例]]></title>
+        <id>https://hanlyjiang.github.io/post/gitlab-chi-xu-ji-cheng-yu-chi-xu-bu-shu-shi-li/</id>
+        <link href="https://hanlyjiang.github.io/post/gitlab-chi-xu-ji-cheng-yu-chi-xu-bu-shu-shi-li/">
+        </link>
+        <updated>2021-05-26T08:12:17.000Z</updated>
+        <summary type="html"><![CDATA[<p>本篇文章介绍如何基于Gitlab来配置一个服务集群的自动构建与部署更新，其中服务的更新基于docker来完成，本文主要关注如何完成部署操作，及如何完成gitlab上ci的配置；在完成单一的服务自动部署更新后，我们通过gitlab的include及trigger机制来简化统一部署流程；</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>本篇文章介绍如何基于Gitlab来配置一个服务集群的自动构建与部署更新，其中服务的更新基于docker来完成，本文主要关注如何完成部署操作，及如何完成gitlab上ci的配置；在完成单一的服务自动部署更新后，我们通过gitlab的include及trigger机制来简化统一部署流程；</p>
+<!-- more -->
+<h2 id="前言">前言</h2>
+<p>我们需要实现服务的自动构建后的自动更新部署，注意这里我们只需要能做到更新部署的服务即可，服务的初次部署属于低频操作，且和服务器环境相关，需要手动来完成；我们这里假定机器上已经部署好了服务；</p>
+<h2 id="单一项目的自动部署的示例">单一项目的自动部署的示例</h2>
+<p>这里我们首先以一个springboot的服务作为示例，实现了整个自动打包及部署更新的流程；</p>
+<h3 id="效果">效果</h3>
+<ul>
+<li>
+<p>提交之后，自动构建jar，并打包docker镜像</p>
+<figure data-type="image" tabindex="1"><img src="https://s2.loli.net/2022/05/26/15jIx7oVTpdN2qG.png" alt="202203192258673" loading="lazy"></figure>
+</li>
+<li>
+<p>构建完成后，通过gitlab界面，可以触发部署，完成后可以访问对应的环境（详见下方说明）</p>
+</li>
+</ul>
+<h3 id="触发部署步骤的方式">触发部署步骤的方式</h3>
+<p>触发部署有多个入口：</p>
+<ol>
+<li>
+<p>流水线列表尾部的手动作业按钮</p>
+<figure data-type="image" tabindex="2"><img src="https://s2.loli.net/2022/05/26/H4IPizrx1pOlMwG.png" alt="20210526101412" loading="lazy"></figure>
+</li>
+<li>
+<p>流水线列表中，点击对应的手动任务，在弹出框中点击运行</p>
+<figure data-type="image" tabindex="3"><img src="https://s2.loli.net/2022/05/26/TN472VCvmxjhHwe.png" alt="20210526101519" loading="lazy"></figure>
+</li>
+<li>
+<p>流水线详情中，点击触发部署</p>
+<figure data-type="image" tabindex="4"><img src="https://s2.loli.net/2022/05/26/TpsmiNOa5AWVf32.png" alt="202203192259870" loading="lazy"></figure>
+</li>
+<li>
+<p>对应手动作业的详情中，点击“触发此手动操作”</p>
+<figure data-type="image" tabindex="5"><img src="https://s2.loli.net/2022/05/26/GDTRWdy2iXAP1Le.png" alt="202203192300715" loading="lazy"></figure>
+</li>
+<li>
+<p>作业列表中对应的部署作业的尾部</p>
+<figure data-type="image" tabindex="6"><img src="https://s2.loli.net/2022/05/26/574YeyxSfMqoaju.png" alt="202203192301127" loading="lazy"></figure>
+</li>
+</ol>
+<h3 id="访问部署环境的方式">访问部署环境的方式</h3>
+<p>部署之后，会在gitlab中生成一个环境，在环境的相关界面即可访问对应的服务地址</p>
+<ol>
+<li>在项目的“运维-环境”入口可以查看所有的环境</li>
+</ol>
+<figure data-type="image" tabindex="7"><img src="https://s2.loli.net/2022/05/26/z6jTAhZRkmXGFqe.png" alt="20210526101758" loading="lazy"></figure>
+<ol start="2">
+<li>
+<p>点击对应环境尾部的链接图标即可访问</p>
+<figure data-type="image" tabindex="8"><img src="https://s2.loli.net/2022/05/26/NHU1YLsjnP8x3ib.png" alt="20210526101901" loading="lazy"></figure>
+</li>
+<li>
+<p>也可以在对应的环境详情页面，点击“查看部署” （注意在部署作业的详情中也可以找到对应环境的入口哦-触发部署步骤的方式的第四中方式的附图）</p>
+<figure data-type="image" tabindex="9"><img src="https://s2.loli.net/2022/05/26/NHU1YLsjnP8x3ib.png" alt="" loading="lazy"></figure>
+</li>
+</ol>
+<h3 id="实现方式">实现方式</h3>
+<p>我们有三个任务：</p>
+<ul>
+<li>构建jar</li>
+<li>构建docker镜像</li>
+<li>部署服务（通过swarm）</li>
+</ul>
+<p>其中构建jar和构建docker镜像是自动完成的，部署步骤则需要手动通过gitlab界面进行触发；</p>
+<h4 id="gitlab-ciyml-配置">gitlab-ci.yml 配置</h4>
+<pre><code class="language-yaml">variables:
+  #  配置仓库环境
+  DOCKER_REGISTRY: zh-registry.colorless.com.cn
+  DOCKER_NAMESPACE: colorless
+  DEPLOY_PATH: /Wksp/colorlessWork/colorless-deploy/deploy/
+  #  配置镜像服务名
+  SERVICE_NAME: graphql-token
+
+stages:
+  - test
+  - build
+  - build_image
+  - deploy
+
+# 引入代码检查任务
+#include:
+#  local: ci/gitlab-ci-sonar.yml
+
+build:jar:
+  # 部分模块若不使用1.8编译会报错
+  image: maven:3.6.3-jdk-8
+  stage: build
+  script:
+    - mvn package
+    - mkdir _archiver
+    - cp target/*.jar _archiver/
+    - ls -lh _archiver/
+  artifacts:
+    name: &quot;dist-$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA&quot;
+    paths:
+      - _archiver/*.jar
+    # 生成的归档包比较大，我们只保留短时间
+    expire_in: 1 hours
+  tags:
+    - common-build
+  only:
+    - master
+    - web
+
+build:docker:
+  stage: build_image
+  script:
+    # 登录公司的Harbor，注意必须在环境变量配置 HARBOR_PWD
+    - echo $HARBOR_PWD | docker login --username=$HARBOR_USER $DOCKER_REGISTRY --password-stdin
+    # 定义镜像TAG
+    - IMAGE_NAME=$DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$CI_COMMIT_SHORT_SHA
+    - echo &quot;Docker build options $DOCKER_OPTIONS, set DOCKER_OPTIONS to --no-cache force rebuild all stage&quot;
+    - cp _archiver/*.jar docker/
+    # build镜像
+    - JAR_FILE=`ls docker/ | grep -E *.jar`
+    - echo $JAR_FILE
+    - docker build $DOCKER_OPTIONS --build-arg JAR_FILE=$JAR_FILE -t $IMAGE_NAME ./docker/
+    # 推送镜像
+    - docker push $IMAGE_NAME
+    - echo &quot;镜像构建完成：$IMAGE_NAME&quot;
+  tags:
+    - docker
+  only:
+    - master
+    - web
+
+deploy:
+  stage: deploy
+  script:
+    - echo $HARBOR_PWD | docker login --username=$HARBOR_USER $DOCKER_REGISTRY --password-stdin
+    - cd $DEPLOY_PATH
+    - source deploy.sh
+    - update_service $DOCKER_NAMESPACE $SERVICE_NAME $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$CI_COMMIT_SHORT_SHA
+  environment:
+    name: test_env_deploy
+    url: $APP_URL/
+  when: manual
+  only:
+    - branches
+    - web
+  tags:
+    - deploy_graphql
+
+</code></pre>
+<p>注意 deploy 任务中定义的环境配置：</p>
+<pre><code class="language-yaml">  environment:
+    name: test_env_deploy
+    url: $APP_URL/
+  when: manual
+</code></pre>
+<ol>
+<li>
+<p>通过environment配置，我们可以在gitlab的 “运维-环境” 中生成一条环境信息，一个环境信息即对应一个部署服务；</p>
+<p>定义环境信息，需要配置name和url两个字段，其中name是环境名称，url则应指向服务的地址，该url即是我们在gitlab环境中查看部署时跳转的页面；</p>
+</li>
+<li>
+<p>这里的url我们通过变量来进行配置，也可以直接写死；</p>
+</li>
+<li>
+<p>注意这里的name不能设置为中文；</p>
+</li>
+<li>
+<p>通过将when 设置为 manual ，可以将部署任务设置为手动触发的方式；</p>
+</li>
+</ol>
+<h2 id="优化改进方案研究">优化改进方案研究</h2>
+<h3 id="改进目标">改进目标</h3>
+<p>我们的一个集群之中有多个服务单元，每个服务单元提交代码更新之后，都需要自动部署更新到对应的环境中。我们可以选择将上面单个项目中的流程在所有项目中都复制一遍，不过：</p>
+<ul>
+<li>重复工作较多，一旦部署脚本发生变化，每个项目都需要单独变化</li>
+<li>每个项目都需要配置到部署服务器的runner</li>
+</ul>
+<p>所以，我们需要考虑将这个重复的步骤集中起来。</p>
+<blockquote>
+<p>实际上，打包jar和构建镜像的流程我们也可以考虑优化复用，不过我们这里主要专注于部署的改进。当服务被打包成镜像之后，部署的流程只关注于镜像，无需针对不同的服务进行区分对待，是非常适合提取统一的；</p>
+</blockquote>
+<h3 id="现状">现状</h3>
+<p>经过上面的步骤，我们已经可以实现上传代码后自动编译，构建镜像，通过gitlab界面实现部署了。不过项目比较多时，我们每个都如此配置，一旦需要改动，会比较麻烦，我们可以考虑将这些任务提取成公用的脚本，在项目中进行引入。</p>
+<p>现在，我们尝试将这部署任务提取成公共的。</p>
+<p>实际上，上面的部署流程中，我们已经部署更新的流程做了封装，具体脚本如下，在更新服务时，我们只需要使用 <code>update_service</code> 函数即可完成服务的更新及本地yml部署文件的修改；</p>
+<pre><code class="language-shell"># 更新服务
+update_service colorless graphql-engine zh-registry.colorless.com.cn/colorless/graphql-engine:1aaa7ad9
+</code></pre>
+<p>deploy.sh 脚本内容：（只关注update_service 的流程即可）</p>
+<pre><code class="language-shell">#!/usr/bin/env bash
+#set -eo pipefail
+
+REGISTRY_ALIYUN=registry.cn-hangzhou.aliyuncs.com/hasura
+REGISTRY_HARBOR=zh-registry.colorless.com.cn/colorless
+# 部署服务
+STACK_NAME=colorless
+
+function getSedOption() {
+  if [ &quot;$(uname)&quot; = &quot;Darwin&quot; ]; then
+    echo &quot;-i .bak&quot;
+  else
+    echo &quot;-i.bak&quot;
+  fi
+}
+
+function logInfo() {
+  echo &quot;--&gt;: $*&quot;
+}
+
+function logError() {
+  echo &quot;--&gt;Error: $*&quot; &gt;&amp;2
+}
+
+# 设置部署目录
+if [ &quot;$0&quot; = &quot;-bash&quot; ]; then
+  DEPLOY_DIR=$PWD
+else
+  DEPLOY_DIR=$(
+    cd $(dirname $0)
+    pwd
+  )
+fi
+echo &quot;DEPLOY_DIR:$DEPLOY_DIR&quot;
+
+# 使用阿里云的镜像
+function use_aliyun_images() {
+  sed &quot;$(getSedOption)&quot; &quot;s|$REGISTRY_HARBOR|$REGISTRY_ALIYUN|g&quot; $DEPLOY_DIR/*/*.yml
+}
+
+# 使用内网 harbor 镜像
+function use_harbor_images() {
+  sed &quot;$(getSedOption)&quot; &quot;s|$REGISTRY_ALIYUN|$REGISTRY_HARBOR|g&quot; $DEPLOY_DIR/*/*.yml
+}
+
+# 部署单个脚本服务
+function deploy() {
+  service=$1
+  stack_name=$2
+  if [ -z &quot;$service&quot; ]; then
+    echo &quot;用法：deploy {服务名称} [stack名称]&quot;
+    echo &quot;     {服务名称} - 可为 hasura，kafka，event_track&quot;
+    return
+  fi
+  if [ -z &quot;$stack_name&quot; ]; then
+    stack_name=$STACK_NAME
+  fi
+  printf &quot;\n%s\n&quot; &quot;获取镜像: $service &quot;
+  grep &quot;image:&quot; &quot;$DEPLOY_DIR/$service/docker-compose.yml&quot; | sed 's/image://g' | xargs -I {} docker pull {}
+  printf &quot;\n%s\n&quot; &quot;启动服务: $service &quot;
+  docker stack deploy -c &quot;$DEPLOY_DIR/$service/docker-compose.yml&quot; $stack_name
+  printf &quot;\n\n&quot;
+}
+
+function deploy_offline() {
+  service=$1
+  stack_name=$2
+  if [ -z &quot;$service&quot; ]; then
+    echo &quot;用法：deploy {服务名称} [stack名称]&quot;
+    echo &quot;     {服务名称} - 可为 hasura，kafka，event_track&quot;
+    return
+  fi
+  if [ -z &quot;$stack_name&quot; ]; then
+    stack_name=$STACK_NAME
+  fi
+  printf &quot;\n%s\n&quot; &quot;启动服务: $service &quot;
+  docker stack deploy -c &quot;$DEPLOY_DIR/$service/docker-compose.yml&quot; $STACK_NAME
+  printf &quot;\n\n&quot;
+}
+
+# 导出一个脚本中的镜像
+function export_images() {
+  service=$1
+  if [ -z &quot;$service&quot; ]; then
+    echo &quot;用法：deploy {服务名称}&quot;
+    echo &quot;     {服务名称} - 可为 hasura，kafka，event_track&quot;
+    return
+  fi
+  printf &quot;\n%s\n&quot; &quot;导出镜像: $service &quot;
+  image_list=$(grep &quot;image:&quot; &quot;$DEPLOY_DIR/$service/docker-compose.yml&quot; | sed 's/image://g' | awk '{print $1}' | tr &quot;\n&quot; &quot; &quot;)
+  echo &quot;docker image save --output=$DEPLOY_DIR/$service.tar $image_list&quot;
+  docker image save --output=&quot;$DEPLOY_DIR/$service&quot;.tar &quot;$image_list&quot;
+  printf &quot;\n\n&quot;
+}
+
+# 部署所有服务
+# deploy_all [stack_name]
+# - stack_name ： stack 名称，不传则为 colorless
+function deploy_all() {
+  stack_name=$1
+  if [ -z &quot;$stack_name&quot; ]; then
+    stack_name=$STACK_NAME
+  fi
+  deploy graphql $stack_name
+  deploy kafka $stack_name
+  deploy &quot;gpl-datacollection&quot; $stack_name
+}
+
+# 不pull镜像，部署所有服务
+# deploy_all_offline [stack_name]
+# - stack_name ： stack 名称，不传则为 colorless
+function deploy_all_offline() {
+  stack_name=$1
+  if [ -z &quot;$stack_name&quot; ]; then
+    stack_name=$STACK_NAME
+  fi
+  deploy_offline graphql $stack_name
+  deploy_offline kafka $stack_name
+  deploy_offline &quot;gpl-datacollection&quot; $stack_name
+}
+
+function pull_image() {
+  image=$1
+  if [ -z $image ]; then
+    logError &quot;image参数未指定&quot;
+    return
+  fi
+  docker pull $image
+}
+
+function _usage_update_service() {
+  logInfo &quot;用法： update_service {stack} {service} {image}&quot;
+}
+
+# 更新服务，用法如下：
+# update_service {stack} {service} {image}
+# update_service colorless graphql-engine zh-registry.colorless.com.cn/colorless/graphql-engine:1aaa7ad9
+# 本函数按如下流程执行：
+# 1. 获取镜像；
+# 2. 更新服务；如更新失败，则尝试回滚服务；
+# 3. 如更新成功，则修改本地yml文件；
+function update_service() {
+  # 要更新的stack
+  stack=$1
+  # 要更新的服务
+  service=$2
+  # 服务的镜像
+  image=$3
+  if [ -z &quot;$stack&quot; ]; then
+    logError &quot;stack 参数不能为空&quot;
+    _usage_update_service
+    return 1
+  fi
+  if [ -z &quot;$service&quot; ]; then
+    logError &quot;service 参数不能为空&quot;
+    _usage_update_service
+    return 1
+  fi
+  if [ -z &quot;$image&quot; ]; then
+    logError &quot;image 参数不能为空&quot;
+    _usage_update_service
+    return 1
+  fi
+  logInfo &quot;获取镜像：$image&quot;
+  pull_image &quot;$image&quot;
+  if [ $? -eq 1 ]; then
+    logError &quot;镜像获取失败&quot;
+    return 1
+  fi
+  service_name=&quot;${stack}_${service}&quot;
+  logInfo &quot;开始更新服务：docker service update $service_name --image=$image&quot;
+  docker service update &quot;$service_name&quot; --image=&quot;$image&quot;
+  update_result=$?
+  logInfo &quot;当前服务状态: &quot;
+  docker stack services $stack
+  # 更新失败
+  if [ $update_result -eq 1 ]; then
+    logError &quot;更新失败，确定是否需要回滚服务&quot;
+    docker service ls --format=&quot;{{.Image}}&quot; | grep -E &quot;^$image$&quot;
+    find_image=$?
+    if [ $find_image -eq 0 ]; then
+      logInfo &quot;开始回滚服务：$service_name&quot;
+      docker service rollback &quot;$service_name&quot;
+      logInfo &quot;回滚完成，输出服务状态：(可手动确认服务状态)&quot;
+      docker service ls
+    else
+      logInfo &quot;无需回滚&quot;
+    fi
+    # 直接退出
+    logError &quot;更新失败，即将退出，请手动检查服务镜像是否正常&quot;
+    return 1
+  fi
+  # 更新成功，开始更新本地yml部署脚本
+  logInfo &quot;开始更新本地yml部署脚本&quot;
+  update_service_yaml_config &quot;$stack&quot; &quot;$service&quot; &quot;$image&quot;
+}
+
+# 更新本地的yml文件配置
+function update_service_yaml_config() {
+  # 要更新的stack
+  stack=$1
+  # 要更新的服务
+  service=$2
+  # 服务的镜像
+  image=$3
+  if [ -z &quot;$stack&quot; ]; then
+    logError &quot;stack 参数不能为空&quot;
+    return 1
+  fi
+  if [ -z &quot;$service&quot; ]; then
+    logError &quot;service 参数不能为空&quot;
+    return 1
+  fi
+  if [ -z &quot;$image&quot; ]; then
+    logError &quot;image 参数不能为空&quot;
+    return 1
+  fi
+  service_name=&quot;${stack}_${service}&quot;
+
+  # 查找需要修改的文件(根据服务名查找，排除arm）
+  # -H 输出匹配的文件路径
+  # -v 过滤掉 arm
+  # -print0 | xargs -0 用于处理文件名中可能存在的特殊字符
+  # 这里 /b:/b 的匹配模式 确保有空格的情况下尽可能的匹配到service
+  # 完成后输出类似如下：
+  # ./graphql/docker-compose-20210325.yml:  graphql-engine:
+  # ./graphql/docker-compose.yml:  graphql-engine:
+  # 获取需要修改的文件列表
+  #   IFS=&quot; &quot; read -r -a file_list &lt;&lt;&lt; find . -type f -name &quot;*.yml&quot; -print0 | xargs -0 -I {} grep -H &quot;$service *: *$&quot; {} | grep -v &quot;arm&quot; | awk -F: '{print $1}' | tr &quot;\n&quot; &quot; &quot;
+#  file_list=($(find . -type f -name &quot;*.yml&quot; -print0 | xargs -0 -I {} grep -H &quot;$service *: *$&quot; {} | grep -v &quot;arm&quot; | awk -F: '{print $1}' | tr &quot;\n&quot; &quot; &quot;))
+# 上面变量的写法在gitlab-runner上有问题
+#  for file in &quot;${file_list[@]}&quot;; do
+  for file in $(find . -type f -name &quot;*.yml&quot; -print0 | xargs -0 -I {} grep -H &quot;$service *: *$&quot; {} | grep -v &quot;arm&quot; | awk -F: '{print $1}' | tr &quot;\n&quot; &quot; &quot;); do
+    logInfo 开始修改文件:&quot;$file&quot;
+    # 获取文件中的镜像全名 &quot; *&quot; 匹配一个或多个空格
+    # 注意：这里通过服务名称来查找镜像名称，通过 grep -A 4 多输出四行，然后在这四行中寻找image段，从而获取文件中对应service的image的全名
+    raw_image=$(grep -A 4 &quot;$service *: *$&quot; &quot;$file&quot; | grep image | sed 's/.*image: *//g')
+    logInfo &quot;备份文件: $file.bak&quot;
+    #    cp -f &quot;$file&quot; &quot;$file.bak&quot;
+    # 开始修改文件
+    sed &quot;$(getSedOption)&quot; &quot;s|$raw_image|$image|g&quot; &quot;$file&quot;
+    if [ $? -eq 0 ]; then
+      confirm_ed_result=$(grep &quot;$image&quot; &quot;$file&quot;)
+      if [ -n &quot;$confirm_ed_result&quot; ]; then
+        logInfo &quot;修改成功&quot;
+        logInfo &quot;服务更新完成&quot;
+      else
+        logError &quot;文件修改失败&quot;
+      fi
+    else
+      logError &quot;文件修改失败&quot;
+    fi
+  done
+}
+
+# 导出所有镜像
+function export_all_images() {
+  export_images graphql
+  export_images kafka
+  export_images &quot;gpl-datacollection&quot;
+}
+
+echo &quot;导入部署脚本成功&quot;
+
+</code></pre>
+<h3 id="调查">调查</h3>
+<p>观察如下一个具体的deploy的job，我们可以有如下提取方向：</p>
+<ol>
+<li>将整个job都提取出去；</li>
+<li>将script段提取出来；</li>
+<li>将部署任务集中到一个单独的部署项目，各个服务模块更新后触发部署项目进行部署；</li>
+</ol>
+<pre><code class="language-yaml">deploy:
+  stage: deploy
+  script:
+    - echo $HARBOR_PWD | docker login --username=$HARBOR_USER $DOCKER_REGISTRY --password-stdin
+    - cd $DEPLOY_PATH
+    #- sudo chmod 777 -R $DEPLOY_PATH   需要自行使用root用户添加权限
+    - echo &quot;$SERVICE_NAME&quot;
+    - echo &quot;$DEPLOY_PATH&quot;
+    - echo &quot;$DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$CI_COMMIT_SHORT_SHA&quot;
+    - source deploy.sh
+    - update_service $DOCKER_NAMESPACE $SERVICE_NAME $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$CI_COMMIT_SHORT_SHA
+  environment:
+    name: test_env_deploy
+    url: $APP_URL/
+  when: manual
+  only:
+    - branches
+    - web
+  tags:
+    - deploy_graphql
+</code></pre>
+<p>接下来，我们带着上述两个问题来寻找相关的技术支持 - 即：gitlab能帮助我们做到哪些及什么程度？</p>
+<p>经过简单的调查我们可以知道，gitlabci的配置中，有一个<code>include</code> 的配置可以引入外部的yaml，我们详细了解下这个配置（<a href="https://docs.gitlab.com/ee/ci/yaml/README.html#include">Keyword reference for the .gitlab-ci.yml file | GitLab</a>）</p>
+<p>而提取脚本是一个比较确定可以实现的事情，所以我们不予调查；</p>
+<h4 id="include"><strong>include</strong></h4>
+<p><strong>用途：</strong></p>
+<ol>
+<li>在ci配置中导入外部的yaml配置；</li>
+<li>拆分长的配置，提升可读性；</li>
+<li>提取公共的配置，减少重复配置；</li>
+<li>拆分放置到中心仓库，在其他项目中引入；</li>
+</ol>
+<p><strong>支持的源</strong>：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Keyword</th>
+<th style="text-align:left">Method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><a href="https://docs.gitlab.com/ee/ci/yaml/README.html#includelocal"><code>local</code></a></td>
+<td style="text-align:left">本项目中的文件</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="https://docs.gitlab.com/ee/ci/yaml/README.html#includefile"><code>file</code></a></td>
+<td style="text-align:left">引入其他项目中的文件</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="https://docs.gitlab.com/ee/ci/yaml/README.html#includeremote"><code>remote</code></a></td>
+<td style="text-align:left">引入远程的URL中的文件（必须能被公开访问到）</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="https://docs.gitlab.com/ee/ci/yaml/README.html#includetemplate"><code>template</code></a></td>
+<td style="text-align:left">引入Gitlab提供的模板文件</td>
+</tr>
+</tbody>
+</table>
+<p>这里我们主要查看<code>file</code>- 即如何引入其他项目中的文件；</p>
+<p><strong>基本用法：</strong>（需要使用project指定项目）</p>
+<p>项目的地址是相对于根目录（<code>/</code>）</p>
+<pre><code class="language-yaml">include:
+  - project: 'my-group/my-project'
+    file: '/templates/.gitlab-ci-template.yml'
+</code></pre>
+<p><strong>指定分支/Tag/提交：</strong>(通过ref指定)</p>
+<pre><code class="language-yaml">include:
+  - project: 'my-group/my-project'
+    ref: main
+    file: '/templates/.gitlab-ci-template.yml'
+
+  - project: 'my-group/my-project'
+    ref: v1.0.0
+    file: '/templates/.gitlab-ci-template.yml'
+
+  - project: 'my-group/my-project'
+    ref: 787123b47f14b552955ca2786bc9542ae66fee5b  # Git SHA
+    file: '/templates/.gitlab-ci-template.yml'
+</code></pre>
+<p><strong>同时引入多个文件：</strong>（file中使用数组语法）</p>
+<pre><code class="language-yaml">include:
+  - project: 'my-group/my-project'
+    ref: main
+    file:
+      - '/templates/.builds.yml'
+      - '/templates/.tests.yml'
+</code></pre>
+<p><strong>嵌套引入：</strong></p>
+<p>所有嵌套的includes都在当前目标项目的范围内执行，所以可以使用local (相对于目标项目), project, remote, 或者 template includes。</p>
+<ul>
+<li>
+<p>可以最多有 100 个 includes；</p>
+</li>
+<li>
+<p>不能有重复的include</p>
+</li>
+<li>
+<p>在<a href="https://gitlab.com/gitlab-org/gitlab/-/issues/28212">GitLab 12.4</a> 及后续版本中, 解析所有文件的时间被限制在30秒之内，所以可能需要考虑文件的复杂度；</p>
+</li>
+</ul>
+<p><strong>权限：</strong></p>
+<p>执行人需要具有项目的权限；</p>
+<p>All <a href="https://docs.gitlab.com/ee/ci/yaml/README.html#nested-includes">nested includes</a> are executed only with the permission of the user, so it’s possible to use project, remote or template includes.</p>
+<h4 id="trigger">trigger</h4>
+<p>gitlab可以使用trigger来触发多项目构建，在gitlab-ci配置中，可以使用trigger来定义一个下游流水线的触发器，当Gitlab启动这个trigger的任务时，会创建一个下游流水线；</p>
+<p>对比于正常的任务，trigger类型的任务只有少量关键字可以使用；</p>
+<p>Gitlab中可使用trigger创建两种类型的下游流水线：</p>
+<ol>
+<li>多项目流水线： 触发其他项目的流水线；</li>
+<li>子流水线： 触发当前项目的流水线；</li>
+</ol>
+<p><strong>多项目流水线的触发任务基本写法：</strong></p>
+<pre><code class="language-yaml">rspec:
+  stage: test
+  script: bundle exec rspec
+
+staging:
+  stage: deploy
+  trigger: my/deployment
+</code></pre>
+<p><strong>多项目流水线的触发任务复杂写法：</strong></p>
+<ul>
+<li>
+<p>通过branch指定分支</p>
+<pre><code class="language-yaml">rspec:
+  stage: test
+  script: bundle exec rspec
+
+staging:
+  stage: deploy
+  trigger:
+    project: my/deployment
+    branch: stable
+</code></pre>
+</li>
+<li>
+<p>镜像下流流水线的状态(通过设置<code>strategy: depend</code>,默认情况下，触发器任务会被标记为成功，设置此标记后，则会等待下游流水线执行完成，然后使用下流流水线的状态来标记该触发器任务的状态)</p>
+<pre><code class="language-yaml">trigger_job:
+trigger:
+  project: my/project
+  strategy: depend
+</code></pre>
+</li>
+<li>
+<p>在下游流水线中，也可以获取上游流水线的状态</p>
+<pre><code class="language-shell">upstream_bridge:
+  stage: test
+  needs:
+    pipeline: other/project
+</code></pre>
+</li>
+</ul>
+<p><strong>子流水线的写法：</strong></p>
+<ul>
+<li>
+<p>指定项目中的YAML文件的路径即可创建子流水线</p>
+<pre><code class="language-shell">trigger_job:
+  trigger:
+    include: path/to/child-pipeline.yml
+</code></pre>
+</li>
+<li>
+<p>同样的，也可以设置获取下游状态</p>
+<pre><code class="language-yaml">trigger_job:
+  trigger:
+    include:
+      - local: path/to/child-pipeline.yml
+    strategy: depend
+</code></pre>
+</li>
+<li>
+<p>可以使用其他项目中的YAML文件来定义子流水线</p>
+<pre><code class="language-yaml">child-pipeline:
+  trigger:
+    include:
+      - project: 'my-group/my-pipeline-library'
+        ref: 'main'
+        file: '/path/to/child-pipeline.yml'
+</code></pre>
+</li>
+<li>
+<p>可以使用自动生成的配置来生成子流水线(参考：<a href="https://docs.gitlab.com/ee/ci/parent_child_pipelines.html#dynamic-child-pipelines">Parent-child pipelines | GitLab</a>)</p>
+<pre><code class="language-yaml">generate-config:
+  stage: build
+  script: generate-ci-config &gt; generated-config.yml
+  artifacts:
+    paths:
+      - generated-config.yml
+
+child-pipeline:
+  stage: test
+  trigger:
+    include:
+      - artifact: generated-config.yml
+        job: generate-config
+</code></pre>
+</li>
+</ul>
+<h3 id="整体方案">整体方案</h3>
+<p>通过上面的分析，我们可以看到</p>
+<ul>
+<li>gitlab支持通过<code>include</code>来引入外部的脚本，脚本可以来自于本项目，也可以来自于其他项目；</li>
+<li>通过<code>trigger</code>可以触发其他项目的流水线或者在本项目中生成一个子流水线，可以选择跟踪子流水线的执行状态；</li>
+</ul>
+<p>经过如上分析，我们决定使用如下方案对现有部署需求进行实施：</p>
+<svg width="982px" height="690px" viewBox="0 0 982 690" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g id="🐶-colorless部署策略" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="PPT" transform="translate(-417.000000, -233.000000)">
+            <g id="colorless" transform="translate(863.000000, 481.000000)">
+                <g id="架构图/标题/带栏框/圆角">
+                    <g id="分组">
+                        <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="226" height="155" rx="6"></rect>
+                        <path d="M6,0 L221,0 C224.313708,-1.44363618e-14 227,2.6862915 227,6 L227,32 L227,32 L0,32 L0,6 C4.82366169e-16,2.6862915 2.6862915,1.4968968e-15 6,0 Z" id="标题栏" fill="#FF9500"></path>
+                    </g>
+                    <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.107999999" fill="#FFFFFF">
+                        <tspan x="35.5778135" y="22">colorless部署仓库</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角备份-2" transform="translate(42.000000, 78.000000)">
+                    <rect id="标题框" fill="#34C759" x="0" y="0" width="142" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="43.0598756" y="21.5">部署服务</tspan>
+                    </text>
+                </g>
+            </g>
+            <g id="TokenManager" transform="translate(417.000000, 233.000000)">
+                <g id="架构图/标题/带栏框/圆角">
+                    <g id="分组">
+                        <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="260" height="149" rx="6"></rect>
+                        <path d="M6,0 L255,0 C258.313708,-6.08718376e-16 261,2.6862915 261,6 L261,32 L261,32 L0,32 L0,6 C-4.05812251e-16,2.6862915 2.6862915,6.08718376e-16 6,0 Z" id="标题栏" fill="#FF9500"></path>
+                    </g>
+                    <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.107999999" fill="#FFFFFF">
+                        <tspan x="66.0686269" y="22">TokenManager</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角" transform="translate(34.000000, 52.000000)">
+                    <rect id="标题框" fill="#34C759" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="69.826" y="21.5">构建JAR</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角备份" transform="translate(34.000000, 99.000000)">
+                    <rect id="标题框" fill="#34C759" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="44.745" y="21.5">打包Docker镜像</tspan>
+                    </text>
+                </g>
+                <path id="直线" d="M131,82 L131,90 L135,90 L130.5,99 L126,90 L130,90 L130,82 L131,82 Z" fill="#979797" fill-rule="nonzero"></path>
+            </g>
+            <g id="RESTAPI" transform="translate(417.000000, 413.000000)">
+                <g id="架构图/标题/带栏框/圆角">
+                    <g id="分组">
+                        <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="260" height="149" rx="6"></rect>
+                        <path d="M6,0 L255,0 C258.313708,-6.08718376e-16 261,2.6862915 261,6 L261,32 L261,32 L0,32 L0,6 C-4.05812251e-16,2.6862915 2.6862915,6.08718376e-16 6,0 Z" id="标题栏" fill="#FF9500"></path>
+                    </g>
+                    <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.107999999" fill="#FFFFFF">
+                        <tspan x="95.9576269" y="22">RestAPI</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角" transform="translate(34.000000, 52.000000)">
+                    <rect id="标题框" fill="#34C759" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="69.826" y="21.5">构建JAR</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角备份" transform="translate(34.000000, 99.000000)">
+                    <rect id="标题框" fill="#34C759" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="44.745" y="21.5">打包Docker镜像</tspan>
+                    </text>
+                </g>
+                <path id="直线" d="M131,82 L131,90 L135,90 L130.5,99 L126,90 L130,90 L130,82 L131,82 Z" fill="#979797" fill-rule="nonzero"></path>
+            </g>
+            <g id="GraphQLAPI" transform="translate(417.000000, 593.000000)">
+                <g id="架构图/标题/带栏框/圆角">
+                    <g id="分组">
+                        <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="260" height="149" rx="6"></rect>
+                        <path d="M6,0 L255,0 C258.313708,-6.08718376e-16 261,2.6862915 261,6 L261,32 L261,32 L0,32 L0,6 C-4.05812251e-16,2.6862915 2.6862915,6.08718376e-16 6,0 Z" id="标题栏" fill="#FF9500"></path>
+                    </g>
+                    <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.107999999" fill="#FFFFFF">
+                        <tspan x="69.7226269" y="22">GraphQLAPI引擎</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角" transform="translate(34.000000, 52.000000)">
+                    <rect id="标题框" fill="#34C759" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="82.846" y="21.5">构建</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角备份" transform="translate(34.000000, 99.000000)">
+                    <rect id="标题框" fill="#34C759" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="44.745" y="21.5">打包Docker镜像</tspan>
+                    </text>
+                </g>
+                <path id="直线" d="M131,82 L131,90 L135,90 L130.5,99 L126,90 L130,90 L130,82 L131,82 Z" fill="#979797" fill-rule="nonzero"></path>
+            </g>
+            <g id="其他服务" transform="translate(417.000000, 773.000000)">
+                <g id="架构图/标题/带栏框/圆角">
+                    <g id="分组">
+                        <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="260" height="149" rx="6"></rect>
+                        <path d="M6,0 L255,0 C258.313708,-6.08718376e-16 261,2.6862915 261,6 L261,32 L261,32 L0,32 L0,6 C-4.05812251e-16,2.6862915 2.6862915,6.08718376e-16 6,0 Z" id="标题栏" fill="#FF9500"></path>
+                    </g>
+                    <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.107999999" fill="#FFFFFF">
+                        <tspan x="83.7086269" y="22">其他服务…</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角" transform="translate(34.000000, 52.000000)">
+                    <rect id="标题框" fill="#34C759" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="82.846" y="21.5">构建</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角备份" transform="translate(34.000000, 99.000000)">
+                    <rect id="标题框" fill="#34C759" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="44.745" y="21.5">打包Docker镜像</tspan>
+                    </text>
+                </g>
+                <path id="直线" d="M131,82 L131,90 L135,90 L130.5,99 L126,90 L130,90 L130,82 L131,82 Z" fill="#979797" fill-rule="nonzero"></path>
+            </g>
+            <path id="直线-2" d="M792.124777,345 L792.124,566.999 L845,566.999 L845,559 L864,568.5 L845,578 L845,569.999 L789.124777,570 L789.124,347.999 L642,348 L642,345 L792.124777,345 Z" fill="#AFAFAF" fill-rule="nonzero"></path>
+            <path id="直线-3" d="M676.006644,509.993385 L677.50663,510.000015 L790.631407,510.500015 L792.124777,510.506615 L792.124,567 L845,567 L845,559 L864,568.5 L845,578 L845,570 L789.124777,570 L789.124,513.492 L677.49337,512.999985 L675.993385,512.993356 L676.006644,509.993385 Z" fill="#AFAFAF" fill-rule="nonzero"></path>
+            <path id="直线-4" d="M845,559 L864,568.5 L845,578 L845,570 L792.301,570 L792.301081,707 L642,707 L642,704 L789.301,704 L789.301081,567 L845,567 L845,559 Z" fill="#AFAFAF" fill-rule="nonzero"></path>
+            <path id="直线-5" d="M845,559 L864,568.5 L845,578 L845,570 L792.301,570 L792.301081,889 L642,889 L642,886 L789.301,886 L789.301081,567 L845,567 L845,559 Z" fill="#AFAFAF" fill-rule="nonzero"></path>
+            <text id="触发" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.6264844" fill="#6272A4">
+                <tspan x="710" y="340">触发</tspan>
+            </text>
+            <text id="触发备份" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.6264844" fill="#6272A4">
+                <tspan x="710" y="506">触发</tspan>
+            </text>
+            <text id="触发备份-2" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.6264844" fill="#6272A4">
+                <tspan x="710" y="700">触发</tspan>
+            </text>
+            <text id="触发备份-3" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.6264844" fill="#6272A4">
+                <tspan x="710" y="882">触发</tspan>
+            </text>
+            <g id="部署机器" transform="translate(1195.000000, 463.000000)">
+                <g id="架构图/标题/纯标题/直角备份-2">
+                    <rect id="标题框" fill="#AF52DE" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="67.649" y="21.5">postgres</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角备份-3" transform="translate(0.000000, 46.000000)">
+                    <rect id="标题框" fill="#AF52DE" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="80.095" y="21.5">redis</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角备份-4" transform="translate(0.000000, 92.000000)">
+                    <rect id="标题框" fill="#AF52DE" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="41.847" y="21.5">graphql-engine</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角备份-5" transform="translate(0.000000, 138.000000)">
+                    <rect id="标题框" fill="#AF52DE" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="45.69" y="21.5">graphql-token</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角备份-6" transform="translate(0.000000, 184.000000)">
+                    <rect id="标题框" fill="#AF52DE" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="41.476" y="21.5">graphql-restapi</tspan>
+                    </text>
+                </g>
+                <g id="架构图/标题/纯标题/直角备份-7" transform="translate(0.000000, 228.000000)">
+                    <rect id="标题框" fill="#AF52DE" x="0" y="0" width="193" height="31"></rect>
+                    <text id="标题" font-family="NotoSansCJKsc-Medium, Noto Sans CJK SC" font-size="14" font-weight="400" letter-spacing="0.153999999" fill="#FFFFFF">
+                        <tspan x="89.048" y="21.5">…</tspan>
+                    </text>
+                </g>
+            </g>
+            <path id="直线-6" d="M1161,565 L1180,574.5 L1161,584 L1161,576 L1089,576 L1089,573 L1161,573 L1161,565 Z" fill="#979797" fill-rule="nonzero"></path>
+            <text id="deploy" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.6264844" fill="#6272A4">
+                <tspan x="1104" y="562">deploy</tspan>
+            </text>
+            <g id="架构图/标题/带栏框/圆角" transform="translate(1179.000000, 418.500000)">
+                <g id="分组">
+                    <rect id="边框栏" stroke="#FF9500" x="0.5" y="0.5" width="219" height="318" rx="6"></rect>
+                    <path d="M6,0 L214,0 C217.313708,-6.08718376e-16 220,2.6862915 220,6 L220,32 L220,32 L0,32 L0,6 C-4.05812251e-16,2.6862915 2.6862915,6.08718376e-16 6,0 Z" id="标题栏" fill="#FF9500"></path>
+                </g>
+                <text id="标题" font-family="PingFangSC-Regular, PingFang SC" font-size="18" font-weight="normal" letter-spacing="0.107999999" fill="#FFFFFF">
+                    <tspan x="72.5016166" y="22">部署机器</tspan>
+                </text>
+            </g>
+        </g>
+    </g>
+</svg>
+<ol>
+<li>每个项目分别定义自己的构建和镜像打包任务；</li>
+<li>镜像打包完成后通过<code>trigger</code>来触发colorless部署仓库的部署任务，需要传递自己的信息给部署仓库生成的流水线；</li>
+<li>触发任务的定义文件放置到colorless部署仓库中，在各个服务项目中通过<code>include</code>来引入；</li>
+</ol>
+<h2 id="优化方案实现">优化方案实现</h2>
+<p>如上所述，我们将部署操作集中到一个单独项目中，而又各个服务项目触发其部署流程，这里我们将这个单独的用于部署的项目称为独立部署项目，将其他服务的项目称之为子服务项目；以下分别说明上述方案中两种项目中的配置方式；</p>
+<h3 id="各子服务项目的配置">各子服务项目的配置</h3>
+<h4 id="gitlab-ciyml配置">gitlab-ci.yml配置</h4>
+<p>我们将部署任务替换为一个触发任务，并从独立部署项目中引入任务的配置</p>
+<pre><code class="language-yaml">stages:
+  - test
+  - build
+  - build_image
+  - auto-build-deploy
+
+# 省略其他定义
+
+# 引入触发自动编译部署任务配置 
+include:
+  - project: 'Deptproduct-project/colorless/colorless-deploy'
+    # ref: master
+    file: '/ci/gitlab-ci-base.yml'
+</code></pre>
+<p>这段配置会从 <code>Deptproduct-project/colorless/colorless-deploy</code> 项目中导入 <code>/ci/gitlab-ci-base.yml</code> 的配置，具体内容如下：</p>
+<pre><code class="language-yaml"># 子模块用的公用触发项目，可以在子模块源码中 include
+trigger:auto-build-deploy:
+  stage: auto-build-deploy
+  variables:
+    TRIGGER_CI_COMMIT_SHORT_SHA: $CI_COMMIT_SHORT_SHA
+    #  配置仓库环境
+    # 自定义变量必须配置在上游UI界面
+    DOCKER_REGISTRY: $DOCKER_REGISTRY
+    DOCKER_NAMESPACE: $DOCKER_NAMESPACE
+    HARBOR_PWD: $HARBOR_PWD
+    HARBOR_USER: $HARBOR_USER
+    SERVICE_NAME: $SERVICE_NAME
+  trigger:
+    project: Deptproduct-project/colorless/colorless-deploy
+</code></pre>
+<p>在子项目中的ci配置中<code>include</code>该文件时，会生成一个触发任务，这个触发任务会触发<code>Deptproduct-project/colorless/colorless-deploy</code>这个项目，也就是我们的独立部署项目；</p>
+<p>也就是说会触发我们独立部署项目生成一个流水线，此时流水线读取的就是我们独立部署项目的<code>.gitlab-ci.yml</code> 文件；</p>
+<h4 id="web-ui中cicd变量配置">web UI中CI/CD变量配置</h4>
+<p>上述的触发任务的配置中，我们定义了几个变量，用于向部署项目的流水线说明我们自身的一些信息</p>
+<pre><code class="language-yaml">    TRIGGER_CI_COMMIT_SHORT_SHA: $CI_COMMIT_SHORT_SHA
+    DOCKER_REGISTRY: $DOCKER_REGISTRY
+    DOCKER_NAMESPACE: $DOCKER_NAMESPACE
+    HARBOR_PWD: $HARBOR_PWD
+    HARBOR_USER: $HARBOR_USER
+    SERVICE_NAME: $SERVICE_NAME
+</code></pre>
+<p>其中，由我们自行定义的变量（<code>$DOCKER_REGISTRY</code>,<code>DOCKER_NAMESPACE</code>,<code>$HARBOR_PWD</code>,<code>$HARBOR_USER</code>,<code>$SERVICE_NAME</code>）需要在项目/群组的CI的变量中进行配置，在解析此触发任务时才可以读取到；</p>
+<figure data-type="image" tabindex="10"><img src="https://s2.loli.net/2022/05/26/tLyelhx2DPbznmV.png" alt="202203192303519" loading="lazy"></figure>
+<h3 id="独立部署项目的配置">独立部署项目的配置</h3>
+<h4 id="gitlab-ciyml-配置-2">gitlab-ci.yml 配置</h4>
+<pre><code class="language-yaml">variables:
+#  UI界面配置 DEPLOY_PATH
+  DEPLOY_PATH: /Wksp/colorlessWork/colorless-deploy/deploy/
+#  部署的stack
+  DOCKER_STACK: colorless
+
+deploy:
+  stage: deploy
+  script:
+    - echo $HARBOR_PWD | docker login --username=$HARBOR_USER $DOCKER_REGISTRY --password-stdin
+    - cd $DEPLOY_PATH
+    - source deploy.sh
+    - update_service $DOCKER_STACK $SERVICE_NAME $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$TRIGGER_CI_COMMIT_SHORT_SHA
+  environment:
+    name: test_env_deploy
+    url: $APP_URL/
+  when: manual
+  tags:
+    - deploy_graphql
+</code></pre>
+<h4 id="web-ui中cicd变量配置-2">web UI中CI/CD变量配置</h4>
+<p>现在，我们有些部署相关的变量需要从子服务项目中提取到当前独立部署项目中来定义，包括：<code>DEPLOY_PATH</code>,<code>DOCKER_STACK</code>,<code>APP_URL</code>，其中<code>DEPLOY_PATH</code>,<code>DOCKER_STACK</code>我们在yml中有定义默认值，可以不在UI界面中进行定义，只需要在UI界面中定义APP_URL即可；</p>
+<h3 id="运行效果说明">运行效果说明</h3>
+<ol>
+<li>每次子服务项目中提交代码，且满足ci配置中定义的条件时，即会生成一个触发任务，执行完前期阶段的任务后，当执行触发任务时，就会触发我们的独立仓库的部署任务。具体界面如下图所示；</li>
+</ol>
+<figure data-type="image" tabindex="11"><img src="https://s2.loli.net/2022/05/26/dQ9ZWJeE7GOcqYz.png" alt="20210526155720" loading="lazy"></figure>
+<ol start="2">
+<li>点击下游任务即可跳转到我们的独立部署仓库中对应的流水线中；</li>
+</ol>
+<figure data-type="image" tabindex="12"><img src="https://s2.loli.net/2022/05/26/38HPnbIrW17AiUY.png" alt="202203192305536" loading="lazy"></figure>
+<ol start="3">
+<li>
+<p>点击deploy任务的运行按钮，即可进行部署；</p>
+</li>
+<li>
+<p>部署完成后，可在独立部署仓库中生成一个部署环境，点击即可前往；</p>
+<figure data-type="image" tabindex="13"><img src="https://s2.loli.net/2022/05/26/Xf8ygsvLGwIzbqE.png" alt="202203192306371" loading="lazy"></figure>
+</li>
+</ol>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Docker数据目录(/var/lib/docker)迁移]]></title>
+        <id>https://hanlyjiang.github.io/post/Docker数据目录迁移/</id>
+        <link href="https://hanlyjiang.github.io/post/Docker数据目录迁移/">
+        </link>
+        <updated>2021-04-21T08:51:40.000Z</updated>
+        <summary type="html"><![CDATA[<p>本文介绍如何安全的迁移Docker的数据目录/var/lib/docker</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>本文介绍如何安全的迁移Docker的数据目录/var/lib/docker</p>
+<!-- more -->
+<h2 id="为什么要迁移">为什么要迁移</h2>
+<ul>
+<li>虚拟机创建时，一般分配一个比较小的系统盘，然后挂载一个大容量的数据盘，docker默认情况下数据存储在系统盘(/var/lib/docker)目录，时间一久，会占满系统盘。</li>
+</ul>
+<h2 id="迁移步骤">迁移步骤</h2>
+<ol>
+<li><strong>首先需要停止docker服务</strong></li>
+</ol>
+<pre><code>systemctl stop docker
+</code></pre>
+<ol start="2">
+<li><strong>通过命令df -h 先去看下磁盘大概的情况，找一个大的空间</strong></li>
+<li><strong>创建docker的新目录，我这边找了data, 所以我这边的新目录地址是 /data/docker/lib/</strong></li>
+</ol>
+<pre><code>
+
+mkdir -p /data/docker/lib
+</code></pre>
+<blockquote>
+<p>注：参数-p 确保目录名称存在，如果目录不存在的就新创建一个。</p>
+</blockquote>
+<ol start="4">
+<li><strong>开始迁移</strong></li>
+</ol>
+<pre><code>rsync -avzP /var/lib/docker /data/docker/lib/
+</code></pre>
+<blockquote>
+<p>先确认是否安装了rsync.</p>
+</blockquote>
+<p>参数解释：</p>
+<ul>
+<li>-a，归档模式，表示递归传输并保持文件属性。</li>
+<li>-v，显示rsync过程中详细信息。可以使用&quot;-vvvv&quot;获取更详细信息。</li>
+<li>-P，显示文件传输的进度信息。(实际上&quot;-P&quot;=&quot;--partial --progress&quot;，其中的&quot;--progress&quot;才是显示进度信息的)。</li>
+<li>-z,   传输时进行压缩提高效率。</li>
+</ul>
+<ol start="5">
+<li><strong>指定新的docker目录</strong></li>
+</ol>
+<pre><code>vim /lib/systemd/system/docker.service
+</code></pre>
+<p>在ExecStart加入:</p>
+<pre><code> --graph=/data/docker/lib/docker
+</code></pre>
+<ol start="6">
+<li><strong>重启docker</strong></li>
+</ol>
+<pre><code>sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo systemctl enable docker # 运行docker自动启动，这里可以不执行
+</code></pre>
+<ol start="7">
+<li><strong>启动之后确认docker 没有问题，确认之前的容器和镜像都还在，然后删除旧的/var/lib/docker/目录</strong></li>
+</ol>
+<h2 id="参考文章">参考文章：</h2>
+<ul>
+<li><a href="https://www.cnblogs.com/insist-forever/p/11739207.html?fileGuid=qQhpHWDVq8HrH9kj">https://www.cnblogs.com/insist-forever/p/11739207.html</a></li>
+</ul>
+]]></content>
+    </entry>
+</feed>
