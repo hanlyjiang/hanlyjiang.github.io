@@ -230,7 +230,7 @@ sudo -u gitlab-runner -H docker info
    ```yaml
    [[runners]]
      name = "blockdataapi-engine"
-     url = "http://172.17.0.205/"
+     url = "http://172.18.0.208/"
      token = "Y-6zdV9zzi8xsY1rygbn"
      executor = "shell"
      builds_dir = "/data/gitlab-runner/builds"
@@ -252,15 +252,15 @@ sudo -u gitlab-runner -H docker info
 
 在群组的设置中打开 CI/CD 设置
 
-![图片](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210224180602.png!thumbnail)
+![20210224180602](https://s2.loli.net/2022/05/26/IwgQXD4zMr6kCuT.png)
 
 展开 Runner 栏位
 
-![图片](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210224180606.png!thumbnail)
+![20210224180606](https://s2.loli.net/2022/05/26/SPIA5iMEXOrsZDu.png)
 
 这里我们选择通过手动设置group runner的方式来注册，可以获取到以下信息：
 
-![图片](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210224180610.png!thumbnail)
+![20210224180610](https://s2.loli.net/2022/05/26/awygY86Wz37MUv5.png)
 
 ### 注册runner
 
@@ -285,9 +285,9 @@ docker方式运行的runner需在此bash中执行命令，主机之间运行的r
 ```shell
 gitlab-runner register 
 # url：
-http://172.17.0.205/
+http://172.18.0.208/
 # token
-cEJ611JDeCWSMyu7WXWi
+cEJ611JDeCWSMyu7WXwx
 # description - 用于辨识该注册所属的群组或项目，可以设置为方便区分的字符串
 sonarqube-runner
 # ci-tag - 标签用于后续CI配置中选择此执行器，后期可以通过gitlab界面更改
@@ -306,7 +306,7 @@ Runtime platform                                    arch=amd64
 Running in system-mode.                            
                                                    
 Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com/):
-http://172.17.0.205/
+http://172.18.0.208/
 Please enter the gitlab-ci token for this runner:
 cEJ611JDeCWSMyu7WXWi
 Please enter the gitlab-ci description for this runner:
@@ -335,13 +335,13 @@ gitlab-runner list
 # 输出类似
 Runtime platform                                    arch=amd64 os=linux pid=23 revision=05161b14 version=12.4.1
 Listing configured runners                          ConfigFile=/etc/gitlab-runner/config.toml
-sonarqube-runner                                    Executor=docker Token=wNwxjEztRpKxYDyK1zVd URL=http://172.17.0.205/
+sonarqube-runner                                    Executor=docker Token=wNwxjEztRpKxYDyK1zVd URL=http://172.18.0.208/
 ```
 
 使用list命令输出的token机url作为参数 使用unregister命令取消注册
 
 ```shell
-gitlab-runner unregister -t 7KM7ftthLAYeJdsB3Tbk -u http://172.17.0.205/
+gitlab-runner unregister -t 7KM7ftthLAYeJdsB3Tbk -u http://172.18.0.208/
 ```
 
 

@@ -59,7 +59,7 @@ CONTAINER ID        IMAGE                          COMMAND             CREATED  
 
 首次打开页面后会提示设置root用户的密码，设置后务必记录好用户密码，后续将使用此用户对Gitlab进行管理
 
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210302163607.png" alt="image-20210302163607120" style="zoom:50%;" />
+![20210302163607](https://s2.loli.net/2022/05/26/XsnoPBt1K5bZHap.png)
 
 ## 配置LDAP
 
@@ -166,16 +166,15 @@ gitlab_rails['smtp_tls'] = false
 
 然后使用root用户登录，进入
 
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210302164307.png" alt="image-20210302164306980" style="zoom:50%;" />
+![20210302164307](https://s2.loli.net/2022/05/26/2z9MUSVjFntBpK1.png)
 
 将用户的访问类型切换为管理员：
 
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210302164354.png" alt="image-20210302164354791" style="zoom:50%;" />
+![20210302164354](https://s2.loli.net/2022/05/26/VXq4AE2lKjd1PLn.png)
 
 ### 关闭用户注册
 
 在配置了域账号登录之后，可以关闭用户注册，即只允许拥有域账号的人员进行登录；
 
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210302164139.png" alt="image-20210302164139380" style="zoom:67%;" />
-
+![](https://s2.loli.net/2022/05/26/VXq4AE2lKjd1PLn.png)
 

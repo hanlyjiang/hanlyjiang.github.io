@@ -25,7 +25,7 @@ isTop: false
 
 * 提交之后，自动构建jar，并打包docker镜像
 
-  ![image-20210526101018201](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192258673.png)
+  ![202203192258673](https://s2.loli.net/2022/05/26/15jIx7oVTpdN2qG.png)
 
 * 构建完成后，通过gitlab界面，可以触发部署，完成后可以访问对应的环境（详见下方说明）
 
@@ -37,23 +37,23 @@ isTop: false
 
 1. 流水线列表尾部的手动作业按钮
 
-   ![image-20210526101410284](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526101412.png)
+   ![20210526101412](https://s2.loli.net/2022/05/26/H4IPizrx1pOlMwG.png)
 
 2. 流水线列表中，点击对应的手动任务，在弹出框中点击运行
 
-   ![image-20210526101518328](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526101519.png)
+   ![20210526101519](https://s2.loli.net/2022/05/26/TN472VCvmxjhHwe.png)
 
 3. 流水线详情中，点击触发部署
 
-   ![image-20210526101603210](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192259870.png)
+   ![202203192259870](https://s2.loli.net/2022/05/26/TpsmiNOa5AWVf32.png)
 
 4. 对应手动作业的详情中，点击“触发此手动操作”
 
-   ![image-20210526101644456](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192300715.png)
+   ![202203192300715](https://s2.loli.net/2022/05/26/GDTRWdy2iXAP1Le.png)
 
 5. 作业列表中对应的部署作业的尾部
 
-   ![image-20210526102728195](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192301127.png)
+   ![202203192301127](https://s2.loli.net/2022/05/26/574YeyxSfMqoaju.png)
 
 ### 访问部署环境的方式
 
@@ -61,15 +61,15 @@ isTop: false
 
 1. 在项目的“运维-环境”入口可以查看所有的环境
 
-![image-20210526101756486](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526101758.png)
+![20210526101758](https://s2.loli.net/2022/05/26/z6jTAhZRkmXGFqe.png)
 
 2. 点击对应环境尾部的链接图标即可访问
 
-   ![image-20210526101900464](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526101901.png)
+   ![20210526101901](https://s2.loli.net/2022/05/26/NHU1YLsjnP8x3ib.png)
 
 3. 也可以在对应的环境详情页面，点击“查看部署” （注意在部署作业的详情中也可以找到对应环境的入口哦-触发部署步骤的方式的第四中方式的附图）
 
-   ![image-20210526101945707](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192302195.png)
+   ![](https://s2.loli.net/2022/05/26/NHU1YLsjnP8x3ib.png)
 
 ### 实现方式
 
@@ -959,7 +959,7 @@ trigger:auto-build-deploy:
 
 其中，由我们自行定义的变量（`$DOCKER_REGISTRY`,`DOCKER_NAMESPACE`,`$HARBOR_PWD`,`$HARBOR_USER`,`$SERVICE_NAME`）需要在项目/群组的CI的变量中进行配置，在解析此触发任务时才可以读取到；
 
-![image-20210526155206137](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192303519.png)
+![202203192303519](https://s2.loli.net/2022/05/26/tLyelhx2DPbznmV.png)
 
 ### 独立部署项目的配置
 
@@ -995,15 +995,15 @@ deploy:
 
 1. 每次子服务项目中提交代码，且满足ci配置中定义的条件时，即会生成一个触发任务，执行完前期阶段的任务后，当执行触发任务时，就会触发我们的独立仓库的部署任务。具体界面如下图所示；
 
-![image-20210526155719096](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210526155720.png)
+![20210526155720](https://s2.loli.net/2022/05/26/dQ9ZWJeE7GOcqYz.png)
 
 2. 点击下游任务即可跳转到我们的独立部署仓库中对应的流水线中；
 
-![image-20210526155942216](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192305536.png)
+![202203192305536](https://s2.loli.net/2022/05/26/38HPnbIrW17AiUY.png)
 
 3. 点击deploy任务的运行按钮，即可进行部署；
 
 4. 部署完成后，可在独立部署仓库中生成一个部署环境，点击即可前往；
 
-   ![image-20210526160146582](https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203192306371.png)
+   ![202203192306371](https://s2.loli.net/2022/05/26/Xf8ygsvLGwIzbqE.png)
 

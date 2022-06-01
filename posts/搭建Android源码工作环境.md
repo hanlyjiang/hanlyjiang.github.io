@@ -19,9 +19,9 @@ isTop: false
 
 Android 系统架构如下两图所示：
 
-![Android 框架详情](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210401092831.png) 
+![20210401092831](https://s2.loli.net/2022/05/26/iVWSvDPlA9I4afd.png)
 
-![Android 系统架构概览](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210401092925.png)
+![20210401092925](https://s2.loli.net/2022/05/26/3KYlCuj5zXc9EUs.png)
 
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -352,7 +352,7 @@ emulator
 
 运行起来之后，查看其中的系统版本号如下：
 
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210403135316.png" alt="Screenshot_1617429150" style="zoom:35%;" />
+![20210403135316](https://s2.loli.net/2022/05/26/ts1xnl2L35HBmeY.png)
 
 ## 使用AndroidStudio调试 `system_process`
 
@@ -519,7 +519,7 @@ cp -R out/soong/.intermediates/frameworks/base/core/res/framework-res/android_co
 
 1. 配置jvm选项，根据机器实际情况设置vm分配的内存策略
 
-   <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402093304.png" alt="image-20210402093304425"  />
+   ![20210402093304](https://s2.loli.net/2022/05/26/Iubf2vnAUeSt5T9.png)
 
    ```shell
    -Xmx16g
@@ -528,7 +528,7 @@ cp -R out/soong/.intermediates/frameworks/base/core/res/framework-res/android_co
 
 2. 配置 idea 属性
 
-   <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210401212321.png" alt="image-20210401212321136" style="zoom:40%;" />
+   ![20210401212321](https://s2.loli.net/2022/05/26/3YAvO65PCwjS971.png)
 
    ```shell
    # 大小写敏感（macOS）
@@ -545,35 +545,35 @@ cp -R out/soong/.intermediates/frameworks/base/core/res/framework-res/android_co
 
 2. 配置项目SDK，进入项目设置，添加一个新的JDK，并删除所有依赖jar库，我们这里取名为：`1.8 (No Libraries)`
 
-   <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402095209.png" alt="image-20210402095209074" style="zoom:67%;" />
+   ![20210402095209](https://s2.loli.net/2022/05/26/IW7d3v2iURTSrHx.png)
 
 3. 配置项目SDK，进入项目设置，添加一个新的SDK，并删除所有jar库，对应的JDK选择之前创建的`1.8 (No Libraries)`，这里我们将SDK命名为 `Android API 30 Platform-NoLib`
 
-   <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402095255.png" alt="image-20210402095255063" style="zoom:67%;" />
+   ![20210402095255](https://s2.loli.net/2022/05/26/zZqhWtRMxOf6j9w.png)
 
 4. 在Project设置中，选择项目SDK为之前设置的 `Android API 30 Platform-NoLib`
 
-   <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402095343.png" alt="image-20210402095343474" style="zoom:67%;" />
+   ![20210402095343](https://s2.loli.net/2022/05/26/pPBC8DeMZQH2Sm5.png)
 
 5. 进入项目设置-模块设置，将模块的SDK设置为之前设置的  `Android API 30 Platform-NoLib` 
 
-   <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402095449.png" alt="image-20210402095449805" style="zoom:67%;" />
+   ![20210402095449](https://s2.loli.net/2022/05/26/q6RfQivmWCVpy1b.png)
 
 #### 附加调试器到 system_process 
 
 1. 附加调试器到 `system_process` 进程
 
-![image-20210402093915683](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402093915.png)
+![20210402093915](https://s2.loli.net/2022/05/26/BCe1wSr2mcDNIhW.png)
 
-![image-20210402095736899](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402095736.png)
+![20210402095736](https://s2.loli.net/2022/05/26/EdqxcUp4PvIwKza.png)
 
 2. 成功后的Debugger界面如下所示
 
-   ![image-20210402100639004](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402100639.png)
+   ![20210402100639](https://s2.loli.net/2022/05/26/UFs6MnaOcGKPdJm.png)
 
 3. 打断点测试，这里我们选择在 `Binder.java` 文件中添加断点，然后在模拟器中打开相机APP以触发断点逻辑。下图就表示我们到达了断点，说明我们可以通过AS来调试该进程了。
 
-   ![image-20210402101258438](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402101258.png)
+   ![20210402101258](https://s2.loli.net/2022/05/26/jK9lUkJWfr1xc34.png)
 
 > 提示：附加调试器时，如找不到设备，可参考第5小节中的 *错误解决：Debug中不显示设备*
 
@@ -659,17 +659,17 @@ adb reboot
 
 1. 点击project窗口的设置按钮，选择 “Edit Scopes”
 
-   ![image-20210402104239366](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402104239.png)
+   ![20210402104239](https://s2.loli.net/2022/05/26/b54fWpm6liduwHo.png)
 
 2. 新建一个规则，输入名称，并在Pattern中输入过滤规则： `file[android]:frameworks//*||file[android]:libcore//*`
 
-   <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402104205.png" alt="image-20210402104205399" style="zoom:67%;" />
+   ![20210402104205](https://s2.loli.net/2022/05/26/O6ulDULrbK8nfPQ.png)
 
 #### 过滤VCS配置中不必要的模块
 
 打开VCS配置，移除frameworks和libcore之外的所有其他模块
 
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402105446.png" alt="image-20210402105446083" style="zoom: 67%;" />
+![20210402105446](https://s2.loli.net/2022/05/26/4MUamSB37LQDThN.png)
 
 ### 使用提示：导入其他模块的源码到AS
 
@@ -700,11 +700,11 @@ find . -name ".DS_Store"  | xargs -I {} rm {}
 
 在附加调试器时，可能会如下图一样，模拟器已经启动了，但是附加调试器的窗口中设备列表中没有设备
 
-![image-20210402121454042](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402121454.png)
+![20210402121454](https://s2.loli.net/2022/05/26/8UdS9MZ3rnAl6mi.png)
 
 此时检查自己的项目配置中的SDK是否选择了AndroidSDK，设置成 Android SDK 即可
 
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210402121537.png" alt="image-20210402121537412" style="zoom:67%;" />
+![20210402121537](https://s2.loli.net/2022/05/26/yKgSVda9RWo8Jnp.png)
 
 
 

@@ -58,7 +58,7 @@ sudo tar -cvf /data/gitlab/data/backups/1592710400_2020_06_21_12.10.0_gitlab_con
 - 进入到gitlab部署机器 
 
 ```shell
-ssh -p 10022 geostar@172.17.0.205
+ssh -p 10022 geostar@172.18.0.208
 ```
 
 - 获取Gitlab中间版本镜像及最终版本镜像
@@ -79,7 +79,7 @@ sudo docker rm gitlab
 
 ```shell
     sudo docker run --detach \
-        --hostname 172.17.0.205 \
+        --hostname 172.18.0.208 \
         --publish 443:443 --publish 80:80 --publish 22:22 \
         --name gitlab \
         --restart always \
@@ -95,7 +95,7 @@ sudo docker rm gitlab
       sudo docker stop gitlab 
       sudo docker rm gitlab 
       sudo docker run --detach \
-        --hostname 172.17.0.205 \
+        --hostname 172.18.0.208 \
         --publish 443:443 --publish 80:80 --publish 22:22 \
         --name gitlab \
         --restart always \
@@ -109,5 +109,5 @@ sudo docker rm gitlab
 
 登录管理员账号，进入管理中心-仪表盘，查看gitlab版本：
 
-![image-20210302165417697](https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210302165417.png)
+![20210302165417](https://s2.loli.net/2022/05/26/bZVXJwGkjyC6AdL.png)
 

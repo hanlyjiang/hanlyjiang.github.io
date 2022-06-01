@@ -146,11 +146,11 @@ public class ViewTest {
 
 我们继续查看 Disposable 接口的字节码，发现居然**没有我们调用的 disposed 方法**。
 
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203132238351.png" alt="image-20220313223827282" style="zoom:50%;" />
+![202203132238351](https://s2.loli.net/2022/05/26/m2OoeUC3WaEuySc.png)
 
 但是，很快就在有一个叫做 `Disposable$-CC` 的类中找到了我们的 `disposed` 方法，同时其中还包括了 `Disposable` 接口中的所有静态方法
 
-<img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203132240481.png" alt="image-20220313224048436" style="zoom:50%;" />
+![202203132240481](https://s2.loli.net/2022/05/26/ljBCpFPid92AczY.png)
 
 这里我们粘贴下 Disposable 接口的定义，可以看到其中有两个接口方法定义，还有若干static方法的定义及实现。而我们的静态方法全部位于字节码中 `Disposable$-CC` 这个类中，而两个接口方法还保留在 `Disposable` 类中。
 
@@ -235,7 +235,7 @@ invoke-static {}, Lio/reactivex/rxjava3/disposables/Disposable;->disposed()Lio/r
 >
 >  Android Gradle 插件对使用某些 Java 8 语言功能以及利用这些功能的第三方库提供内置支持。如图 所示，默认工具链实现新语言功能的方法是在**使用 D8/R8 将类文件编译成 dex 代码的过程中执行字节码转换，这种转换称为 `desugar`**。
 >
-> <img src="https://gitee.com/hanlyjiang/image-repo/raw/master/image/202203132254856.png" alt="desugar_diagram" style="zoom:50%;" />
+> ![202203132254856](https://s2.loli.net/2022/05/26/PLiSGTwhZADqjFm.png)
 
 
 
