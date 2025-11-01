@@ -83,7 +83,7 @@ params:
   # 网站左上角标签配置
   label:
     text: "清水池塘"
-    icon: "/img/site-img.png"
+    icon: "/img/home.png"
     iconHeight: 35
 
   # 社交图标 (新增 umami 统计页面链接)
@@ -99,7 +99,7 @@ params:
 
   # Favicon 和 Apple Touch Icon 配置
   assets:
-    favicon: "/img/site-icon.png"
+    favicon: "/img/home.png"
     # ... 其他尺寸图标
 
   # 列表页和文章页的封面显示策略
