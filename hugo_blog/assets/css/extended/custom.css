@@ -16,9 +16,11 @@ pre code {
 
 /* 调整首页欢迎区域 vertical 位置 */
 .home-info {
-  margin-top: -5rem; /* 负值上移，正值下移 */
-  margin-bottom: -5rem; /* 负值上移，正值下移 */
+/*  margin-top: 0; !* 负值上移，正值下移 *!*/
+/*  padding-top: 0;*/
+/*  margin-bottom: -5rem; !* 负值上移，正值下移 *!*/
   padding-left: 2px;
+  min-height: 80px !important;
 }
 
 
