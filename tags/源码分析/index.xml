@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>源码分析 on 清水池塘</title><link>https://anlyjiang.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</link><description>Recent content in 源码分析 on 清水池塘</description><generator>Hugo -- 0.152.2</generator><language>zh-cn</language><lastBuildDate>Sun, 06 Mar 2022 15:11:54 +0000</lastBuildDate><atom:link href="https://anlyjiang.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/index.xml" rel="self" type="application/rss+xml"/><item><title>Dagger 在Android库(SDK)模块中的使用实践</title><link>https://anlyjiang.github.io/posts/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/</link><pubDate>Sun, 06 Mar 2022 15:11:54 +0000</pubDate><guid>https://anlyjiang.github.io/posts/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/</guid><description>&lt;p&gt;本文主要描述如何使用Dagger解决实际项目中遇到的问题，这两个问题是：&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>源码分析 on 清水池塘</title><link>https://hanlyjiang.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</link><description>Recent content in 源码分析 on 清水池塘</description><generator>Hugo -- 0.152.2</generator><language>zh-cn</language><lastBuildDate>Sun, 06 Mar 2022 15:11:54 +0000</lastBuildDate><atom:link href="https://hanlyjiang.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/index.xml" rel="self" type="application/rss+xml"/><item><title>Dagger 在Android库(SDK)模块中的使用实践</title><link>https://hanlyjiang.github.io/posts/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/</link><pubDate>Sun, 06 Mar 2022 15:11:54 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/</guid><description>&lt;p&gt;本文主要描述如何使用Dagger解决实际项目中遇到的问题，这两个问题是：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;如何在库（SDK）模块中使用Dagger依赖注入？&lt;/li&gt;
 &lt;li&gt;MVP中的Dagger依赖注入如何实现无感注入？&lt;/li&gt;
@@ -41,7 +41,7 @@
 &lt;li&gt;无法使用 Hilt&lt;/li&gt;
 &lt;li&gt;无法直接使用 dagger-android&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;这两个问题实际上是类似的，Hilt及Dagger-Android都是用于解决 Android 组件（Activity，Fragment，Service，BroadcastReceiver 等）的依赖注入的。但是他们都要求我们必须使用 Application。&lt;/p&gt;</description></item><item><title>Android bindService流程</title><link>https://anlyjiang.github.io/posts/androidbindservice-liu-cheng-fen-xi/</link><pubDate>Mon, 12 Apr 2021 10:18:50 +0000</pubDate><guid>https://anlyjiang.github.io/posts/androidbindservice-liu-cheng-fen-xi/</guid><description>&lt;p&gt;本文分析bindService的流程，首先我们通过阅读源码获取一个主线的调用地图，然后提出若干问题，包括：APP进程中如何获取AMS，AMS如何启动APP-service的进程，AMS中如何获取ApplicationThread并与之通讯，Service的启动及绑定流程；然后再通过源码一一解答。最后再整体总结梳理一下整体流程；&lt;/p&gt;
+&lt;p&gt;这两个问题实际上是类似的，Hilt及Dagger-Android都是用于解决 Android 组件（Activity，Fragment，Service，BroadcastReceiver 等）的依赖注入的。但是他们都要求我们必须使用 Application。&lt;/p&gt;</description></item><item><title>Android bindService流程</title><link>https://hanlyjiang.github.io/posts/androidbindservice-liu-cheng-fen-xi/</link><pubDate>Mon, 12 Apr 2021 10:18:50 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/androidbindservice-liu-cheng-fen-xi/</guid><description>&lt;p&gt;本文分析bindService的流程，首先我们通过阅读源码获取一个主线的调用地图，然后提出若干问题，包括：APP进程中如何获取AMS，AMS如何启动APP-service的进程，AMS中如何获取ApplicationThread并与之通讯，Service的启动及绑定流程；然后再通过源码一一解答。最后再整体总结梳理一下整体流程；&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;预先知识：&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Binder通信机制&lt;/li&gt;
@@ -132,7 +132,7 @@
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;==总结：==&lt;/p&gt;</description></item><item><title>搭建Android源码工作环境</title><link>https://anlyjiang.github.io/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/</link><pubDate>Thu, 08 Apr 2021 10:18:50 +0000</pubDate><guid>https://anlyjiang.github.io/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/</guid><description>&lt;ul&gt;
+&lt;p&gt;==总结：==&lt;/p&gt;</description></item><item><title>搭建Android源码工作环境</title><link>https://hanlyjiang.github.io/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/</link><pubDate>Thu, 08 Apr 2021 10:18:50 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/</guid><description>&lt;ul&gt;
 &lt;li&gt;简单介绍系统架构、编译环境的搭建&lt;/li&gt;
 &lt;li&gt;简单介绍利用 AndroidStudio 调试 system_process 进程的方法及编译更新部分系统模块的方式&lt;/li&gt;
 &lt;/ul&gt;

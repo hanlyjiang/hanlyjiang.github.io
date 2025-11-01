@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>工具 on 清水池塘</title><link>https://anlyjiang.github.io/tags/%E5%B7%A5%E5%85%B7/</link><description>Recent content in 工具 on 清水池塘</description><generator>Hugo -- 0.152.2</generator><language>zh-cn</language><lastBuildDate>Tue, 01 Jun 2021 10:26:00 +0000</lastBuildDate><atom:link href="https://anlyjiang.github.io/tags/%E5%B7%A5%E5%85%B7/index.xml" rel="self" type="application/rss+xml"/><item><title>简化Android库上传到Maven仓库的gradle配置</title><link>https://anlyjiang.github.io/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/</link><pubDate>Tue, 01 Jun 2021 10:26:00 +0000</pubDate><guid>https://anlyjiang.github.io/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/</guid><description>&lt;p&gt;配置 android 上传到 maven 中心仓库，发现配置的代码有点多，而且如果有多个库模块需要上传，则需要复制粘贴不少重复的配置代码，于是编写了一个 gradle 插件用于简化提取这个配置过程；&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>工具 on 清水池塘</title><link>https://hanlyjiang.github.io/tags/%E5%B7%A5%E5%85%B7/</link><description>Recent content in 工具 on 清水池塘</description><generator>Hugo -- 0.152.2</generator><language>zh-cn</language><lastBuildDate>Tue, 01 Jun 2021 10:26:00 +0000</lastBuildDate><atom:link href="https://hanlyjiang.github.io/tags/%E5%B7%A5%E5%85%B7/index.xml" rel="self" type="application/rss+xml"/><item><title>简化Android库上传到Maven仓库的gradle配置</title><link>https://hanlyjiang.github.io/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/</link><pubDate>Tue, 01 Jun 2021 10:26:00 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/</guid><description>&lt;p&gt;配置 android 上传到 maven 中心仓库，发现配置的代码有点多，而且如果有多个库模块需要上传，则需要复制粘贴不少重复的配置代码，于是编写了一个 gradle 插件用于简化提取这个配置过程；&lt;/p&gt;
 &lt;h2 id="插件用途及效果"&gt;插件用途及效果&lt;/h2&gt;
 &lt;p&gt;本插件用于简化Android库上传到Maven中心仓库的配置，避免每个project的gradle中都放置一份重复较多的配置；&lt;/p&gt;
 &lt;p&gt;插件有如下功能：&lt;/p&gt;
@@ -199,7 +199,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="使用步骤"&gt;使用步骤&lt;/h2&gt;
 &lt;h3 id="引入插件"&gt;引入插件&lt;/h3&gt;
-&lt;p&gt;在需要使用的模块的build脚本中，引入我们的插件，同时引入 &lt;code&gt;maven-publish&lt;/code&gt; 插件和&lt;code&gt; signing&lt;/code&gt; 插件。&lt;/p&gt;</description></item><item><title>IDEA使用技巧之导航</title><link>https://anlyjiang.github.io/posts/idea-shi-yong-ji-qiao-zhi-dao-hang/</link><pubDate>Wed, 21 Apr 2021 14:12:14 +0000</pubDate><guid>https://anlyjiang.github.io/posts/idea-shi-yong-ji-qiao-zhi-dao-hang/</guid><description>&lt;p&gt;介绍IDEA及AndroidStudio中的导航技巧，包括文件导航，代码元素（类，方法）导航，文本导航等，还有书签等的使用方法；提高编写代码及阅读代码的效率；&lt;/p&gt;
+&lt;p&gt;在需要使用的模块的build脚本中，引入我们的插件，同时引入 &lt;code&gt;maven-publish&lt;/code&gt; 插件和&lt;code&gt; signing&lt;/code&gt; 插件。&lt;/p&gt;</description></item><item><title>IDEA使用技巧之导航</title><link>https://hanlyjiang.github.io/posts/idea-shi-yong-ji-qiao-zhi-dao-hang/</link><pubDate>Wed, 21 Apr 2021 14:12:14 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/idea-shi-yong-ji-qiao-zhi-dao-hang/</guid><description>&lt;p&gt;介绍IDEA及AndroidStudio中的导航技巧，包括文件导航，代码元素（类，方法）导航，文本导航等，还有书签等的使用方法；提高编写代码及阅读代码的效率；&lt;/p&gt;
 &lt;h2 id="插入符导航"&gt;插入符导航&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;后退：==⌘[==&lt;/li&gt;
@@ -243,7 +243,7 @@
 &lt;!-- raw HTML omitted --&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;删除记录： 按 ==Delete== 或者 ==⌫==&lt;/p&gt;</description></item><item><title>Gridea使用小记</title><link>https://anlyjiang.github.io/posts/gridea%E4%BD%BF%E7%94%A8%E5%B0%8F%E8%AE%B0/</link><pubDate>Mon, 05 Apr 2021 11:58:07 +0000</pubDate><guid>https://anlyjiang.github.io/posts/gridea%E4%BD%BF%E7%94%A8%E5%B0%8F%E8%AE%B0/</guid><description>&lt;p&gt;仅记录使用Gridea过程中解决的问题及解决方式&lt;/p&gt;
+&lt;p&gt;删除记录： 按 ==Delete== 或者 ==⌫==&lt;/p&gt;</description></item><item><title>Gridea使用小记</title><link>https://hanlyjiang.github.io/posts/gridea%E4%BD%BF%E7%94%A8%E5%B0%8F%E8%AE%B0/</link><pubDate>Mon, 05 Apr 2021 11:58:07 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/gridea%E4%BD%BF%E7%94%A8%E5%B0%8F%E8%AE%B0/</guid><description>&lt;p&gt;仅记录使用Gridea过程中解决的问题及解决方式&lt;/p&gt;
 &lt;h2 id="下载安装并使用"&gt;下载安装并使用&lt;/h2&gt;
 &lt;p&gt;访问这里（https://gridea.dev/）下载安装并使用，不赘述。&lt;/p&gt;
 &lt;h2 id="远程同步github配置"&gt;远程同步github配置&lt;/h2&gt;
@@ -255,7 +255,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;typora
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
 &lt;p&gt;远程同步时，会将此文件放入到output目录下，然后将output目录推送到github上，为了避免将其中的某些文件推入到远程仓库，故可以通过此方式定义gitignore&lt;/p&gt;
-&lt;/blockquote&gt;</description></item><item><title>Gitlab-Runner安装并注册</title><link>https://anlyjiang.github.io/posts/gitlab-%E5%AE%89%E8%A3%85%E5%B9%B6%E6%B3%A8%E5%86%8Cgitlab-runner/</link><pubDate>Thu, 11 Jun 2020 16:11:58 +0000</pubDate><guid>https://anlyjiang.github.io/posts/gitlab-%E5%AE%89%E8%A3%85%E5%B9%B6%E6%B3%A8%E5%86%8Cgitlab-runner/</guid><description>&lt;p&gt;本文介绍Gitlab-Runner的安装运行（包括docker方式安装运行及二进制直接运行），并介绍如何将Gitlab注册到Gitlab。同时还介绍了gitlab-runner的一些常用操作命令。&lt;/p&gt;
+&lt;/blockquote&gt;</description></item><item><title>Gitlab-Runner安装并注册</title><link>https://hanlyjiang.github.io/posts/gitlab-%E5%AE%89%E8%A3%85%E5%B9%B6%E6%B3%A8%E5%86%8Cgitlab-runner/</link><pubDate>Thu, 11 Jun 2020 16:11:58 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/gitlab-%E5%AE%89%E8%A3%85%E5%B9%B6%E6%B3%A8%E5%86%8Cgitlab-runner/</guid><description>&lt;p&gt;本文介绍Gitlab-Runner的安装运行（包括docker方式安装运行及二进制直接运行），并介绍如何将Gitlab注册到Gitlab。同时还介绍了gitlab-runner的一些常用操作命令。&lt;/p&gt;
 &lt;h2 id="安装gitlab-runner"&gt;安装Gitlab-Runner&lt;/h2&gt;
 &lt;p&gt;gitlab-runner可以使用docker方式运行，也可以在主机上运行其二进制可执行文件，可按如下方式进行选择：&lt;/p&gt;
 &lt;ul&gt;
@@ -291,7 +291,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;gitlab-runer --help
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 2. 单次执行&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;docker exec gitlab-runner gitlab-runner --help
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;使用临时的：&lt;/p&gt;</description></item><item><title>Gitlab安装配置</title><link>https://anlyjiang.github.io/posts/gitlab-%E5%AE%89%E8%A3%85%E5%B9%B6%E9%85%8D%E7%BD%AEgitlab/</link><pubDate>Mon, 06 Apr 2020 11:54:06 +0000</pubDate><guid>https://anlyjiang.github.io/posts/gitlab-%E5%AE%89%E8%A3%85%E5%B9%B6%E9%85%8D%E7%BD%AEgitlab/</guid><description>&lt;p&gt;主要内容：&lt;/p&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;使用临时的：&lt;/p&gt;</description></item><item><title>Gitlab安装配置</title><link>https://hanlyjiang.github.io/posts/gitlab-%E5%AE%89%E8%A3%85%E5%B9%B6%E9%85%8D%E7%BD%AEgitlab/</link><pubDate>Mon, 06 Apr 2020 11:54:06 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/gitlab-%E5%AE%89%E8%A3%85%E5%B9%B6%E9%85%8D%E7%BD%AEgitlab/</guid><description>&lt;p&gt;主要内容：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;使用docker运行 gitlab；&lt;/li&gt;
 &lt;li&gt;配置LDAP及邮箱；&lt;/li&gt;
