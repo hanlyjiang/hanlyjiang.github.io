@@ -2,7 +2,7 @@
 date = '2025-11-01T22:39:13+08:00'
 draft = false
 title = 'Hugo博客配置'
-categories = ["技术"]
+categories = ["蜻蜓点水"]
 tags = ["Hugo", "教程"]
 
 series = ["Blog配置系列"]

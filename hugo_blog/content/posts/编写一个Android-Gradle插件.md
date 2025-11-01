@@ -2,7 +2,7 @@
 title: '编写一个Android Gradle插件'
 date: 2020-09-20 10:18:50
 tags: [Android,Gradle]
-
+categories : ["深入水底"]
 hideInList: false
 feature: 
 isTop: false
