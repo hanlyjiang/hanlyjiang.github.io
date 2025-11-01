@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>深入水底 on 清水池塘</title>
+    <link>https://hanlyjiang.github.io/categories/%E6%B7%B1%E5%85%A5%E6%B0%B4%E5%BA%95/</link>
+    <description>Recent content in 深入水底 on 清水池塘</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Sun, 20 Sep 2020 10:18:50 +0000</lastBuildDate>
+    <atom:link href="https://hanlyjiang.github.io/categories/%E6%B7%B1%E5%85%A5%E6%B0%B4%E5%BA%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>编写一个Android Gradle插件</title>
+      <link>https://hanlyjiang.github.io/posts/%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AAandroid-gradle%E6%8F%92%E4%BB%B6/</link>
+      <pubDate>Sun, 20 Sep 2020 10:18:50 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AAandroid-gradle%E6%8F%92%E4%BB%B6/</guid>
+      <description>&lt;p&gt;gradle有三种编写插件的方式，我们这里使用在项目中的buildSrc模块中编写插件的方式，自定义了一个应用于Android项目的根据flavor过滤so库的gradle插件；&lt;/p&gt;
+&lt;!-- more --&gt;
+&lt;h2 id=&#34;概述&#34;&gt;概述&lt;/h2&gt;
+&lt;p&gt;自定义gradle插件有如下三种方式（&lt;a href=&#34;https://docs.gradle.org/current/userguide/custom_plugins.html#sec:packaging_a_plugin&#34;&gt;🔗链接&lt;/a&gt;）：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;在buildscript中直接编写；&lt;/li&gt;
+&lt;li&gt;在buildSrc项目中编写插件代码；&lt;/li&gt;
+&lt;li&gt;在独立的项目中编写插件代码；&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这里我们将使用buildSrc方式实现一个gradle插件。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

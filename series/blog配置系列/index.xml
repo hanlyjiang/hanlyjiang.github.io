@@ -6,8 +6,31 @@
     <description>Recent content in Blog配置系列 on 清水池塘</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 01 Nov 2025 22:39:13 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 01 Nov 2025 23:15:13 +0800</lastBuildDate>
     <atom:link href="https://hanlyjiang.github.io/series/blog%E9%85%8D%E7%BD%AE%E7%B3%BB%E5%88%97/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Hugo使用规则</title>
+      <link>https://hanlyjiang.github.io/posts/hugo%E4%BD%BF%E7%94%A8%E6%A8%A1%E5%BC%8F/</link>
+      <pubDate>Sat, 01 Nov 2025 23:15:13 +0800</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/hugo%E4%BD%BF%E7%94%A8%E6%A8%A1%E5%BC%8F/</guid>
+      <description>&lt;h2 id=&#34;概述&#34;&gt;概述&lt;/h2&gt;
+&lt;p&gt;本文用于梳理要如何使用 hugo ，如后续使用中需要使用哪些命令，当前对博客的一些规划，使用规则等；&lt;/p&gt;
+&lt;h2 id=&#34;整体布局&#34;&gt;整体布局&lt;/h2&gt;
+&lt;p&gt;支持三个维度：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;专题（series）：用于将一个主题相关的内容连接起来；&lt;/li&gt;
+&lt;li&gt;分类（categories）：主要用于区分文章的类别，当前划分如下几种：
+&lt;ol&gt;
+&lt;li&gt;坐岸观水：个人感想，日记等等；&lt;/li&gt;
+&lt;li&gt;蜻蜓点水：主要是一些轻度技术内容，如博客配置，网络配置，玩机配置等；&lt;/li&gt;
+&lt;li&gt;浮游水面：技术相关的想法，但是不涉及具体技术细节的；&lt;/li&gt;
+&lt;li&gt;深入水底：纯技术相关的内容，如技术学习教程，技术总结等；&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;标签（tags）：标识文章所涉及的一些关键词，热点，关键技术等等，可以尽量多添加；&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;使用文件头部 meta 定义的方式来添加对应的维度标记，下面是一个模板：&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Hugo博客配置</title>
       <link>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</link>
