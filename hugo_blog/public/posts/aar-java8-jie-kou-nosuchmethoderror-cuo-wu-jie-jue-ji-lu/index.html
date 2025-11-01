@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title> AAR Java8 接口 NoSuchMethodError 错误解决记录 | 清水池塘</title>
+<meta name="keywords" content="Android, 问题解决">
+<meta name="description" content="遇到一个初看时非常诡异的问题，现已解决，特记录一下解决过程。
+🙋‍♀️ 是什么问题？
+错误日志
+APP运行过程中，忽然报了一个莫名其妙的错误： NoSuchMethodError, 报错的地方是 rxjava3 的 Disposable.disposed()
+E/AndroidRuntime: FATAL EXCEPTION: main
+    Process: com.github.hanlyjiang.sample, PID: 7357
+    java.lang.NoSuchMethodError: No static method disposed()Lio/reactivex/rxjava3/disposables/Disposable; in class Lio/reactivex/rxjava3/disposables/Disposable; or its super classes (declaration of &#39;io.reactivex.rxjava3.disposables.Disposable&#39; appears in /data/app/~~veR3ZUFYzXjZ48FDcAW0Nw==/com.github.hanlyjiang.sample-bhuZG0wVNdVKs_mfxOh5gg==/base.apk)
+        at com.github.hanlyjiang.lib_mod.ViewTest.disposable(ViewTest.java:8)
+        at com.github.hanlyjiang.sample.MainActivity.lambda$onCreate$0(MainActivity.java:15)
+        at com.github.hanlyjiang.sample.MainActivity$$ExternalSyntheticLambda0.onClick(Unknown Source:0)
+        at android.view.View.performClick(View.java:7456)
+        at com.google.android.material.button.MaterialButton.performClick(MaterialButton.java:1119)
+        at android.view.View.performClickInternal(View.java:7433)
+        at android.view.View.access$3700(View.java:836)
+        at android.view.View$PerformClick.run(View.java:28832)
+        at android.os.Handler.handleCallback(Handler.java:938)
+        at android.os.Handler.dispatchMessage(Handler.java:99)
+        at android.os.Looper.loopOnce(Looper.java:201)
+        at android.os.Looper.loop(Looper.java:288)
+        at android.app.ActivityThread.main(ActivityThread.java:7902)
+        at java.lang.reflect.Method.invoke(Native Method)
+        at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)
+        at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:933)
+
+⏰ Tip">
+<meta name="author" content="野生莲藕">
+<link rel="canonical" href="http://localhost:1313/posts/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="清水池塘 (Alt + H)">清水池塘</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+       AAR Java8 接口 NoSuchMethodError 错误解决记录
+    </h1>
+    <div class="post-meta"><span title='2022-03-13 23:18:16 +0000 UTC'>March 13, 2022</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>野生莲藕</span>
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#-%e6%98%af%e4%bb%80%e4%b9%88%e9%97%ae%e9%a2%98" aria-label="🙋‍♀️ 是什么问题？">🙋‍♀️ 是什么问题？</a><ul>
+                        
+                <li>
+                    <a href="#%e9%94%99%e8%af%af%e6%97%a5%e5%bf%97" aria-label="错误日志">错误日志</a></li>
+                <li>
+                    <a href="#%e5%87%ba%e7%8e%b0%e5%9c%ba%e6%99%af" aria-label="出现场景">出现场景</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e8%a7%a3%e5%86%b3%e6%96%b9%e6%a1%88" aria-label="解决方案">解决方案</a><ul>
+                        
+                <li>
+                    <a href="#%e8%a7%a3%e6%b3%951" aria-label="解法1">解法1</a></li>
+                <li>
+                    <a href="#%e8%a7%a3%e6%b3%952" aria-label="解法2">解法2</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e6%a1%88%e4%be%8b%e8%a7%82%e5%af%9f" aria-label="案例观察">案例观察</a><ul>
+                        
+                <li>
+                    <a href="#class%e5%ad%97%e8%8a%82%e7%a0%81%e6%b2%a1%e6%9c%89%e9%97%ae%e9%a2%98" aria-label="class字节码没有问题">class字节码没有问题</a></li>
+                <li>
+                    <a href="#viewtestdisposable" aria-label="ViewTest.disposable">ViewTest.disposable</a></li>
+                <li>
+                    <a href="#disposabledisposed" aria-label="Disposable.disposed()">Disposable.disposed()</a></li>
+                <li>
+                    <a href="#%e6%ad%a3%e7%a1%ae%e7%9a%84viewtestdisposable%e5%ad%97%e8%8a%82%e7%a0%81" aria-label="正确的ViewTest.disposable字节码">正确的ViewTest.disposable字节码</a></li>
+                <li>
+                    <a href="#%e6%80%bb%e7%bb%93" aria-label="总结">总结</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e5%8e%9f%e5%9b%a0%e5%88%86%e6%9e%90" aria-label="原因分析">原因分析</a><ul>
+                        
+                <li>
+                    <a href="#class---dex--java8-%e8%af%ad%e8%a8%80%e7%89%b9%e6%80%a7%e6%94%af%e6%8c%81" aria-label="class -&gt; dex &amp; Java8 语言特性支持">class -&gt; dex &amp; Java8 语言特性支持</a></li>
+                <li>
+                    <a href="#%e5%af%b9%e5%ba%94%e6%88%91%e4%bb%ac%e7%9a%84%e9%97%ae%e9%a2%98" aria-label="对应我们的问题">对应我们的问题</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e8%bf%9b%e4%b8%80%e6%ad%a5%e4%ba%86%e8%a7%a3" aria-label="进一步了解">进一步了解</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>遇到一个初看时非常诡异的问题，现已解决，特记录一下解决过程。</p>
+<h2 id="-是什么问题">🙋‍♀️ 是什么问题？<a hidden class="anchor" aria-hidden="true" href="#-是什么问题">#</a></h2>
+<h3 id="错误日志">错误日志<a hidden class="anchor" aria-hidden="true" href="#错误日志">#</a></h3>
+<p>APP运行过程中，忽然报了一个莫名其妙的错误： <code>NoSuchMethodError</code>, 报错的地方是 rxjava3 的 <code>Disposable.disposed()</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>E/AndroidRuntime: FATAL EXCEPTION: main
+</span></span><span style="display:flex;"><span>    Process: com.github.hanlyjiang.sample, PID: <span style="color:#ae81ff">7357</span>
+</span></span><span style="display:flex;"><span>    java.lang.NoSuchMethodError: No static method disposed<span style="color:#f92672">()</span>Lio/reactivex/rxjava3/disposables/Disposable; in class Lio/reactivex/rxjava3/disposables/Disposable; or its super classes <span style="color:#f92672">(</span>declaration of <span style="color:#e6db74">&#39;io.reactivex.rxjava3.disposables.Disposable&#39;</span> appears in /data/app/~~veR3ZUFYzXjZ48FDcAW0Nw<span style="color:#f92672">==</span>/com.github.hanlyjiang.sample-bhuZG0wVNdVKs_mfxOh5gg<span style="color:#f92672">==</span>/base.apk<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at com.github.hanlyjiang.lib_mod.ViewTest.disposable<span style="color:#f92672">(</span>ViewTest.java:8<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at com.github.hanlyjiang.sample.MainActivity.lambda$onCreate$0<span style="color:#f92672">(</span>MainActivity.java:15<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at com.github.hanlyjiang.sample.MainActivity$$ExternalSyntheticLambda0.onClick<span style="color:#f92672">(</span>Unknown Source:0<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at android.view.View.performClick<span style="color:#f92672">(</span>View.java:7456<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at com.google.android.material.button.MaterialButton.performClick<span style="color:#f92672">(</span>MaterialButton.java:1119<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at android.view.View.performClickInternal<span style="color:#f92672">(</span>View.java:7433<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at android.view.View.access$3700<span style="color:#f92672">(</span>View.java:836<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at android.view.View$PerformClick.run<span style="color:#f92672">(</span>View.java:28832<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at android.os.Handler.handleCallback<span style="color:#f92672">(</span>Handler.java:938<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at android.os.Handler.dispatchMessage<span style="color:#f92672">(</span>Handler.java:99<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at android.os.Looper.loopOnce<span style="color:#f92672">(</span>Looper.java:201<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at android.os.Looper.loop<span style="color:#f92672">(</span>Looper.java:288<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at android.app.ActivityThread.main<span style="color:#f92672">(</span>ActivityThread.java:7902<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at java.lang.reflect.Method.invoke<span style="color:#f92672">(</span>Native Method<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run<span style="color:#f92672">(</span>RuntimeInit.java:548<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        at com.android.internal.os.ZygoteInit.main<span style="color:#f92672">(</span>ZygoteInit.java:933<span style="color:#f92672">)</span>
+</span></span></code></pre></div><blockquote>
+<p><strong>⏰ Tip</strong></p>
+<p>实际上还有遇到过一个 <code>AbstractMethodError</code> 的错误</p>
+</blockquote>
+<h3 id="出现场景">出现场景<a hidden class="anchor" aria-hidden="true" href="#出现场景">#</a></h3>
+<ul>
+<li>AAR 引入到APP模块</li>
+<li>打包APK（不通过AndroidStudio直接运行）</li>
+<li>安装并运行</li>
+</ul>
+<h2 id="解决方案">解决方案<a hidden class="anchor" aria-hidden="true" href="#解决方案">#</a></h2>
+<p>对于需要解决问题的，可以直接参考尝试下面两种解决方案。</p>
+<h3 id="解法1">解法1<a hidden class="anchor" aria-hidden="true" href="#解法1">#</a></h3>
+<p><code>gradle.properties</code> 文件中添加属性：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-properties" data-lang="properties"><span style="display:flex;"><span><span style="color:#a6e22e">android.enableDexingArtifactTransform.desugaring</span><span style="color:#f92672">=</span><span style="color:#e6db74">false</span>
+</span></span></code></pre></div><h3 id="解法2">解法2<a hidden class="anchor" aria-hidden="true" href="#解法2">#</a></h3>
+<p>修改 aar 的依赖方式，将name+ext的方式修改为 files</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-groovy" data-lang="groovy"><span style="display:flex;"><span>	implementation<span style="color:#f92672">(</span>name: <span style="color:#e6db74">&#39;libmod-release&#39;</span><span style="color:#f92672">,</span> ext: <span style="color:#e6db74">&#39;aar&#39;</span><span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>修改之后</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-groovy" data-lang="groovy"><span style="display:flex;"><span>	implementation<span style="color:#f92672">(</span>files<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;libs/libmod-release.aar&#39;</span><span style="color:#f92672">))</span>
+</span></span></code></pre></div><h2 id="案例观察">案例观察<a hidden class="anchor" aria-hidden="true" href="#案例观察">#</a></h2>
+<p>根据错误信息，找到我们的代码，得到如下调用关系：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>ViewTest.<span style="color:#a6e22e">disposable</span> <span style="color:#f92672">-&gt;</span> Disposable.<span style="color:#a6e22e">disposed</span>()
+</span></span></code></pre></div><p>为了方便分析及演示，我编写了一个测试工程位于： <a href="https://github.com/colorless-hanly/NoSuchMethodError">colorless-hanly/NoSuchMethodError: NoSuchMethodError (github.com)</a>，运行此工程能复现该问题。</p>
+<h3 id="class字节码没有问题">class字节码没有问题<a hidden class="anchor" aria-hidden="true" href="#class字节码没有问题">#</a></h3>
+<p>我们的AAR提供给APP模块时，是以 class 类文件提供的，通过反编译查看其内容，没有任何问题。</p>
+<p>所以我们看看最后运行的APK对应的DEX，并通过AndroidStudio 查看其对应的字节码。</p>
+<h3 id="viewtestdisposable"><code>ViewTest.disposable</code><a hidden class="anchor" aria-hidden="true" href="#viewtestdisposable">#</a></h3>
+<p>首先我们根据报错信息找到出错的<code>ViewTest.disposable</code>类，并查看其字节码</p>
+<p><strong>Java 代码：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ViewTest</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> Disposable <span style="color:#a6e22e">disposable</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Disposable.<span style="color:#a6e22e">disposed</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>字节码：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>.<span style="color:#a6e22e">class</span> <span style="color:#66d9ef">public</span> Lcom<span style="color:#f92672">/</span>github<span style="color:#f92672">/</span>hanlyjiang<span style="color:#f92672">/</span>lib_mod<span style="color:#f92672">/</span>ViewTest;
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">super</span> Ljava<span style="color:#f92672">/</span>lang<span style="color:#f92672">/</span>Object;
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">source</span> <span style="color:#e6db74">&#34;ViewTest.java&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">#</span> direct methods
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">method</span> <span style="color:#66d9ef">public</span> constructor <span style="color:#f92672">&lt;</span>init<span style="color:#f92672">&gt;</span>()V
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">registers</span> 1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">line</span> 5
+</span></span><span style="display:flex;"><span>    invoke<span style="color:#f92672">-</span>direct {p0}, Ljava<span style="color:#f92672">/</span>lang<span style="color:#f92672">/</span>Object;<span style="color:#f92672">-&gt;&lt;</span>init<span style="color:#f92672">&gt;</span>()V
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span><span style="color:#f92672">-</span><span style="color:#66d9ef">void</span>
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">end</span> method
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">method</span> <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#a6e22e">disposable</span>()Lio<span style="color:#f92672">/</span>reactivex<span style="color:#f92672">/</span>rxjava3<span style="color:#f92672">/</span>disposables<span style="color:#f92672">/</span>Disposable;
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">registers</span> 1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">line</span> 8
+</span></span><span style="display:flex;"><span>    invoke<span style="color:#f92672">-</span><span style="color:#66d9ef">static</span> {}, Lio<span style="color:#f92672">/</span>reactivex<span style="color:#f92672">/</span>rxjava3<span style="color:#f92672">/</span>disposables<span style="color:#f92672">/</span>Disposable;<span style="color:#f92672">-&gt;</span>disposed()Lio<span style="color:#f92672">/</span>reactivex<span style="color:#f92672">/</span>rxjava3<span style="color:#f92672">/</span>disposables<span style="color:#f92672">/</span>Disposable;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    move<span style="color:#f92672">-</span>result<span style="color:#f92672">-</span>object v0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span><span style="color:#f92672">-</span>object v0
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">end</span> method
+</span></span></code></pre></div><p>看起来没有任何问题。</p>
+<h3 id="disposabledisposed"><code>Disposable.disposed()</code><a hidden class="anchor" aria-hidden="true" href="#disposabledisposed">#</a></h3>
+<p>我们继续查看 Disposable 接口的字节码，发现居然<strong>没有我们调用的 disposed 方法</strong>。</p>
+<p><img alt="202203132238351" loading="lazy" src="https://s2.loli.net/2022/05/26/m2OoeUC3WaEuySc.png"></p>
+<p>但是，很快就在有一个叫做 <code>Disposable$-CC</code> 的类中找到了我们的 <code>disposed</code> 方法，同时其中还包括了 <code>Disposable</code> 接口中的所有静态方法</p>
+<p><img alt="202203132240481" loading="lazy" src="https://s2.loli.net/2022/05/26/ljBCpFPid92AczY.png"></p>
+<p>这里我们粘贴下 Disposable 接口的定义，可以看到其中有两个接口方法定义，还有若干static方法的定义及实现。而我们的静态方法全部位于字节码中 <code>Disposable$-CC</code> 这个类中，而两个接口方法还保留在 <code>Disposable</code> 类中。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">Disposable</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">dispose</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isDisposed</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> Disposable <span style="color:#a6e22e">fromRunnable</span>(<span style="color:#a6e22e">@NonNull</span> Runnable run) {
+</span></span><span style="display:flex;"><span>        Objects.<span style="color:#a6e22e">requireNonNull</span>(run, <span style="color:#e6db74">&#34;run is null&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> RunnableDisposable(run);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> Disposable <span style="color:#a6e22e">fromAction</span>(<span style="color:#a6e22e">@NonNull</span> Action action) {
+</span></span><span style="display:flex;"><span>        Objects.<span style="color:#a6e22e">requireNonNull</span>(action, <span style="color:#e6db74">&#34;action is null&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> ActionDisposable(action);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> Disposable <span style="color:#a6e22e">fromFuture</span>(<span style="color:#a6e22e">@NonNull</span> Future<span style="color:#f92672">&lt;?&gt;</span> future) {
+</span></span><span style="display:flex;"><span>        Objects.<span style="color:#a6e22e">requireNonNull</span>(future, <span style="color:#e6db74">&#34;future is null&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> fromFuture(future, <span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> Disposable <span style="color:#a6e22e">fromFuture</span>(<span style="color:#a6e22e">@NonNull</span> Future<span style="color:#f92672">&lt;?&gt;</span> future, <span style="color:#66d9ef">boolean</span> allowInterrupt) {
+</span></span><span style="display:flex;"><span>        Objects.<span style="color:#a6e22e">requireNonNull</span>(future, <span style="color:#e6db74">&#34;future is null&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> FutureDisposable(future, allowInterrupt);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> Disposable <span style="color:#a6e22e">fromSubscription</span>(<span style="color:#a6e22e">@NonNull</span> Subscription subscription) {
+</span></span><span style="display:flex;"><span>        Objects.<span style="color:#a6e22e">requireNonNull</span>(subscription, <span style="color:#e6db74">&#34;subscription is null&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> SubscriptionDisposable(subscription);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> Disposable <span style="color:#a6e22e">fromAutoCloseable</span>(<span style="color:#a6e22e">@NonNull</span> AutoCloseable autoCloseable) {
+</span></span><span style="display:flex;"><span>        Objects.<span style="color:#a6e22e">requireNonNull</span>(autoCloseable, <span style="color:#e6db74">&#34;autoCloseable is null&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> AutoCloseableDisposable(autoCloseable);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> AutoCloseable <span style="color:#a6e22e">toAutoCloseable</span>(<span style="color:#a6e22e">@NonNull</span> Disposable disposable) {
+</span></span><span style="display:flex;"><span>        Objects.<span style="color:#a6e22e">requireNonNull</span>(disposable, <span style="color:#e6db74">&#34;disposable is null&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> disposable::dispose;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> Disposable <span style="color:#a6e22e">empty</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> fromRunnable(Functions.<span style="color:#a6e22e">EMPTY_RUNNABLE</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> Disposable <span style="color:#a6e22e">disposed</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> EmptyDisposable.<span style="color:#a6e22e">INSTANCE</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="正确的viewtestdisposable字节码">正确的<code>ViewTest.disposable</code>字节码<a hidden class="anchor" aria-hidden="true" href="#正确的viewtestdisposable字节码">#</a></h3>
+<p>前面我们发现，我们字节码中调用的方法是 <code>Disposable;-&gt;disposed()</code>，而实际上该方法位于 <code>Disposable$-CC;-&gt;disposed()</code>,现在我们看下正常的可以运行通过的apk中dex对应的字节码。</p>
+<ul>
+<li>经过对比，发现Disposable 还是被拆分为了 Disposable 和 Disposable$-CC</li>
+<li>而 ViewTest.disposable 对应的字节码却有区别，正常可以调用通过的字节码和异常的对比如下：</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 正确的</span>
+</span></span><span style="display:flex;"><span>invoke<span style="color:#f92672">-</span><span style="color:#66d9ef">static</span> {}, Lio<span style="color:#f92672">/</span>reactivex<span style="color:#f92672">/</span>rxjava3<span style="color:#f92672">/</span>disposables<span style="color:#f92672">/</span>Disposable$<span style="color:#f92672">-</span>CC;<span style="color:#f92672">-&gt;</span>disposed()Lio<span style="color:#f92672">/</span>reactivex<span style="color:#f92672">/</span>rxjava3<span style="color:#f92672">/</span>disposables<span style="color:#f92672">/</span>Disposable;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 错误的</span>
+</span></span><span style="display:flex;"><span>invoke<span style="color:#f92672">-</span><span style="color:#66d9ef">static</span> {}, Lio<span style="color:#f92672">/</span>reactivex<span style="color:#f92672">/</span>rxjava3<span style="color:#f92672">/</span>disposables<span style="color:#f92672">/</span>Disposable;<span style="color:#f92672">-&gt;</span>disposed()Lio<span style="color:#f92672">/</span>reactivex<span style="color:#f92672">/</span>rxjava3<span style="color:#f92672">/</span>disposables<span style="color:#f92672">/</span>Disposable;
+</span></span></code></pre></div><p>可以发现，能正常运行的方法调用确实指向了 <code>Disposable$-CC;-&gt;disposed()</code>。</p>
+<h3 id="总结">总结<a hidden class="anchor" aria-hidden="true" href="#总结">#</a></h3>
+<p>也就是说在编译的过程中：</p>
+<ul>
+<li>Disposable 会被拆分为 <code>Disposable</code> 和 <code>Disposable$-CC</code>
+<ul>
+<li><code>Disposable</code> 包含了接口方法的声明</li>
+<li><code>Disposable$-CC</code> 中则包含了静态方法的声明及实现</li>
+</ul>
+</li>
+<li>对于调用到 Disposable 的静态方法的部分，最终编译完成后，会替换为指向<code>Disposable$-CC</code></li>
+</ul>
+<p>而我们出错的情况下，是没有正确指向的，所以确实会出现找不到对应的方法的情况。</p>
+<h2 id="原因分析">原因分析<a hidden class="anchor" aria-hidden="true" href="#原因分析">#</a></h2>
+<h3 id="class---dex--java8-语言特性支持">class -&gt; dex &amp; Java8 语言特性支持<a hidden class="anchor" aria-hidden="true" href="#class---dex--java8-语言特性支持">#</a></h3>
+<p>以下为Android 官方文档上的相关描述：</p>
+<blockquote>
+<ul>
+<li><strong><a href="https://developer.android.google.cn/studio/write/java8-support">使用 Java 8 语言功能和 API</a></strong></li>
+</ul>
+<p>Android Gradle 插件对使用某些 Java 8 语言功能以及利用这些功能的第三方库提供内置支持。如图 所示，默认工具链实现新语言功能的方法是在<strong>使用 D8/R8 将类文件编译成 dex 代码的过程中执行字节码转换，这种转换称为 <code>desugar</code></strong>。</p>
+<p><img alt="202203132254856" loading="lazy" src="https://s2.loli.net/2022/05/26/PLiSGTwhZADqjFm.png"></p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong><a href="https://developer.android.google.cn/studio/write/java8-support#library-desugaring">Java 8 及更高版本 API 脱糖支持（Android Gradle 插件 4.0.0 及更高版本）</a></strong></li>
+</ul>
+<p>如果您使用 Android Gradle 插件 4.0.0 或更高版本构建应用，插件扩展了对使用多种 Java 8 语言 API 的支持，而无需为应用设置最低 API 级别。</p>
+<p>之所以能够实现对较低平台版本的这种额外支持，是因为脱糖引擎经过插件 4.0.0 及更高版本扩展后，也能使 Java 语言 API 脱糖。因此，您可以在支持较低 Android 版本的应用中添加过去仅在最新 Android 版本中可用的标准语言 API（如 <code>java.util.streams</code>）。</p>
+<p>使用 Android Gradle 插件 4.0.0 或更高版本构建应用时，支持下面一组 API：</p>
+<ul>
+<li>顺序流 (<code>java.util.stream</code>)</li>
+<li><code>java.time</code> 的子集</li>
+<li><code>java.util.function</code></li>
+<li><code>java.util.{Map,Collection,Comparator}</code> 的最近新增内容</li>
+<li>可选内容（<code>java.util.Optional</code>、<code>java.util.OptionalInt</code> 和 <code>java.util.OptionalDouble</code>）以及对上述 API 很有用的一些其他新类</li>
+<li><code>java.util.concurrent.atomic</code> 的一些新增内容（<code>AtomicInteger</code>、<code>AtomicLong</code> 和 <code>AtomicReference</code> 的新方法）</li>
+<li><code>ConcurrentHashMap</code>（包含 Android 5.0 的问题修复）</li>
+</ul>
+<p>如需查看受支持的 API 的完整列表，请参阅<a href="https://developer.android.google.cn/studio/write/java8-support-table">通过脱糖获得 Java 8 及更高版本 API</a>。</p>
+<p>为了支持这些语言 API，插件编译了一个单独的 DEX 文件（其中包含缺失 API 的实现），并将其添加到您的应用中。脱糖过程会重新编写应用的代码，以便在运行时改用此库。</p>
+</blockquote>
+<blockquote>
+<ul>
+<li><strong><a href="https://developer.android.google.cn/studio/command-line/d8">编译使用了 Java 8 语言功能的字节码</a></strong></li>
+</ul>
+<p><code>d8</code> 通过一个叫做“脱糖”的编译过程，使您能够在代码中<a href="https://developer.android.google.cn/studio/write/java8-support">使用 Java 8 语言功能</a>，此过程会将这些实用的语言功能转换为可以在 Android 平台上运行的字节码。</p>
+<p>Android Studio 和 Android Gradle 插件包含了 <code>d8</code> 为您启用脱糖所需的类路径资源。</p>
+<p>Android Studio 和 Android Gradle 插件包含了 <code>d8</code> 为您启用脱糖所需的类路径资源。不过，从命令行使用 <code>d8</code> 时，您需要手动添加这些资源。</p>
+<p>其中一个资源就是目标 Android SDK 中的 <code>android.jar</code>。此资源包含一组 Android 平台 API，您可以使用 <code>--lib</code> 标记来指定该资源的路径。</p>
+<p>另一个资源是您项目的部分已编译的 Java 字节码，您目前不打算将这部分字节码编译为 DEX 字节码，但在将其他类编译为 DEX 字节码时需要用到这些字节码。例如，如果代码使用<a href="https://docs.oracle.com/javase/tutorial/java/IandI/defaultmethods.html">默认和静态接口方法</a>（一种 Java 8 语言功能），则您需要使用此标记来指定您项目的所有 Java 字节码的路径，即使您不打算将所有 Java 字节码都编译为 DEX 字节码也是如此。<strong>这是因为 <code>d8</code> 需要根据这些信息来理解您项目的代码并解析对接口方法的调用</strong>。</p>
+</blockquote>
+<p>通过以上描述我们可以知道：</p>
+<ul>
+<li>Android 通过 D8 将 class 转换为可在Android平台上执行的dex，这个过程称为 <strong>desugar （脱糖）</strong>。</li>
+<li>脱糖过程中，可能会重新编写应用的代码。</li>
+<li>脱糖时需要指定脱糖所需要的类路径资源。</li>
+</ul>
+<h3 id="对应我们的问题">对应我们的问题<a hidden class="anchor" aria-hidden="true" href="#对应我们的问题">#</a></h3>
+<blockquote>
+<p>待补充</p>
+<p>通过 d8 手动对class进行dex转换，然后观察转换差异。</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>d8 MainActivity.class --intermediate --file-per-class --output ~/build/intermediate/dex
+</span></span><span style="display:flex;"><span>--lib android_sdk/platforms/api-level/android.jar
+</span></span><span style="display:flex;"><span>--classpath ~/build/javac/debug
+</span></span></code></pre></div><p>将类文件编译成 dex 代码的过程中执行字节码转换，这种转换称为 <code>desugar</code>。AGP 使用 D8 完成desugar ，为了能正确的处理class，需要根据POM依赖信息来寻找对应的依赖，然后将所有依赖项目都加入到 desurge classpath，然后才能正确处理。而 aar 引入时不具备这些POM依赖信息，所以无法还原。</p>
+<h2 id="进一步了解">进一步了解<a hidden class="anchor" aria-hidden="true" href="#进一步了解">#</a></h2>
+<ul>
+<li><a href="https://developer.android.google.cn/studio/command-line/d8">d8  | Android 开发者  | Android Developers (google.cn)</a></li>
+<li><a href="https://developer.android.google.cn/studio/write/java8-support">使用 Java 8 语言功能和 API  | Android 开发者  | Android Developers (google.cn)</a></li>
+<li><a href="https://developer.android.google.cn/studio/write/java8-support#library-desugaring">使用 Java 8 语言功能和 API  | Android 开发者  | Android Developers (google.cn)</a></li>
+<li><a href="https://developer.android.google.cn/studio/releases/gradle-plugin">Android Gradle 插件版本说明  | Android 开发者  | Android Developers (google.cn)</a></li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/android/">Android</a></li>
+      <li><a href="http://localhost:1313/tags/%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/">问题解决</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">清水池塘</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

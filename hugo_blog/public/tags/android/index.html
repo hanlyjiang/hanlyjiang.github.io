@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Android | 清水池塘</title>
+<meta name="keywords" content="">
+<meta name="description" content="">
+<meta name="author" content="野生莲藕">
+<link rel="canonical" href="http://localhost:1313/tags/android/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/tags/android/index.xml" title="rss">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/tags/android/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body class="list" id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="清水池塘 (Alt + H)">清水池塘</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header">
+  <h1>
+    Android
+  </h1>
+</header>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Android Jacoco覆盖率统计配置
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Android Jacoco 覆盖率统计Gradle配置，包括生成本地单元测试报告，仪器单元测试报告，合并两种测试的报告，合并两种测试的执行数据并在AndroidStudio的编辑器中查看每一行的覆盖率情况。
+如何让测试任务生成 Jacoco 覆盖率统计数据？ 这里我们仅仅从Gradle任务来说，不考虑 AndroidStudio/IDEA。
+本地单元测试（Test） 对于本地单元测试来说，原先有一个 testDebugUnitTest 的测试任务，如果不做配置，该任务只会生成测试通过情况的报告。只要应用 jacoco 插件，然后运行 testDebugUnitTest 任务时，就会同时生成jacoco覆盖率统计执行数据文件。
+// build.gradle apply(plugin = &#34;jacoco&#34;) 之所以能这样是因为 jacoco 插件会给所有 Test 类型的任务添加 jacoco 的配置。
+可以通过如下方式输出其执行数据文件路径：
+afterEvaluate { tasks.getByName(&#34;testDebugUnitTest&#34;).apply { doLast { (this.extensions.getByName(&#34;jacoco&#34;) as JacocoTaskExtension).apply { logger.lifecycle(&#34;testDebugUnitTest dest: ${this.destinationFile?.absolutePath}&#34;) } } } } 执行情况如下：
+testDebugUnitTest dest: /Users/hanlyjiang/Wksp/project/AndroidTestSample/app/build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec 仪器单元测试（AndroidTest） 仪器单元测试覆盖率数据的统计需要打开testCoverageEnabled开关，然后会有一个createDebugCoverageReport 的任务生成，同时也会生成html的报告。
+// groovy android { buildTypes { debug { testCoverageEnabled = true } } } // kotlin android { buildTypes { getByName(&#34;debug&#34;).apply { isTestCoverageEnabled = true } } } 连接设备执行该任务即可生成对应的执行数据文件及对应的覆盖率报告。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2022-03-19 22:29:12 +0000 UTC'>March 19, 2022</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Android Jacoco覆盖率统计配置" href="http://localhost:1313/posts/android-jacoco-gradle-config/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent"> AAR Java8 接口 NoSuchMethodError 错误解决记录
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>遇到一个初看时非常诡异的问题，现已解决，特记录一下解决过程。
+🙋‍♀️ 是什么问题？ 错误日志 APP运行过程中，忽然报了一个莫名其妙的错误： NoSuchMethodError, 报错的地方是 rxjava3 的 Disposable.disposed()
+E/AndroidRuntime: FATAL EXCEPTION: main Process: com.github.hanlyjiang.sample, PID: 7357 java.lang.NoSuchMethodError: No static method disposed()Lio/reactivex/rxjava3/disposables/Disposable; in class Lio/reactivex/rxjava3/disposables/Disposable; or its super classes (declaration of &#39;io.reactivex.rxjava3.disposables.Disposable&#39; appears in /data/app/~~veR3ZUFYzXjZ48FDcAW0Nw==/com.github.hanlyjiang.sample-bhuZG0wVNdVKs_mfxOh5gg==/base.apk) at com.github.hanlyjiang.lib_mod.ViewTest.disposable(ViewTest.java:8) at com.github.hanlyjiang.sample.MainActivity.lambda$onCreate$0(MainActivity.java:15) at com.github.hanlyjiang.sample.MainActivity$$ExternalSyntheticLambda0.onClick(Unknown Source:0) at android.view.View.performClick(View.java:7456) at com.google.android.material.button.MaterialButton.performClick(MaterialButton.java:1119) at android.view.View.performClickInternal(View.java:7433) at android.view.View.access$3700(View.java:836) at android.view.View$PerformClick.run(View.java:28832) at android.os.Handler.handleCallback(Handler.java:938) at android.os.Handler.dispatchMessage(Handler.java:99) at android.os.Looper.loopOnce(Looper.java:201) at android.os.Looper.loop(Looper.java:288) at android.app.ActivityThread.main(ActivityThread.java:7902) at java.lang.reflect.Method.invoke(Native Method) at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548) at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:933) ⏰ Tip
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2022-03-13 23:18:16 +0000 UTC'>March 13, 2022</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to  AAR Java8 接口 NoSuchMethodError 错误解决记录" href="http://localhost:1313/posts/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Dagger 在Android库(SDK)模块中的使用实践
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>本文主要描述如何使用Dagger解决实际项目中遇到的问题，这两个问题是：
+如何在库（SDK）模块中使用Dagger依赖注入？ MVP中的Dagger依赖注入如何实现无感注入？ 本文不会介绍如何使用Dagger，只专注于描述如上两个问题的解决的前因后果及解决方案。
+背景 接手开发一个SDK，大致情况如下：
+该SDK内部有若干界面，包括Activity，Fragment等 使用MVP架构 逐渐发现内部依赖混乱，在得空后，遂对其依赖部分进行重构改造。
+为什么使用依赖注入进行改造？ 主要是依赖混乱，单例的滥用导致依赖关系不明显，无法管理，无法测试
+某些对象，我们在很多类中都需要使用，如 Retrofit 的请求对象，代表信息的标识字段等，此时为了避免通过构造函数或者setter方法来传递，就直接起了个单例，还有很多其他类似的情况，最终导致单例有10多个，调用单例 getInstance 的地方更是数不胜数。
+导致我们要对对应的代码进行单元测试做mock操作异常困难，
+因为依赖关系太不明显，几乎得一行行找才能找到类或方法到底依赖了哪些对象 同时mock的过程也变得麻烦，由于没有作为类成员，所以无法简单通过mock替换对应成员； 依赖注入改造的问题点 主要有如下问题：
+之所以提第一个问题，是因为Google 针对Android，在Dagger的基础上针对性的构建了一个Hilt 的依赖注入框架，能够减少Android中直接使用Dagger的模板代码。但是Hilt的使中有要求：
+所有使用 Hilt 的应用都必须包含一个带有 @HiltAndroidApp 注释的 Application 类。
+参考： 使用 Hilt 实现依赖项注入 | Android 开发者 | Android Developers (google.cn)
+也就是必须能控制住Application，如上所述，我们作为一个SDK的提供方：
+是没有机会修改Application的代码的 而且，我们也不能要求使用方去做这种限制；同时，如果使用方有使用 Hilt 呢，我们的代码是否会对其产生影响？ 故，我们只能直接使用Dagger。
+而另外一个问题在于MVP的架构限制，P 层需要持有V层的引用，也就是P依赖V，而V通常是Activity或者Fragment，而Activity及Fragment的创建过程由Android系统控制，所以在使用Dagger时我们需要添加一些模板代码（下方会说明），将 Activity及Fragment对象注入到 Dagger 的依赖图谱中。
+没有 Application 的问题解决 首先，我们要解决的是没有Application的问题，那么没有Application会给我们带来哪些问题呢？
+无法使用 Hilt 无法直接使用 dagger-android 这两个问题实际上是类似的，Hilt及Dagger-Android都是用于解决 Android 组件（Activity，Fragment，Service，BroadcastReceiver 等）的依赖注入的。但是他们都要求我们必须使用 Application。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2022-03-06 15:11:54 +0000 UTC'>March 6, 2022</span>&nbsp;·&nbsp;<span>8 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Dagger 在Android库(SDK)模块中的使用实践" href="http://localhost:1313/posts/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Gradle学习指南-前言
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>这个对于安卓开发来说，Gradle可以不了解，但是又必须了解。
+说不需要了解，是因为： 通过AndroidStudio建立工程的时候，默认就创建好了Gradle的项目结构及对应的任务，通过IDE来添加模块的时候，也可以自动的添加Gradle的配置。
+说需要了解，是因为：有时候会遇到构建错误，还有时候需要改一改构建流程的默认行为，另外有些时候，需要自行扩展一个构建任务。
+Gradle学习的一个难点在于，其学习资料非常零散，少有成体系的学习资料。当然，官方文档是很成体系的，官方文档也有不好的地方：
+纯英文； 版本更新之后，文档结构有变化。 官方文档对于安卓项目的说明没有（因为android的插件是google自行扩展的） 还有一个问题就是，前期gradle的脚本都是使用groovy来编写，我们要写脚本，需要去学习一门新的语言，虽然这个语言和java比较接近，但是由于没什么其他用途，加上需要编写gradle脚本的场景也不是那么常见，就会让觉得有点不值得投入，这两个因素结合起来，会劝退很多安卓开发人员。现在，gradle可以使用kotlin来编写其dsl脚本，学习成本会降低很多。
+见到其wrapper的设计令我印象深刻，对比ant及maven需要手动去下载一份二进制副本，然后配置到环境变量中，而你获取到别人的gradle项目之后，直接使用wrapper脚本，就可以执行gradle任务，wrapper脚本会自动帮助你去获取一份gradle的二进制副本，就好像你直接执行gradle的二进制命令一样。
+另外gradle也提供了方便的扩展机制，能对构建流程进行定制。
+接下来，我将从安卓开发的视角，对Gradle的使用做一个整体的介绍。内容上会包括Gradle的一些基础概念，一些常见的Gradle任务介绍，Android的常见Gradle配置介绍，同时也会介绍自定义Gradle任务及Gradle插件。
+</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-10-07 22:07:09 +0000 UTC'>October 7, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Gradle学习指南-前言" href="http://localhost:1313/posts/gradle-xue-xi-zhi-nan-qian-yan/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">简化Android库上传到Maven仓库的gradle配置
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>配置 android 上传到 maven 中心仓库，发现配置的代码有点多，而且如果有多个库模块需要上传，则需要复制粘贴不少重复的配置代码，于是编写了一个 gradle 插件用于简化提取这个配置过程；
+插件用途及效果 本插件用于简化Android库上传到Maven中心仓库的配置，避免每个project的gradle中都放置一份重复较多的配置；
+插件有如下功能：
+简化 maven-publish 插件的配置流程； 添加上传到Maven中心仓库的 publish 任务； 支持配置上传时是否包含 javadoc 及源码； 直接使用maven-publish插件的配置： import org.gradle.api.publish.maven.MavenPom plugins { id(&#34;com.android.library&#34;) id(&#34;signing&#34;) `maven-publish` } android { defaultConfig { versionName(&#34;1.0.0-SNAPSHOT&#34;) } } dependencies { // } tasks.register(&#34;javadoc&#34;, Javadoc::class.java) { group = &#34;publishing&#34; dependsOn(&#34;assemble&#34;) source = android.sourceSets[&#34;main&#34;].java.getSourceFiles() classpath &#43;= project.files(android.bootClasspath &#43; File.pathSeparator) if (JavaVersion.current().isJava9Compatible) { (options as StandardJavadocDocletOptions).addBooleanOption(&#34;html5&#34;, true) } android.libraryVariants.forEach { libraryVariant -&gt; classpath &#43;= libraryVariant.javaCompileProvider.get().classpath } options.apply { encoding(&#34;UTF-8&#34;) charset(&#34;UTF-8&#34;) isFailOnError = false (this as StandardJavadocDocletOptions).apply { // addStringOption(&#34;Xdoclint:none&#34;) links?.add(&#34;https://developer.android.google.cn/reference/&#34;) links?.add(&#34;http://docs.oracle.com/javase/8/docs/api/&#34;) } } } tasks.register(&#34;jarSource&#34;, Jar::class.java) { group = &#34;publishing&#34; from(android.sourceSets[&#34;main&#34;].java.srcDirs) archiveClassifier.set(&#34;sources&#34;) } tasks.register(&#34;jarJavadoc&#34;, Jar::class.java) { group = &#34;publishing&#34; dependsOn(&#34;javadoc&#34;) val javadoc: Javadoc = tasks.getByName(&#34;javadoc&#34;) as Javadoc from(javadoc.destinationDir) archiveClassifier.set(&#34;javadoc&#34;) } fun getMyPom(): Action&lt;in MavenPom&gt; { return Action&lt;MavenPom&gt; { name.set(&#34;Android Common Utils Lib&#34;) description.set(&#34;Android Common Utils Library For HJ&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) licenses { license { name.set(&#34;The Apache License, Version 2.0&#34;) url.set(&#34;http://www.apache.org/licenses/LICENSE-2.0.txt&#34;) } } developers { developer { id.set(&#34;hanlyjiang&#34;) name.set(&#34;Hanly Jiang&#34;) email.set(&#34;hanlyjiang@outlook.com&#34;) } } scm { connection.set(&#34;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&#34;) developerConnection.set(&#34;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) } } } afterEvaluate { publishing { publications { create&lt;MavenPublication&gt;(&#34;release&#34;) { from(components.getByName(&#34;release&#34;)) groupId = &#34;com.github.hanlyjiang&#34; artifactId = &#34;android_common_utils&#34; version = android.defaultConfig.versionName pom(getMyPom()) // 添加javadoc artifact(tasks.getByName(&#34;jarJavadoc&#34;) as Jar) // 添加source artifact(tasks.getByName(&#34;jarSource&#34;) as Jar) } } repositories { val ossrhCredentials = Action&lt;PasswordCredentials&gt; { username = properties[&#34;ossrhUsername&#34;].toString() password = properties[&#34;ossrhPassword&#34;].toString() } // sonar的仓库，地址根据项目的版本号来确定是snapshot还是正式仓库 maven { name = &#34;Sonartype&#34; val releasesRepoUrl = uri(&#34;https://oss.sonatype.org/service/local/staging/deploy/maven2&#34;) val snapshotsRepoUrl = uri(&#34;https://oss.sonatype.org/content/repositories/snapshots/&#34;) url = if (android.defaultConfig.versionName.toString().endsWith(&#34;SNAPSHOT&#34;)) snapshotsRepoUrl else releasesRepoUrl credentials(ossrhCredentials) // snapshot的地址： // https://oss.sonatype.org/content/repositories/snapshots/com/github/hanlyjiang/android_common_utils/ } // 项目本地的仓库 maven { name = &#34;ProjectLocal&#34; val releasesRepoUrl = uri(layout.buildDirectory.dir(&#34;repos/releases&#34;)) val snapshotsRepoUrl = uri(layout.buildDirectory.dir(&#34;repos/snapshots&#34;)) url = if (android.defaultConfig.versionName.toString().endsWith(&#34;SNAPSHOT&#34;)) snapshotsRepoUrl else releasesRepoUrl } } } signing { sign(publishing.publications.getByName(&#34;release&#34;)) } } 使用AndroidMavenPubPlugin简化后的配置： import org.gradle.api.publish.maven.MavenPom plugins { id(&#34;com.android.library&#34;) id(&#34;signing&#34;) `maven-publish` // 引入我们本地仓库中的gradle插件 id(&#34;com.github.hanlyjiang.android_maven_pub&#34;) version (&#34;0.0.5&#34;) apply (false) } android { defaultConfig { versionName(&#34;1.0.1-SNAPSHOT&#34;) } } dependencies { // } apply(plugin = &#34;com.github.hanlyjiang.android_maven_pub&#34;) configure&lt;io.hanlyjiang.gradle.android.AndroidMavenPubPluginExtension&gt; { groupId.set(&#34;com.github.hanlyjiang&#34;) artifactId.set(&#34;android-common-utils&#34;) projectLocalRepoPath.set(&#34;local-maven-repo&#34;) mavenPomAction.set(Action&lt;MavenPom&gt; { name.set(&#34;Android Common Utils Lib&#34;) description.set(&#34;Android Common Utils Library For HJ&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) properties.set( mapOf( &#34;myProp&#34; to &#34;value&#34;, &#34;prop.with.dots&#34; to &#34;anotherValue&#34; ) ) licenses { license { name.set(&#34;The Apache License, Version 2.0&#34;) url.set(&#34;http://www.apache.org/licenses/LICENSE-2.0.txt&#34;) } } developers { developer { id.set(&#34;hanlyjiang&#34;) name.set(&#34;Hanly Jiang&#34;) email.set(&#34;hanlyjiang@outlook.com&#34;) } } scm { connection.set(&#34;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&#34;) developerConnection.set(&#34;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) } }) } 使用步骤 引入插件 在需要使用的模块的build脚本中，引入我们的插件，同时引入 maven-publish 插件和 signing 插件。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-06-01 10:26:00 +0000 UTC'>June 1, 2021</span>&nbsp;·&nbsp;<span>5 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to 简化Android库上传到Maven仓库的gradle配置" href="http://localhost:1313/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Android bindService流程
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>本文分析bindService的流程，首先我们通过阅读源码获取一个主线的调用地图，然后提出若干问题，包括：APP进程中如何获取AMS，AMS如何启动APP-service的进程，AMS中如何获取ApplicationThread并与之通讯，Service的启动及绑定流程；然后再通过源码一一解答。最后再整体总结梳理一下整体流程；
+预先知识：
+Binder通信机制 整体分析与总结 主线地图与问题提出 我们从bindService一路跟踪，初步绘制了如下的调用序列图，我们可以以下面的图作为一个主线地图，避免走失，然后根据具体问题进行细节分析。
+从上图中，我们提出如下问题：
+bindServiceCommon到IActivityManager的调用中，是如何获取到ActivityManagerService的？ AMS中如何获取ApplicationThread并与之通讯？ ApplicatoinThread的用途？ApplicationThread运行的进程是哪个？ 进程如何启动-即AMS如何创建APP:server进程？ Service如何启动？ Service如何绑定？ ServiceConnection 的回调方法何时使用？ 问题解答汇总 我们将相关问题的结论提前到此小节，便于后续从比较抽象的层次上来进行复习及预览；
+APP进程如何获取AMS？ APP进程中通过 ServiceManager.getService(Context.ACTIVITY_SERVICE) 获取的ActivityManagerService的客户端操作代理对象（Proxy）。
+该对象位于APP进程中，可以使用此对象（通过Binder进程间通信）来要求（位于system_process中）的ActivityManagerService进行对应的服务操作；
+AMS如何获取ApplicationThread？ APP进程在binderSerice时，将自己进程中的ApplicationThread取出，通过Binder机制传递给AMS进程，传递过程中会转换成一个Proxy对象；
+ActivityManager.getService().bindIsolatedService( mMainThread.getApplicationThread(), getActivityToken(), service, service.resolveTypeIfNeeded(getContentResolver()), sd, flags, instanceName, getOpPackageName(), user.getIdentifier()); 服务如何绑定？服务如何启动？进程如何启动？ 进程启动： 在独立的进程中运行的服务需要先将进程启动，进程的启动是通过APP进程，请求系统进程中的AMS来执行，通过AMS的startProcessLocked方法启动进程，最终会通过socket接口请求zygote进程来启动进程。 在启动时会指定java的入口点为ActivityThread，即进程启动后会运行ActivityThread的main方法； AMS中会记录启动的进程记录（ProcessRecord），对应的ProcessRecord中会记录进程对应的ApplicationThread； 服务启动： 服务的启动需要请求AMS来完成 启动时需要先通过PID获取要启动到的ProcessRecord，通过ProcessRecord中记录的ApplicationThread来与对应的进程通信。 AMS通过ApplicationThread来通知对应的进程创建服务，ApplicationThread作为通信的接口，实际上最终会通过ActivityThread的handleCreateService来创建服务的实例； 服务创建时，是在APP进程（可能是独立的进程）中进行的，需要通过类加载器加载对应的Service的类，同时构造相应的上下文及资源对象等，然后构造对应的实例； 服务创建成功后，会记录到ActivityThread的一个Service列表中，以便后续管理； 服务绑定： 服务绑定先在APP进程中，通过AMS代理对象发起请求，由AMS来安排bind（ActivityManagerService.bindIsolatedService）; 然后具体的绑定动作还是通过IApplicationThread安排到APP的Service进程中，最终执行的ActivityThread#handleBindService; 在APP进程中，会将Service取出，然后调用其onBind方法来获取IBinder远程操作对象； 之后再通过AMS调用 ActivityManagerService#publishService 来通知绑定成功的通知到对应的需要绑定服务的APP进程； publishService中会调用ServiceConnection的onServiceConnected方法通知服务连接了； 整体流程总结 待补充
+详细分析解答问题 APP进程中如何获取AMS？ 说明：
+第一次先逐项查看各个小节，最后再看此处的总结；
+后续直接查看总结来快速获取结论；
+==总结：==
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-12 10:18:50 +0000 UTC'>April 12, 2021</span>&nbsp;·&nbsp;<span>22 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Android bindService流程" href="http://localhost:1313/posts/androidbindservice-liu-cheng-fen-xi/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">搭建Android源码工作环境
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> 简单介绍系统架构、编译环境的搭建 简单介绍利用 AndroidStudio 调试 system_process 进程的方法及编译更新部分系统模块的方式 Android系统架构 Android 系统架构如下两图所示：
+应用框架。应用框架最常被应用开发者使用。很多此类 API 都可以直接映射到底层 HAL 接口，并可提供与实现驱动程序相关的实用信息。 Binder IPC。Binder 进程间通信 (IPC) 机制允许应用框架跨越进程边界并调用 Android 系统服务代码，这使得高级框架 API 能与 Android 系统服务进行交互。在应用框架级别，开发者无法看到此类通信的过程，但一切似乎都在“按部就班地运行”。 系统服务。系统服务是专注于特定功能的模块化组件，例如窗口管理器、搜索服务或通知管理器。应用框架 API 所提供的功能可与系统服务通信，以访问底层硬件。Android 包含两组服务：“系统”（诸如窗口管理器和通知管理器之类的服务）和“媒体”（与播放和录制媒体相关的服务）。 硬件抽象层 (HAL)。HAL 可定义一个标准接口以供硬件供应商实现，这可让 Android 忽略较低级别的驱动程序实现。借助 HAL，硬件开发者可以顺利实现相关功能，而不会影响或更改更高级别的系统。HAL 实现会被封装成模块，并会由 Android 系统适时地加载。如需了解详情，请参阅硬件抽象层 (HAL)。 Linux 内核。开发设备驱动程序与开发典型的 Linux 设备驱动程序类似。Android 使用的 Linux 内核版本包含一些特殊的补充功能，例如低内存终止守护进程（一个内存管理系统，可更主动地保留内存）、唤醒锁定（一种 PowerManager 系统服务）、Binder IPC 驱动程序，以及对移动嵌入式平台来说非常重要的其他功能。这些补充功能主要用于增强系统功能，不会影响驱动程序开发。可以使用任意版本的内核，只要它支持所需功能（如 Binder 驱动程序）即可。不过建议使用 Android 内核的最新版本。如需了解详情，请参阅构建内核一文。 以上部分内容来源： https://source.android.google.cn/devices/architecture?hl=zh-cn
+搭建开发环境并编译源码 本节将讨论 Android 11 源码下载和编译的方法、AndroidStudio开发环境的搭建方法，及 system_process 进程的调试方法等相关知识。
+选择分支 可参考 source.android.google.cn 的文档 代号、标记和 Build 号 ，可以看到当前最新的版本及标记如下：
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-08 10:18:50 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>6 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to 搭建Android源码工作环境" href="http://localhost:1313/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">[译]Android开发所需要的矩阵知识
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>翻译国外文章，该文章介绍了Android开发中矩阵相关的数学知识，包括矩阵是什么？矩阵加法及乘法运算，2x2矩阵的变换，最后演进为Android中使用的3x3矩阵。文中图片及动图比较多，相对好懂。
+原文链接：https://i-rant.arnaudbos.com/matrices-for-developers/#technical-challenge
+几周前，我在一个android-user-group频道上，有人问一个关于Android的Matrix.postScale（sx，sy，px，py）方法及其工作原理的问题，因为它“难以掌握”。
+在2016年初，我在一个Android应用程序上完成了一个自由项目，在其中我必须实现一个令人兴奋的功能：
+用户在购买并下载了岩壁的数字地形后，必须能够查看由以下部分组成的岩壁：
+悬崖的照片， 包含爬坡路线叠加层的SVG文件。 用户必须具有随意平移和缩放的能力，并且必须具有“跟随”图片的路线层。
+APP截图1 APP截图2 APP截图3 技术挑战 为了让攀爬路线的图层能够跟随用户的手势操作，我发现我不得不重载Android ImageView，在Canvas上绘制并处理手指手势。 作为一名优秀的工程师：我搜索了Stack Overflow😅 我发现需要android.graphics.Matrix类进行2D转换。
+这个类的问题在于，从方法名称来说，你能很清楚的了解它的作用，但是如果没有没有一定的数学背景知识，你很难了解它背后是怎么实现的，比方说下面是matrix的某个方法的API文档说明：
+boolean postScale (float sx, float sy, float px, float py)
+Postconcats the matrix with the specified scale. M’ = S(sx, sy, px, py) * M
+从文档看起它可以通过某些参数缩放某些东西，并通过某种乘法来完成它。不过我还是有很多疑问：
+它到底是做什么的？ 缩放矩阵？ 那是什么意思，我想缩放画布… 我应该使用preScale还是postScale？ 当我从从手势检测代码获取输入参数，然后进入尝试和错误的无限循环时，是否需要尝试同时使用这两个方法？ 因此，在开发过程的这一刻，我意识到在完成大学的头两年后，我需要重新学习很多年前关于矩阵的基本数学技能。
+在搜寻网络资料时，我发现了很多不错的资源，并且能够再次学习一些数学知识。 通过将我的理解应用到Java和Android中的代码，它还帮助我解决了2D转换问题。 因此，考虑到我在上面提到的频道上进行的讨论，似乎我不是唯一一个在矩阵中苦苦挣扎的人，试图弄明白这一点，并在Android的Matrix类和方法中使用这些技能，所以我想我会写一篇文章，第一部分是关于矩阵的，第二部分“使用Android和Java进行2D转换”是关于如何在Java和Android上将关于矩阵的知识应用到代码中。
+Matrix是什么？ 我在可汗学院（Khan Academy）上发现一门关于矩阵的很好的代数课程。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-02-08 10:38:22 +0000 UTC'>February 8, 2021</span>&nbsp;·&nbsp;<span>23 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to [译]Android开发所需要的矩阵知识" href="http://localhost:1313/posts/android%E5%BC%80%E5%8F%91%E6%89%80%E9%9C%80%E8%A6%81%E7%9A%84%E7%9F%A9%E9%98%B5%E7%9F%A5%E8%AF%86/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">编写一个Android Gradle插件
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>gradle有三种编写插件的方式，我们这里使用在项目中的buildSrc模块中编写插件的方式，自定义了一个应用于Android项目的根据flavor过滤so库的gradle插件；
+概述 自定义gradle插件有如下三种方式（🔗链接）：
+在buildscript中直接编写； 在buildSrc项目中编写插件代码； 在独立的项目中编写插件代码； 这里我们将使用buildSrc方式实现一个gradle插件。
+新建 buildSrc module gradle会在项目中寻找名称为buildSrc模块，将其加载为gradle的插件代码目录。所以我们直接通过菜单新建一个名为 buildSrc 的java/kotlin模块。
+然后在build.gradle中添加相关的plugin(java-gradle-plugin)及依赖：
+plugins { id &#39;java&#39; id &#39;java-gradle-plugin&#39; id &#34;org.jetbrains.kotlin.jvm&#34; version &#39;1.3.61&#39; } group = &#34;io.github.hanlyjiang.gradle&#34; version = &#34;0.0.2&#34; dependencies { testCompile group: &#39;junit&#39;, name: &#39;junit&#39;, version: &#39;4.12&#39; // 添加android相关build tools依赖，以便使用 android gradle 相关的API compile &#39;com.android.tools.build:gradle:3.2.0&#39; } 编写插件 需求简介 **应用场景：**我们的产品中集成了两种VPN SDK，但是具体到每个项目上面，都只会落地到具体的一种，这个时候需要排除对应的SDK的SO库以减小APP包大小，不同的地区的打包配置通过flavor来进行区分配置，即每个地区会对应不同的flavor；
+需求提取： 这里实际上我们需要的是能够根据flavor，在打包过程中移除指定的so文件；
+实现思路：
+flavor配置方式：在flavor中配置一个buildConfigField字段，用于指定我们的flavor需要的配置
+// 配置VPN类型 buildConfigField &#34;String&#34;, &#34;VPN_TYPE&#34;, &#34;\&#34;$VpnType.SANG_FOR\&#34;&#34; 插件配置：我们使用一个so_exclude配置来指定具体的exclude规则，包含两个字段。
+buildConfigFieldKey 用于指定之前在flavor中定义的配置； configMap 为一个配置表，指定上面的字段可取的值，即对应值应该exclude的so文件列表； so_exclude { /** * 使用VPN_TYPE 来设置so过滤的规则 */ buildConfigFieldKey = &#34;VPN_TYPE&#34; configMap = [ (VpnType.H3C_iNode.name()): [ // 新华三过滤深信服的 &#34;lib/armeabi-v7a/libauth_forward.so&#34;, &#34;lib/armeabi-v7a/libhttps.so&#34;, &#34;lib/armeabi-v7a/libpkcs12cert.so&#34;, &#34;lib/armeabi-v7a/libsvpnservice.so&#34; ], (VpnType.SANG_FOR.name()) : [ // 深信服过滤新华三的 &#34;lib/armeabi-v7a/libies.so&#34;, ], (VpnType.NONE.name()) : [ // 如配置成 NONE，则过滤掉所有的VPN的 // 深信服的so &#34;lib/armeabi-v7a/libauth_forward.so&#34;, &#34;lib/armeabi-v7a/libhttps.so&#34;, &#34;lib/armeabi-v7a/libpkcs12cert.so&#34;, &#34;lib/armeabi-v7a/libsvpnservice.so&#34;, // inode的so &#34;lib/armeabi-v7a/libies.so&#34;, ] ] } 定义插件及使用插件简介 插件需要继承 org.gradle.api.Plugin，可在Plugin对构建流程进行自定义（如：创建任务，定义任务关系，修改已有任务动作等） 插件如果需要能够读取一些配置，可通过 project.extensions.create 来从build.gradle中提取 如需在自己的 android代码模块中使用插件，通过 apply plugin: 插件类引用即可 插件实现 插件的实现如下： 读取 so_exclude 配置，存储到 extension（类型为 FlavorSoExcludePluginExtension ）中 读取 android 的配置，找到 AppExtension类型的配置，也就是应用了 apply application 的模块的配置，我们的项目中只有一个app模块应用此配置-即我们的apk模块； 遍历所有变体，获取对应变体的 so_exclude 对应的配置字段的值，建立flavor到配置值的映射表； 修改 packageApplication 任务，让其在执行之前即删除待打包临时目录中的对应so文件； package io.github.hanlyjiang.gradle.plugin.soexclude import com.android.build.gradle.AppExtension import com.android.build.gradle.api.ApkVariantOutput import org.gradle.api.Plugin import org.gradle.api.Project import org.gradle.api.logging.LogLevel import org.gradle.api.logging.Logger import org.gradle.api.logging.Logging import java.io.File /** * so 插件的 gradle 配置实体 */ open class FlavorSoExcludePluginExtension { /** * so 过滤配置表 */ var configMap: Map&lt;String, List&lt;String&gt;&gt;? = null /** * 配置字段的名称 */ var buildConfigFieldKey: String = FlavorSoExcludePlugin.DEFAULT_CONFIG_KEY } /** * flavor so 打包过滤配置 * * ## 用法说明： * * 1. 在build.gradle 中引入插件 &lt;code&gt;apply plugin: FlavorSoExcludePlugin&lt;/code&gt;; * 2. 添加 so_exclude 配置段： * * ```groovy * so_exclude { * buildConfigFieldKey = &#34;VPN_TYPE&#34; * configMap = [ * (VpnType.H3C_iNode.name()): [ * &#34;lib/armeabi-v7a/libauth_forward.so&#34;, * &#34;lib/armeabi-v7a/libhttps.so&#34;, * &#34;lib/armeabi-v7a/libpkcs12cert.so&#34;, * &#34;lib/armeabi-v7a/libsvpnservice.so&#34; * ], * (VpnType.SANG_FOR.name()) : [ * &#34;lib/armeabi-v7a/libies.so&#34;, * ], * (VpnType.NONE.name()) : [ * // 深信服的so * &#34;lib/armeabi-v7a/libauth_forward.so&#34;, * &#34;lib/armeabi-v7a/libhttps.so&#34;, * &#34;lib/armeabi-v7a/libpkcs12cert.so&#34;, * &#34;lib/armeabi-v7a/libsvpnservice.so&#34;, * // inode的so * &#34;lib/armeabi-v7a/libies.so&#34;, * ] * ] *} *``` * 3. 在flavor的配置中添加 buildConfigField 配置，如： * ``` * buildConfigField &#34;String&#34;, &#34;VPN_TYPE&#34;, &#34;\&#34;$VpnType.H3C_iNode\&#34;&#34; * ``` * 其中字段的名称为 之前 so_exclude 中配置的 `buildConfigFieldKey` 字段，对应的值为 configMap 中的 key ，如此配置后，打包时就会将configMap对应key中的so列表过滤掉 * @author hanlyjiang 09/20/20 2:42 PM * @version 1.0 */ class FlavorSoExcludePlugin : Plugin&lt;Project&gt; { companion object { const val PLUGIN_NAME = &#34;FlavorSoExcludePlugin&#34; const val DEFAULT_CONFIG_KEY = &#34;SO_EXCLUDE&#34; const val DEBUG = false private val logger: Logger = Logging.getLogger(FlavorSoExcludePlugin::class.java) fun logInfo(msg: String) { logger.log(LogLevel.LIFECYCLE, &#34;&lt;- $PLUGIN_NAME: $msg -&gt;&#34;) } fun logDebug(msg: String) { if (DEBUG) { logInfo(msg) } } } lateinit var extension: FlavorSoExcludePluginExtension override fun apply(project: Project) { // 添加自己的配置 extension = project.extensions.create(&#34;so_exclude&#34;, FlavorSoExcludePluginExtension::class.java) // 创建一个打印配置的任务，用于定义 val task = project.tasks.create(&#34;printConfig&#34;) task.group = &#34;soExclude-plugin&#34; task.doLast { logInfo(&#34;-- 配置字段：buildConfigFieldKey= &#34; &#43; extension.buildConfigFieldKey) logInfo(&#34;-- 当前配置：&#34;) extension.configMap?.run { this.keys.forEach { key -&gt; logInfo(&#34;-- config: $key -- &#34;) get(key)?.forEach { logInfo(&#34;values: $it&#34;) } logInfo(&#34;------------------ &#34;) } } } // 获取android的配置 val androidExtensions = project.extensions.getByName(&#34;android&#34;) logInfo(&#34;&#34; &#43; androidExtensions.javaClass) if (androidExtensions is AppExtension) { // applicatoin类型的就进行任务处理 initPackageOptions(project, androidExtensions) } } /** * vpn 配置 */ private var configMap: MutableMap&lt;String, String&gt; = HashMap() private fun initPackageOptions(project: Project, android: AppExtension) { project.afterEvaluate { android.productFlavors.all { val flavorName = it.name logDebug(&#34;--productFlavors : ${it.name}&#34;) var soExcludeConfig = &#34;&#34; it.buildConfigFields[extension.buildConfigFieldKey]?.run { soExcludeConfig = value.replace(&#34;\&#34;&#34;, &#34;&#34;) } logDebug(&#34;--productFlavors : $flavorName, soExcludeConfig: $soExcludeConfig&#34;) configMap[flavorName] = soExcludeConfig } android.applicationVariants.all { variant -&gt; logDebug(&#34;app variant flavorName: ${variant.flavorName}&#34;) val flavorName = variant.flavorName val configKey = configMap[flavorName] variant.outputs.forEach { output -&gt; if (output is ApkVariantOutput) { //核心逻辑：修改packageApplication任务，在生成apk包之前，删除打包临时目录中的so文件即可避免打包so到apk中 output.packageApplication.doFirst { output.packageApplication.jniFolders.all { // jniFolder 目录为最后打包apk时，用于存放so文件的临时目录 logInfo(&#34;变体名称: ${variant.flavorName} , configKey: ${configKey}, jniFolders: &#34; &#43; it.absoluteFile) handleExclude(it, configKey); true } } } } } } } private fun handleExclude(jniFolder: File?, configKey: String?) { extension.configMap?.run { val soExcludeList: List&lt;String&gt;? = get(configKey) soExcludeList?.run { deleteJniSoFiles(jniFolder, *(soExcludeList.toTypedArray())) } } } private fun deleteJniSoFiles(jniFolder: File?, vararg files: String) { for (item in files) { val file = File(jniFolder, item) if (file.exists()) { val deleteResult = file.delete() logInfo(&#34;删除so文件 $item : ${if (deleteResult) &#34;成功&#34; else &#34;失败&#34;}&#34;) } } } } 使用枚举进行配置 我们在buildSrc中定义一个枚举类，用于约定可以配置的值，即可以清晰定义配置值避免配置时直接写字符串容易出错，又可以支持代码自动补全方便配置。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2020-09-20 10:18:50 +0000 UTC'>September 20, 2020</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to 编写一个Android Gradle插件" href="http://localhost:1313/posts/%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AAandroid-gradle%E6%8F%92%E4%BB%B6/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Android-WebView中Java同JS的交互
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Android提供的几种JS同Java交互的方式介绍，通过一个实例介绍通过evaluateJavascript调用JS方法。
+Android提供的js原生交互API Android调用 JS 代码： 通过WebView的 loadUrl() 通过WebView的 evaluateJavascript() 方法 Android调用 JS 代码主要使用 第二种方法。
+JS 调用 Android 代码： 通过 WebView 的 addJavascriptInterface() 进行对象映射 通过WebChromeClient的 onJsAlert() 、onJsConfirm()、onJsPrompt() 方法回调拦截JS对话框alert()、confirm()、prompt() 消息 通过WebViewClient的shouldOverrideUrlLoading() 方法回调拦截 url 第2和第3中方式能力有限，所以主要是第一种。
+官方示例代码：
+addJavaScriptInterface 注入原生对象到JS &#43; 原生通过loadUrl 调用JS代码
+class JsObject { @JavascriptInterface public String toString() { return &#34;injectedObject&#34;; } } webview.getSettings().setJavaScriptEnabled(true); // 注入Java对象到 JavaScript ，JS中可以通过 injectedObject 来调用原生代码 webView.addJavascriptInterface(new JsObject(), &#34;injectedObject&#34;); webView.loadData(&#34;&#34;, &#34;text/html&#34;, null); webView.loadUrl(&#34;javascript:alert(injectedObject.toString())&#34;); 注意：
+Android 4.2（JELLY BEAN）及更高版本中只有被JavascriptInterface注解的public方法才可以在js中调用； Android4.2以下设备上，所有public方法都可以被js访问（包括继承的） 通过addJavaScriptInterface加入对象 ： 必须在注入对象之前启用JavaScript，并且注入的对象直到下次页面重新加载才会出现在JavaScript中。 应用实例：Java同Vue交互 我们需要在页面加载完毕之后更新数据，此时需要通过Java侧调用JS的方法来将数据传递给JS通知其更新； 首先，我们需要在JS侧定义一个接收数据的方法，为了能让Java侧能方便找到，我们将方法定义到window对象上。 然后在WebView中页面加载完毕（onPageFinished）后，调用 webView.evaluateJavascript 来调用此JS方法；
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2020-03-20 10:18:50 +0000 UTC'>March 20, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Android-WebView中Java同JS的交互" href="http://localhost:1313/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/"></a>
+</article>
+<footer class="page-footer">
+  <nav class="pagination">
+    <a class="next" href="http://localhost:1313/tags/android/page/2/">Next&nbsp;&nbsp;»
+    </a>
+  </nav>
+</footer>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">清水池塘</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

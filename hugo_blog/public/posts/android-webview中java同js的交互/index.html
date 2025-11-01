@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Android-WebView中Java同JS的交互 | 清水池塘</title>
+<meta name="keywords" content="Android, WebView, Vue">
+<meta name="description" content="Android提供的几种JS同Java交互的方式介绍，通过一个实例介绍通过evaluateJavascript调用JS方法。
+Android提供的js原生交互API
+Android调用 JS 代码：
+
+通过WebView的 loadUrl()
+通过WebView的 evaluateJavascript() 方法
+
+Android调用 JS 代码主要使用 第二种方法。
+JS 调用 Android 代码：
+
+通过 WebView 的 addJavascriptInterface() 进行对象映射
+通过WebChromeClient的 onJsAlert() 、onJsConfirm()、onJsPrompt() 方法回调拦截JS对话框alert()、confirm()、prompt() 消息
+通过WebViewClient的shouldOverrideUrlLoading() 方法回调拦截 url
+
+第2和第3中方式能力有限，所以主要是第一种。
+官方示例代码：
+addJavaScriptInterface 注入原生对象到JS &#43; 原生通过loadUrl 调用JS代码
+class JsObject {
+@JavascriptInterface
+public String toString() { return &#34;injectedObject&#34;; }
+}
+webview.getSettings().setJavaScriptEnabled(true);
+// 注入Java对象到 JavaScript ，JS中可以通过 injectedObject 来调用原生代码
+webView.addJavascriptInterface(new JsObject(), &#34;injectedObject&#34;);
+webView.loadData(&#34;&#34;, &#34;text/html&#34;, null);
+webView.loadUrl(&#34;javascript:alert(injectedObject.toString())&#34;);
+
+注意：
+
+Android 4.2（JELLY BEAN）及更高版本中只有被JavascriptInterface注解的public方法才可以在js中调用； Android4.2以下设备上，所有public方法都可以被js访问（包括继承的）
+通过addJavaScriptInterface加入对象 ： 必须在注入对象之前启用JavaScript，并且注入的对象直到下次页面重新加载才会出现在JavaScript中。
+
+
+应用实例：Java同Vue交互
+我们需要在页面加载完毕之后更新数据，此时需要通过Java侧调用JS的方法来将数据传递给JS通知其更新；
+首先，我们需要在JS侧定义一个接收数据的方法，为了能让Java侧能方便找到，我们将方法定义到window对象上。
+然后在WebView中页面加载完毕（onPageFinished）后，调用 webView.evaluateJavascript 来调用此JS方法；">
+<meta name="author" content="野生莲藕">
+<link rel="canonical" href="http://localhost:1313/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="清水池塘 (Alt + H)">清水池塘</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Android-WebView中Java同JS的交互
+    </h1>
+    <div class="post-meta"><span title='2020-03-20 10:18:50 +0000 UTC'>March 20, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>野生莲藕</span>
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#android%e6%8f%90%e4%be%9b%e7%9a%84js%e5%8e%9f%e7%94%9f%e4%ba%a4%e4%ba%92api" aria-label="Android提供的js原生交互API">Android提供的js原生交互API</a><ul>
+                        
+                <li>
+                    <a href="#android%e8%b0%83%e7%94%a8-js-%e4%bb%a3%e7%a0%81" aria-label="Android调用 JS 代码：">Android调用 JS 代码：</a></li>
+                <li>
+                    <a href="#js-%e8%b0%83%e7%94%a8-android-%e4%bb%a3%e7%a0%81" aria-label="JS 调用 Android 代码：">JS 调用 Android 代码：</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e5%ba%94%e7%94%a8%e5%ae%9e%e4%be%8bjava%e5%90%8cvue%e4%ba%a4%e4%ba%92" aria-label="应用实例：Java同Vue交互">应用实例：Java同Vue交互</a><ul>
+                        
+                <li>
+                    <a href="#js%e4%be%a7%e6%96%b9%e6%b3%95%e6%b3%a8%e5%86%8c" aria-label="JS侧方法注册">JS侧方法注册</a></li>
+                <li>
+                    <a href="#%e5%8e%9f%e7%94%9f%e4%be%a7%e8%b0%83%e7%94%a8js" aria-label="原生侧调用JS">原生侧调用JS</a><ul>
+                        
+                <li>
+                    <a href="#%e5%ae%9a%e4%b9%89%e6%96%b9%e6%b3%95-%e8%b0%83%e7%94%a8js%e6%96%b9%e6%b3%95%e6%9b%b4%e6%96%b0%e6%95%b0%e6%8d%ae" aria-label="定义方法-调用JS方法更新数据">定义方法-调用JS方法更新数据</a></li></ul>
+                </li>
+                <li>
+                    <a href="#webview%e5%88%9d%e5%a7%8b%e5%8c%96%e5%b9%b6%e8%b0%83%e7%94%a8js%e6%96%b9%e6%b3%95" aria-label="WebView初始化并调用JS方法">WebView初始化并调用JS方法</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>Android提供的几种JS同Java交互的方式介绍，通过一个实例介绍通过<code>evaluateJavascript</code>调用JS方法。</p>
+<h2 id="android提供的js原生交互api">Android提供的js原生交互API<a hidden class="anchor" aria-hidden="true" href="#android提供的js原生交互api">#</a></h2>
+<h3 id="android调用-js-代码">Android调用 JS 代码：<a hidden class="anchor" aria-hidden="true" href="#android调用-js-代码">#</a></h3>
+<ol>
+<li>通过WebView的 <strong>loadUrl()</strong></li>
+<li>通过WebView的 <strong>evaluateJavascript()</strong> 方法</li>
+</ol>
+<p>Android调用 JS 代码主要使用 第二种方法。</p>
+<h3 id="js-调用-android-代码">JS 调用 Android 代码：<a hidden class="anchor" aria-hidden="true" href="#js-调用-android-代码">#</a></h3>
+<ol>
+<li><strong>通过 WebView 的 addJavascriptInterface() 进行对象映射</strong></li>
+<li>通过<strong>WebChromeClient</strong>的 <strong>onJsAlert</strong>() 、<strong>onJsConfirm</strong>()、<strong>onJsPrompt</strong>() 方法回调拦截JS对话框<strong>alert</strong>()、<strong>confirm</strong>()、<strong>prompt</strong>() 消息</li>
+<li>通过<strong>WebViewClient</strong>的<strong>shouldOverrideUrlLoading()</strong> 方法回调拦截 url</li>
+</ol>
+<p>第2和第3中方式能力有限，所以主要是第一种。</p>
+<p><strong>官方示例代码：</strong></p>
+<p>addJavaScriptInterface 注入原生对象到JS + 原生通过loadUrl 调用JS代码</p>
+<pre tabindex="0"><code>class JsObject {
+@JavascriptInterface
+public String toString() { return &#34;injectedObject&#34;; }
+}
+webview.getSettings().setJavaScriptEnabled(true);
+// 注入Java对象到 JavaScript ，JS中可以通过 injectedObject 来调用原生代码
+webView.addJavascriptInterface(new JsObject(), &#34;injectedObject&#34;);
+webView.loadData(&#34;&#34;, &#34;text/html&#34;, null);
+webView.loadUrl(&#34;javascript:alert(injectedObject.toString())&#34;);
+</code></pre><blockquote>
+<p><strong>注意：</strong></p>
+<ol>
+<li>Android 4.2（JELLY BEAN）及更高版本中只有被<em>JavascriptInterface</em>注解的public方法才可以在js中调用； Android4.2以下设备上，所有public方法都可以被js访问（包括继承的）</li>
+<li>通过<em>addJavaScriptInterface</em>加入对象 ： 必须在注入对象之前启用JavaScript，并且注入的对象直到下次页面重新加载才会出现在JavaScript中。</li>
+</ol>
+</blockquote>
+<h2 id="应用实例java同vue交互">应用实例：Java同Vue交互<a hidden class="anchor" aria-hidden="true" href="#应用实例java同vue交互">#</a></h2>
+<p>我们需要在页面加载完毕之后更新数据，此时需要通过Java侧调用JS的方法来将数据传递给JS通知其更新；
+首先，我们需要在JS侧定义一个接收数据的方法，为了能让Java侧能方便找到，我们将方法定义到window对象上。
+然后在WebView中页面加载完毕（onPageFinished）后，调用 <code>webView.evaluateJavascript</code> 来调用此JS方法；</p>
+<h3 id="js侧方法注册">JS侧方法注册<a hidden class="anchor" aria-hidden="true" href="#js侧方法注册">#</a></h3>
+<blockquote>
+<p>注意：</p>
+<ol>
+<li>需要添加到全局对象，这样才能Android侧才能调用；</li>
+<li>由于示例中只有一个app组件，所以直接使用 vm.$children[0] 获取vue组件</li>
+<li>component.$data 获取组件的数据，并赋值，赋值后view会自动变化；</li>
+</ol>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// main.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">/* eslint-disable no-new */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">vm</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Vue</span>({
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">el</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;#app&#39;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">components</span><span style="color:#f92672">:</span> {<span style="color:#a6e22e">App</span>},
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">template</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;&lt;App/&gt;&#39;</span>,
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 定义hnUpdateData方法到window全局对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>window.<span style="color:#a6e22e">hnApp</span> <span style="color:#f92672">=</span> {};
+</span></span><span style="display:flex;"><span>window.<span style="color:#a6e22e">hnApp</span>.<span style="color:#a6e22e">hnUpdateData</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">data</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">data</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Android</span>.<span style="color:#a6e22e">alert</span>(<span style="color:#e6db74">&#34;数据格式不正确&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">data</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">jsonData</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">data</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">component</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">$children</span>[<span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">$data</span>.<span style="color:#a6e22e">header</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">jsonData</span>.<span style="color:#a6e22e">header</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">jsonData</span>.<span style="color:#a6e22e">header</span> <span style="color:#f92672">:</span> {};
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">$data</span>.<span style="color:#a6e22e">jjb</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">jsonData</span>.<span style="color:#a6e22e">jjb</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">jsonData</span>.<span style="color:#a6e22e">jjb</span> <span style="color:#f92672">:</span> {};
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">$data</span>.<span style="color:#a6e22e">events</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">jsonData</span>.<span style="color:#a6e22e">events</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">jsonData</span>.<span style="color:#a6e22e">events</span> <span style="color:#f92672">:</span> [];
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><h3 id="原生侧调用js">原生侧调用JS<a hidden class="anchor" aria-hidden="true" href="#原生侧调用js">#</a></h3>
+<h4 id="定义方法-调用js方法更新数据">定义方法-调用JS方法更新数据<a hidden class="anchor" aria-hidden="true" href="#定义方法-调用js方法更新数据">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">tryUpdateWebData</span>(JSdata jSdata) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (isPageLoaded <span style="color:#f92672">&amp;&amp;</span> isDataReady) {
+</span></span><span style="display:flex;"><span>            String methodName <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;window.hnApp.hnUpdateData&#34;</span>;
+</span></span><span style="display:flex;"><span>            String params <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Gson().<span style="color:#a6e22e">toJson</span>(jSdata);
+</span></span><span style="display:flex;"><span>            String js <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;javascript:&#34;</span> <span style="color:#f92672">+</span> methodName <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;(&#34;</span> <span style="color:#f92672">+</span> JSONObject.<span style="color:#a6e22e">quote</span>(params) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;)&#34;</span>;
+</span></span><span style="display:flex;"><span>            webView.<span style="color:#a6e22e">evaluateJavascript</span>(js, <span style="color:#66d9ef">new</span> ValueCallback<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">&gt;</span>() {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onReceiveValue</span>(String value) {
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><blockquote>
+<p>注意：</p>
+<ol>
+<li>js执行代码：javascript:methodName(参数)</li>
+<li>参数处理：JSONObject.quote(params) 对象转json字符串</li>
+</ol>
+</blockquote>
+<h3 id="webview初始化并调用js方法">WebView初始化并调用JS方法<a hidden class="anchor" aria-hidden="true" href="#webview初始化并调用js方法">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">initView</span>() {
+</span></span><span style="display:flex;"><span>        webView <span style="color:#f92672">=</span> (WebView) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">web_view</span>);
+</span></span><span style="display:flex;"><span>        webView.<span style="color:#a6e22e">setWebViewClient</span>(webViewClient);
+</span></span><span style="display:flex;"><span>        webView.<span style="color:#a6e22e">setWebChromeClient</span>(webChromeClient);
+</span></span><span style="display:flex;"><span>        webView.<span style="color:#a6e22e">setDownloadListener</span>(downloadListener);
+</span></span><span style="display:flex;"><span>        webView.<span style="color:#a6e22e">requestFocusFromTouch</span>();
+</span></span><span style="display:flex;"><span>        WebSettings settings <span style="color:#f92672">=</span> webView.<span style="color:#a6e22e">getSettings</span>();    <span style="color:#75715e">// Copy From Cordova SystemWebViewEngine.java</span>
+</span></span><span style="display:flex;"><span>        settings.<span style="color:#a6e22e">setJavaScriptEnabled</span>(<span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>        settings.<span style="color:#a6e22e">setJavaScriptCanOpenWindowsAutomatically</span>(<span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>        settings.<span style="color:#a6e22e">setJavaScriptEnabled</span>(<span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> WebViewClient webViewClient <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> WebViewClient() {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">@RequiresApi</span>(api <span style="color:#f92672">=</span> Build.<span style="color:#a6e22e">VERSION_CODES</span>.<span style="color:#a6e22e">LOLLIPOP</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">shouldOverrideUrlLoading</span>(WebView view, WebResourceRequest request) {
+</span></span><span style="display:flex;"><span>            view.<span style="color:#a6e22e">loadUrl</span>(request.<span style="color:#a6e22e">getUrl</span>().<span style="color:#a6e22e">toString</span>());
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">super</span>.<span style="color:#a6e22e">shouldOverrideUrlLoading</span>(view, request);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onPageFinished</span>(WebView view, String url) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">super</span>.<span style="color:#a6e22e">onPageFinished</span>(view, url);
+</span></span><span style="display:flex;"><span>            isPageLoaded <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 调用js更新数据</span>
+</span></span><span style="display:flex;"><span>            tryUpdateWebData(mData);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> WebChromeClient webChromeClient <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> WebChromeClient() {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// ...   </span>
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/android/">Android</a></li>
+      <li><a href="http://localhost:1313/tags/webview/">WebView</a></li>
+      <li><a href="http://localhost:1313/tags/vue/">Vue</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">清水池塘</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

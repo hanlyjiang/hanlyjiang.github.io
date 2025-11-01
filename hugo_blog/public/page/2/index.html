@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head>
+	<meta name="generator" content="Hugo 0.152.2"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>清水池塘</title>
+
+<meta name="description" content="">
+<meta name="author" content="野生莲藕">
+<link rel="canonical" href="http://localhost:1313/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/index.xml" title="rss">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body class="list" id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="清水池塘 (Alt + H)">清水池塘</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">简化Android库上传到Maven仓库的gradle配置
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>配置 android 上传到 maven 中心仓库，发现配置的代码有点多，而且如果有多个库模块需要上传，则需要复制粘贴不少重复的配置代码，于是编写了一个 gradle 插件用于简化提取这个配置过程；
+插件用途及效果 本插件用于简化Android库上传到Maven中心仓库的配置，避免每个project的gradle中都放置一份重复较多的配置；
+插件有如下功能：
+简化 maven-publish 插件的配置流程； 添加上传到Maven中心仓库的 publish 任务； 支持配置上传时是否包含 javadoc 及源码； 直接使用maven-publish插件的配置： import org.gradle.api.publish.maven.MavenPom plugins { id(&#34;com.android.library&#34;) id(&#34;signing&#34;) `maven-publish` } android { defaultConfig { versionName(&#34;1.0.0-SNAPSHOT&#34;) } } dependencies { // } tasks.register(&#34;javadoc&#34;, Javadoc::class.java) { group = &#34;publishing&#34; dependsOn(&#34;assemble&#34;) source = android.sourceSets[&#34;main&#34;].java.getSourceFiles() classpath &#43;= project.files(android.bootClasspath &#43; File.pathSeparator) if (JavaVersion.current().isJava9Compatible) { (options as StandardJavadocDocletOptions).addBooleanOption(&#34;html5&#34;, true) } android.libraryVariants.forEach { libraryVariant -&gt; classpath &#43;= libraryVariant.javaCompileProvider.get().classpath } options.apply { encoding(&#34;UTF-8&#34;) charset(&#34;UTF-8&#34;) isFailOnError = false (this as StandardJavadocDocletOptions).apply { // addStringOption(&#34;Xdoclint:none&#34;) links?.add(&#34;https://developer.android.google.cn/reference/&#34;) links?.add(&#34;http://docs.oracle.com/javase/8/docs/api/&#34;) } } } tasks.register(&#34;jarSource&#34;, Jar::class.java) { group = &#34;publishing&#34; from(android.sourceSets[&#34;main&#34;].java.srcDirs) archiveClassifier.set(&#34;sources&#34;) } tasks.register(&#34;jarJavadoc&#34;, Jar::class.java) { group = &#34;publishing&#34; dependsOn(&#34;javadoc&#34;) val javadoc: Javadoc = tasks.getByName(&#34;javadoc&#34;) as Javadoc from(javadoc.destinationDir) archiveClassifier.set(&#34;javadoc&#34;) } fun getMyPom(): Action&lt;in MavenPom&gt; { return Action&lt;MavenPom&gt; { name.set(&#34;Android Common Utils Lib&#34;) description.set(&#34;Android Common Utils Library For HJ&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) licenses { license { name.set(&#34;The Apache License, Version 2.0&#34;) url.set(&#34;http://www.apache.org/licenses/LICENSE-2.0.txt&#34;) } } developers { developer { id.set(&#34;hanlyjiang&#34;) name.set(&#34;Hanly Jiang&#34;) email.set(&#34;hanlyjiang@outlook.com&#34;) } } scm { connection.set(&#34;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&#34;) developerConnection.set(&#34;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) } } } afterEvaluate { publishing { publications { create&lt;MavenPublication&gt;(&#34;release&#34;) { from(components.getByName(&#34;release&#34;)) groupId = &#34;com.github.hanlyjiang&#34; artifactId = &#34;android_common_utils&#34; version = android.defaultConfig.versionName pom(getMyPom()) // 添加javadoc artifact(tasks.getByName(&#34;jarJavadoc&#34;) as Jar) // 添加source artifact(tasks.getByName(&#34;jarSource&#34;) as Jar) } } repositories { val ossrhCredentials = Action&lt;PasswordCredentials&gt; { username = properties[&#34;ossrhUsername&#34;].toString() password = properties[&#34;ossrhPassword&#34;].toString() } // sonar的仓库，地址根据项目的版本号来确定是snapshot还是正式仓库 maven { name = &#34;Sonartype&#34; val releasesRepoUrl = uri(&#34;https://oss.sonatype.org/service/local/staging/deploy/maven2&#34;) val snapshotsRepoUrl = uri(&#34;https://oss.sonatype.org/content/repositories/snapshots/&#34;) url = if (android.defaultConfig.versionName.toString().endsWith(&#34;SNAPSHOT&#34;)) snapshotsRepoUrl else releasesRepoUrl credentials(ossrhCredentials) // snapshot的地址： // https://oss.sonatype.org/content/repositories/snapshots/com/github/hanlyjiang/android_common_utils/ } // 项目本地的仓库 maven { name = &#34;ProjectLocal&#34; val releasesRepoUrl = uri(layout.buildDirectory.dir(&#34;repos/releases&#34;)) val snapshotsRepoUrl = uri(layout.buildDirectory.dir(&#34;repos/snapshots&#34;)) url = if (android.defaultConfig.versionName.toString().endsWith(&#34;SNAPSHOT&#34;)) snapshotsRepoUrl else releasesRepoUrl } } } signing { sign(publishing.publications.getByName(&#34;release&#34;)) } } 使用AndroidMavenPubPlugin简化后的配置： import org.gradle.api.publish.maven.MavenPom plugins { id(&#34;com.android.library&#34;) id(&#34;signing&#34;) `maven-publish` // 引入我们本地仓库中的gradle插件 id(&#34;com.github.hanlyjiang.android_maven_pub&#34;) version (&#34;0.0.5&#34;) apply (false) } android { defaultConfig { versionName(&#34;1.0.1-SNAPSHOT&#34;) } } dependencies { // } apply(plugin = &#34;com.github.hanlyjiang.android_maven_pub&#34;) configure&lt;io.hanlyjiang.gradle.android.AndroidMavenPubPluginExtension&gt; { groupId.set(&#34;com.github.hanlyjiang&#34;) artifactId.set(&#34;android-common-utils&#34;) projectLocalRepoPath.set(&#34;local-maven-repo&#34;) mavenPomAction.set(Action&lt;MavenPom&gt; { name.set(&#34;Android Common Utils Lib&#34;) description.set(&#34;Android Common Utils Library For HJ&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) properties.set( mapOf( &#34;myProp&#34; to &#34;value&#34;, &#34;prop.with.dots&#34; to &#34;anotherValue&#34; ) ) licenses { license { name.set(&#34;The Apache License, Version 2.0&#34;) url.set(&#34;http://www.apache.org/licenses/LICENSE-2.0.txt&#34;) } } developers { developer { id.set(&#34;hanlyjiang&#34;) name.set(&#34;Hanly Jiang&#34;) email.set(&#34;hanlyjiang@outlook.com&#34;) } } scm { connection.set(&#34;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&#34;) developerConnection.set(&#34;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) } }) } 使用步骤 引入插件 在需要使用的模块的build脚本中，引入我们的插件，同时引入 maven-publish 插件和 signing 插件。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-06-01 10:26:00 +0000 UTC'>June 1, 2021</span>&nbsp;·&nbsp;<span>5 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to 简化Android库上传到Maven仓库的gradle配置" href="http://localhost:1313/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Gitlab持续集成与持续部署-实例
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>本篇文章介绍如何基于Gitlab来配置一个服务集群的自动构建与部署更新，其中服务的更新基于docker来完成，本文主要关注如何完成部署操作，及如何完成gitlab上ci的配置；在完成单一的服务自动部署更新后，我们通过gitlab的include及trigger机制来简化统一部署流程；
+前言 我们需要实现服务的自动构建后的自动更新部署，注意这里我们只需要能做到更新部署的服务即可，服务的初次部署属于低频操作，且和服务器环境相关，需要手动来完成；我们这里假定机器上已经部署好了服务；
+单一项目的自动部署的示例 这里我们首先以一个springboot的服务作为示例，实现了整个自动打包及部署更新的流程；
+效果 提交之后，自动构建jar，并打包docker镜像
+构建完成后，通过gitlab界面，可以触发部署，完成后可以访问对应的环境（详见下方说明）
+触发部署步骤的方式 触发部署有多个入口：
+流水线列表尾部的手动作业按钮
+流水线列表中，点击对应的手动任务，在弹出框中点击运行
+流水线详情中，点击触发部署
+对应手动作业的详情中，点击“触发此手动操作”
+作业列表中对应的部署作业的尾部
+访问部署环境的方式 部署之后，会在gitlab中生成一个环境，在环境的相关界面即可访问对应的服务地址
+在项目的“运维-环境”入口可以查看所有的环境 点击对应环境尾部的链接图标即可访问
+也可以在对应的环境详情页面，点击“查看部署” （注意在部署作业的详情中也可以找到对应环境的入口哦-触发部署步骤的方式的第四中方式的附图）
+实现方式 我们有三个任务：
+构建jar 构建docker镜像 部署服务（通过swarm） 其中构建jar和构建docker镜像是自动完成的，部署步骤则需要手动通过gitlab界面进行触发；
+gitlab-ci.yml 配置 variables: # 配置仓库环境 DOCKER_REGISTRY: zh-registry.colorless.com.cn DOCKER_NAMESPACE: colorless DEPLOY_PATH: /Wksp/colorlessWork/colorless-deploy/deploy/ # 配置镜像服务名 SERVICE_NAME: graphql-token stages: - test - build - build_image - deploy # 引入代码检查任务 #include: # local: ci/gitlab-ci-sonar.yml build:jar: # 部分模块若不使用1.8编译会报错 image: maven:3.6.3-jdk-8 stage: build script: - mvn package - mkdir _archiver - cp target/*.jar _archiver/ - ls -lh _archiver/ artifacts: name: &#34;dist-$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA&#34; paths: - _archiver/*.jar # 生成的归档包比较大，我们只保留短时间 expire_in: 1 hours tags: - common-build only: - master - web build:docker: stage: build_image script: # 登录公司的Harbor，注意必须在环境变量配置 HARBOR_PWD - echo $HARBOR_PWD | docker login --username=$HARBOR_USER $DOCKER_REGISTRY --password-stdin # 定义镜像TAG - IMAGE_NAME=$DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$CI_COMMIT_SHORT_SHA - echo &#34;Docker build options $DOCKER_OPTIONS, set DOCKER_OPTIONS to --no-cache force rebuild all stage&#34; - cp _archiver/*.jar docker/ # build镜像 - JAR_FILE=`ls docker/ | grep -E *.jar` - echo $JAR_FILE - docker build $DOCKER_OPTIONS --build-arg JAR_FILE=$JAR_FILE -t $IMAGE_NAME ./docker/ # 推送镜像 - docker push $IMAGE_NAME - echo &#34;镜像构建完成：$IMAGE_NAME&#34; tags: - docker only: - master - web deploy: stage: deploy script: - echo $HARBOR_PWD | docker login --username=$HARBOR_USER $DOCKER_REGISTRY --password-stdin - cd $DEPLOY_PATH - source deploy.sh - update_service $DOCKER_NAMESPACE $SERVICE_NAME $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$CI_COMMIT_SHORT_SHA environment: name: test_env_deploy url: $APP_URL/ when: manual only: - branches - web tags: - deploy_graphql 注意 deploy 任务中定义的环境配置：
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-05-26 16:12:17 +0000 UTC'>May 26, 2021</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Gitlab持续集成与持续部署-实例" href="http://localhost:1313/posts/gitlab-chi-xu-ji-cheng-yu-chi-xu-bu-shu-shi-li/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Docker数据目录(/var/lib/docker)迁移
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>本文介绍如何安全的迁移Docker的数据目录/var/lib/docker
+为什么要迁移 虚拟机创建时，一般分配一个比较小的系统盘，然后挂载一个大容量的数据盘，docker默认情况下数据存储在系统盘(/var/lib/docker)目录，时间一久，会占满系统盘。 迁移步骤 首先需要停止docker服务 systemctl stop docker 通过命令df -h 先去看下磁盘大概的情况，找一个大的空间 创建docker的新目录，我这边找了data, 所以我这边的新目录地址是 /data/docker/lib/ mkdir -p /data/docker/lib 注：参数-p 确保目录名称存在，如果目录不存在的就新创建一个。
+开始迁移 rsync -avzP /var/lib/docker /data/docker/lib/ 先确认是否安装了rsync.
+参数解释：
+-a，归档模式，表示递归传输并保持文件属性。 -v，显示rsync过程中详细信息。可以使用&#34;-vvvv&#34;获取更详细信息。 -P，显示文件传输的进度信息。(实际上&#34;-P&#34;=&#34;–partial –progress&#34;，其中的&#34;–progress&#34;才是显示进度信息的)。 -z, 传输时进行压缩提高效率。 指定新的docker目录 vim /lib/systemd/system/docker.service 在ExecStart加入:
+--graph=/data/docker/lib/docker 重启docker sudo systemctl daemon-reload sudo systemctl restart docker sudo systemctl enable docker # 运行docker自动启动，这里可以不执行 启动之后确认docker 没有问题，确认之前的容器和镜像都还在，然后删除旧的/var/lib/docker/目录 参考文章： https://www.cnblogs.com/insist-forever/p/11739207.html </p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-21 16:51:40 +0000 UTC'>April 21, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Docker数据目录(/var/lib/docker)迁移" href="http://localhost:1313/posts/docker%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E8%BF%81%E7%A7%BB/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">IDEA使用技巧之导航
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>介绍IDEA及AndroidStudio中的导航技巧，包括文件导航，代码元素（类，方法）导航，文本导航等，还有书签等的使用方法；提高编写代码及阅读代码的效率；
+插入符导航 后退：==⌘[== 前进：==⌘]== 最后编辑点： ==⇧⌘⌫== 定位到当前的结束括号： ==Ctrl&#43;M== 或者 ==↑== , ==↓== 查看光标所在位置所属的元素：==⌃⇧Q== （注意看下图的左上角显示了当前的类） 移动到当前开始括号对应的闭合括号： ==Ctrl &#43; M== 在代码块之间导航： ==⌥⇧⌘[== ==⌥⇧⌘]== 移动插入符 移动到下一个或者上一个单词： ==⌥→==，==⌥←==
+移动到下个段落：（下个方法）
+使用 ==Shift&#43;Command&#43;A== 调出Action搜索弹框； 搜索 Move Caret Forward a Paragraph 或 Move Caret Backward a Paragraph 查找最近的位置 使用 ==⇧⌘E== 可以打开最近位置的弹窗，使用上下健进行导航
+在打开此弹窗时，再次使用 ==⇧⌘E== 可以选中 Show Changed Only
+可直接输入以搜索代码片段
+删除记录： 按 ==Delete== 或者 ==⌫==
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-21 14:12:14 +0000 UTC'>April 21, 2021</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to IDEA使用技巧之导航" href="http://localhost:1313/posts/idea-shi-yong-ji-qiao-zhi-dao-hang/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Android bindService流程
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>本文分析bindService的流程，首先我们通过阅读源码获取一个主线的调用地图，然后提出若干问题，包括：APP进程中如何获取AMS，AMS如何启动APP-service的进程，AMS中如何获取ApplicationThread并与之通讯，Service的启动及绑定流程；然后再通过源码一一解答。最后再整体总结梳理一下整体流程；
+预先知识：
+Binder通信机制 整体分析与总结 主线地图与问题提出 我们从bindService一路跟踪，初步绘制了如下的调用序列图，我们可以以下面的图作为一个主线地图，避免走失，然后根据具体问题进行细节分析。
+从上图中，我们提出如下问题：
+bindServiceCommon到IActivityManager的调用中，是如何获取到ActivityManagerService的？ AMS中如何获取ApplicationThread并与之通讯？ ApplicatoinThread的用途？ApplicationThread运行的进程是哪个？ 进程如何启动-即AMS如何创建APP:server进程？ Service如何启动？ Service如何绑定？ ServiceConnection 的回调方法何时使用？ 问题解答汇总 我们将相关问题的结论提前到此小节，便于后续从比较抽象的层次上来进行复习及预览；
+APP进程如何获取AMS？ APP进程中通过 ServiceManager.getService(Context.ACTIVITY_SERVICE) 获取的ActivityManagerService的客户端操作代理对象（Proxy）。
+该对象位于APP进程中，可以使用此对象（通过Binder进程间通信）来要求（位于system_process中）的ActivityManagerService进行对应的服务操作；
+AMS如何获取ApplicationThread？ APP进程在binderSerice时，将自己进程中的ApplicationThread取出，通过Binder机制传递给AMS进程，传递过程中会转换成一个Proxy对象；
+ActivityManager.getService().bindIsolatedService( mMainThread.getApplicationThread(), getActivityToken(), service, service.resolveTypeIfNeeded(getContentResolver()), sd, flags, instanceName, getOpPackageName(), user.getIdentifier()); 服务如何绑定？服务如何启动？进程如何启动？ 进程启动： 在独立的进程中运行的服务需要先将进程启动，进程的启动是通过APP进程，请求系统进程中的AMS来执行，通过AMS的startProcessLocked方法启动进程，最终会通过socket接口请求zygote进程来启动进程。 在启动时会指定java的入口点为ActivityThread，即进程启动后会运行ActivityThread的main方法； AMS中会记录启动的进程记录（ProcessRecord），对应的ProcessRecord中会记录进程对应的ApplicationThread； 服务启动： 服务的启动需要请求AMS来完成 启动时需要先通过PID获取要启动到的ProcessRecord，通过ProcessRecord中记录的ApplicationThread来与对应的进程通信。 AMS通过ApplicationThread来通知对应的进程创建服务，ApplicationThread作为通信的接口，实际上最终会通过ActivityThread的handleCreateService来创建服务的实例； 服务创建时，是在APP进程（可能是独立的进程）中进行的，需要通过类加载器加载对应的Service的类，同时构造相应的上下文及资源对象等，然后构造对应的实例； 服务创建成功后，会记录到ActivityThread的一个Service列表中，以便后续管理； 服务绑定： 服务绑定先在APP进程中，通过AMS代理对象发起请求，由AMS来安排bind（ActivityManagerService.bindIsolatedService）; 然后具体的绑定动作还是通过IApplicationThread安排到APP的Service进程中，最终执行的ActivityThread#handleBindService; 在APP进程中，会将Service取出，然后调用其onBind方法来获取IBinder远程操作对象； 之后再通过AMS调用 ActivityManagerService#publishService 来通知绑定成功的通知到对应的需要绑定服务的APP进程； publishService中会调用ServiceConnection的onServiceConnected方法通知服务连接了； 整体流程总结 待补充
+详细分析解答问题 APP进程中如何获取AMS？ 说明：
+第一次先逐项查看各个小节，最后再看此处的总结；
+后续直接查看总结来快速获取结论；
+==总结：==
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-12 10:18:50 +0000 UTC'>April 12, 2021</span>&nbsp;·&nbsp;<span>22 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Android bindService流程" href="http://localhost:1313/posts/androidbindservice-liu-cheng-fen-xi/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">工作交接-Gitlab相关
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Gitlab&amp;持续集成&amp;效率工具 graph Gitlab[Gitlab&amp;持续集成&amp;效率工具] Gitlab --&gt; 服务维护 Gitlab --&gt; Gitlab&amp;Sonar使用问题解答与解决 Gitlab --&gt; CI[基于Gitlab CI的自动化流程] 服务维护 目前有3个服务器需要维护，上面有部署若干服务：
+graph 205[172.17.0.205] 206[172.17.0.206] 208[172.17.0.208] 205 --&gt; gitlab 206 --&gt; sonarqube 206 --&gt; mattermost 208 --&gt; yapi 208 --&gt; confluence 208 --&gt; gitlab-runner 208 --&gt; 移动中心H5站点 服务的连接方式及部署的服务可以参考文档： 《Gitlab-SonarQube服务信息汇总》， 该文档记录了服务器的ssh远程的方式，各服务的部署启动方式，部署的目录；
+以下简要说明各个服务的维护方式及可能遇到的问题。
+gitlab（205） 部署目录： /data/gitlab/ teambition的thoughts上记录了部分使用过程中可能遇到的问题，可以访问tb的此文档目录 进行查阅；
+这里我们重点强调下gitlab的重启可能遇到的问题，使用过程中发现，在gitlab重启时，如果有gitlab-runner不停的向gitlab服务器发送请求，则有可能导致gitlab无法启动，故我们采取gitlab启动过程中不连接网络，启动完成后再连接网络的方式启动gitlab详细可参考tb上的此文章。
+sonarqube （206） 部署目录：/data/_data/sonarqube 一般只需要启动及重启，可参考 《Gitlab-SonarQube服务信息汇总》 的相关小节，主要命令如下：
+# 部署 docker stack deploy -c docker-compose.yml sonarqube # 停止 docker stack down sonarqube # 重新启动 docker stack up sonarqube -c docker-compose.yml yapi（208） 部署目录： /data/yapi-docker-deploy # 启动命令 docker stack deploy -c docker-compose.yml yapi # 其他维护命令基于yapi的stack执行即可 mattermost相关（206） mattermost相关请联系段春先
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-08 16:48:23 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to 工作交接-Gitlab相关" href="http://localhost:1313/posts/%E5%B7%A5%E4%BD%9C%E4%BA%A4%E6%8E%A5-gitlab%E7%9B%B8%E5%85%B3/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">移动中心交接
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>GeoPanel-移动中心-代码同步 一般步骤 克隆gitlab代码到本地 添加github远程仓库到本地仓库（下面取名为github）
+可使用 git remote -v show 命令确认当前说注册的远程仓库列表
+使用 fetch 命令获取github远程仓库代码到本地
+通过 git fetch github 获取github远程仓库上的所有分支及tag
+如我们需要获取指定分支（如：alpha分支），也可以通过 git fetch github alpha:refs/remotes/github/alpha 只拉取指定分支；
+如果我们需要获取指定tag（如 v1.3.3），可通过 git fetch github v1.3.3:refs/tagg/v1.3.3 只拉取指定tag；
+将上一步拉取的github远程仓库上的分支/tag推送到gitlab远程仓库的指定分支；
+推送分支到gitlab：git push origin refs/remotes/github/alpha:alpha
+推送tag到github：git push origin refs/tags/v1.3.3:v1.3.3
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-08 16:46:15 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to 移动中心交接" href="http://localhost:1313/posts/%E7%A7%BB%E5%8A%A8%E4%B8%AD%E5%BF%83%E4%BA%A4%E6%8E%A5/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">GeoPanel容器化
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>GeoPanel容器化概览 此部分主要工作是对GeoPanel中的各服务进行容器化改造，即制作docker镜像，然后对服务进行容器化编排，简化部署步骤，适应更加智能化的部署需求。
+主要包括如下部分：
+graph GeoPanel[GeoPanel容器化] GeoPanel --&gt; pgspider打包 GeoPanel --&gt; hasura-块数据API引擎 GeoPanel --&gt; 公司自研镜像打包 GeoPanel --&gt; 服务编排 由于pgspider和hasura的打包过程比较复杂，所以需要这里单独列出； 公司自研服务的镜像打包主要是springboot的镜像打包，流程比较简单，所以合并起来说； 服务编排中描述当前已经容器化的服务及使用swarm编排的情况； GeoPanel容器化-ARM镜像构建-通用步骤 这里的国产化主要指：制作arm版本的镜像
+前言 移动中心所有服务全部基于docker，故此文档实际叙述的是基于docker部署的服务在arm平台上迁移的基本路径；
+ARM 版本Docker安装； 构建所有镜像的ARM版本； 测试机信息 CPU FT-1500A 4核 arm64 内存 8G OS 麒麟V10 包管理器 apt ARM机器上安装Docker Docker官方文档
+Docker支持如下系统及架构
+国产系统依据安装包的格式选择对应的参考系统即可，如麒麟v10基于ubuntu，可以按官方文档- Install Docker Engine on Ubuntu进行安装。
+查看系统信息 geostar@geostar-ft1500a:~$ cat /proc/version Linux version 4.4.131-20200515.kylin.desktop-generic (YHKYLIN-OS@Kylin) (gcc version 5.5.0 20171010 (Ubuntu/Linaro 5.5.0-12ubuntu1~16.04) ) #kylin SMP Fri May 15 11:29:10 CST 2020 这里可以看到系统是基于ubuntu16.04 的，所以我们添加ubuntu16.04（xenial）的软件源
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-08 15:10:06 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>34 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to GeoPanel容器化" href="http://localhost:1313/posts/geopanel-rong-qi-hua/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">搭建Android源码工作环境
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> 简单介绍系统架构、编译环境的搭建 简单介绍利用 AndroidStudio 调试 system_process 进程的方法及编译更新部分系统模块的方式 Android系统架构 Android 系统架构如下两图所示：
+应用框架。应用框架最常被应用开发者使用。很多此类 API 都可以直接映射到底层 HAL 接口，并可提供与实现驱动程序相关的实用信息。 Binder IPC。Binder 进程间通信 (IPC) 机制允许应用框架跨越进程边界并调用 Android 系统服务代码，这使得高级框架 API 能与 Android 系统服务进行交互。在应用框架级别，开发者无法看到此类通信的过程，但一切似乎都在“按部就班地运行”。 系统服务。系统服务是专注于特定功能的模块化组件，例如窗口管理器、搜索服务或通知管理器。应用框架 API 所提供的功能可与系统服务通信，以访问底层硬件。Android 包含两组服务：“系统”（诸如窗口管理器和通知管理器之类的服务）和“媒体”（与播放和录制媒体相关的服务）。 硬件抽象层 (HAL)。HAL 可定义一个标准接口以供硬件供应商实现，这可让 Android 忽略较低级别的驱动程序实现。借助 HAL，硬件开发者可以顺利实现相关功能，而不会影响或更改更高级别的系统。HAL 实现会被封装成模块，并会由 Android 系统适时地加载。如需了解详情，请参阅硬件抽象层 (HAL)。 Linux 内核。开发设备驱动程序与开发典型的 Linux 设备驱动程序类似。Android 使用的 Linux 内核版本包含一些特殊的补充功能，例如低内存终止守护进程（一个内存管理系统，可更主动地保留内存）、唤醒锁定（一种 PowerManager 系统服务）、Binder IPC 驱动程序，以及对移动嵌入式平台来说非常重要的其他功能。这些补充功能主要用于增强系统功能，不会影响驱动程序开发。可以使用任意版本的内核，只要它支持所需功能（如 Binder 驱动程序）即可。不过建议使用 Android 内核的最新版本。如需了解详情，请参阅构建内核一文。 以上部分内容来源： https://source.android.google.cn/devices/architecture?hl=zh-cn
+搭建开发环境并编译源码 本节将讨论 Android 11 源码下载和编译的方法、AndroidStudio开发环境的搭建方法，及 system_process 进程的调试方法等相关知识。
+选择分支 可参考 source.android.google.cn 的文档 代号、标记和 Build 号 ，可以看到当前最新的版本及标记如下：
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-08 10:18:50 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>6 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to 搭建Android源码工作环境" href="http://localhost:1313/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Gridea使用小记
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>仅记录使用Gridea过程中解决的问题及解决方式
+下载安装并使用 访问这里（https://gridea.dev/）下载安装并使用，不赘述。
+远程同步github配置 关于建立仓库，获取token，配置pages赘述，仅记录额外的配置。
+在Gridea的工作目录的根目录中新建一个 .gitignore 文件，输入如下内容：
+.DS_Store */.DS_Store # 自己的本地草稿 typora 远程同步时，会将此文件放入到output目录下，然后将output目录推送到github上，为了避免将其中的某些文件推入到远程仓库，故可以通过此方式定义gitignore
+</p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-05 11:58:07 +0000 UTC'>April 5, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Gridea使用小记" href="http://localhost:1313/posts/gridea%E4%BD%BF%E7%94%A8%E5%B0%8F%E8%AE%B0/"></a>
+</article>
+<footer class="page-footer">
+  <nav class="pagination">
+    <a class="prev" href="http://localhost:1313/">
+      «&nbsp;Prev&nbsp;
+    </a>
+    <a class="next" href="http://localhost:1313/page/3/">Next&nbsp;&nbsp;»
+    </a>
+  </nav>
+</footer>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">清水池塘</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

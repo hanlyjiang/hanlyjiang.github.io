@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Docker数据目录(/var/lib/docker)迁移 | 清水池塘</title>
+<meta name="keywords" content="Docker">
+<meta name="description" content="本文介绍如何安全的迁移Docker的数据目录/var/lib/docker
+为什么要迁移
+
+虚拟机创建时，一般分配一个比较小的系统盘，然后挂载一个大容量的数据盘，docker默认情况下数据存储在系统盘(/var/lib/docker)目录，时间一久，会占满系统盘。
+
+迁移步骤
+
+首先需要停止docker服务
+
+systemctl stop docker
+
+通过命令df -h 先去看下磁盘大概的情况，找一个大的空间
+创建docker的新目录，我这边找了data, 所以我这边的新目录地址是 /data/docker/lib/
+
+
+
+mkdir -p /data/docker/lib
+
+注：参数-p 确保目录名称存在，如果目录不存在的就新创建一个。
+
+
+开始迁移
+
+rsync -avzP /var/lib/docker /data/docker/lib/
+
+先确认是否安装了rsync.
+
+参数解释：
+
+-a，归档模式，表示递归传输并保持文件属性。
+-v，显示rsync过程中详细信息。可以使用&quot;-vvvv&quot;获取更详细信息。
+-P，显示文件传输的进度信息。(实际上&quot;-P&quot;=&quot;&ndash;partial &ndash;progress&quot;，其中的&quot;&ndash;progress&quot;才是显示进度信息的)。
+-z,   传输时进行压缩提高效率。
+
+
+指定新的docker目录
+
+vim /lib/systemd/system/docker.service
+在ExecStart加入:
+ --graph=/data/docker/lib/docker
+
+重启docker
+
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo systemctl enable docker # 运行docker自动启动，这里可以不执行
+
+启动之后确认docker 没有问题，确认之前的容器和镜像都还在，然后删除旧的/var/lib/docker/目录
+
+参考文章：
+
+https://www.cnblogs.com/insist-forever/p/11739207.html
+">
+<meta name="author" content="野生莲藕">
+<link rel="canonical" href="http://localhost:1313/posts/docker%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E8%BF%81%E7%A7%BB/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/docker%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E8%BF%81%E7%A7%BB/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="清水池塘 (Alt + H)">清水池塘</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Docker数据目录(/var/lib/docker)迁移
+    </h1>
+    <div class="post-meta"><span title='2021-04-21 16:51:40 +0000 UTC'>April 21, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>野生莲藕</span>
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e8%a6%81%e8%bf%81%e7%a7%bb" aria-label="为什么要迁移">为什么要迁移</a></li>
+                <li>
+                    <a href="#%e8%bf%81%e7%a7%bb%e6%ad%a5%e9%aa%a4" aria-label="迁移步骤">迁移步骤</a></li>
+                <li>
+                    <a href="#%e5%8f%82%e8%80%83%e6%96%87%e7%ab%a0" aria-label="参考文章：">参考文章：</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>本文介绍如何安全的迁移Docker的数据目录/var/lib/docker</p>
+<h2 id="为什么要迁移">为什么要迁移<a hidden class="anchor" aria-hidden="true" href="#为什么要迁移">#</a></h2>
+<ul>
+<li>虚拟机创建时，一般分配一个比较小的系统盘，然后挂载一个大容量的数据盘，docker默认情况下数据存储在系统盘(/var/lib/docker)目录，时间一久，会占满系统盘。</li>
+</ul>
+<h2 id="迁移步骤">迁移步骤<a hidden class="anchor" aria-hidden="true" href="#迁移步骤">#</a></h2>
+<ol>
+<li><strong>首先需要停止docker服务</strong></li>
+</ol>
+<pre tabindex="0"><code>systemctl stop docker
+</code></pre><ol start="2">
+<li><strong>通过命令df -h 先去看下磁盘大概的情况，找一个大的空间</strong></li>
+<li><strong>创建docker的新目录，我这边找了data, 所以我这边的新目录地址是 /data/docker/lib/</strong></li>
+</ol>
+<pre tabindex="0"><code>
+
+mkdir -p /data/docker/lib
+</code></pre><blockquote>
+<p>注：参数-p 确保目录名称存在，如果目录不存在的就新创建一个。</p>
+</blockquote>
+<ol start="4">
+<li><strong>开始迁移</strong></li>
+</ol>
+<pre tabindex="0"><code>rsync -avzP /var/lib/docker /data/docker/lib/
+</code></pre><blockquote>
+<p>先确认是否安装了rsync.</p>
+</blockquote>
+<p>参数解释：</p>
+<ul>
+<li>-a，归档模式，表示递归传输并保持文件属性。</li>
+<li>-v，显示rsync过程中详细信息。可以使用&quot;-vvvv&quot;获取更详细信息。</li>
+<li>-P，显示文件传输的进度信息。(实际上&quot;-P&quot;=&quot;&ndash;partial &ndash;progress&quot;，其中的&quot;&ndash;progress&quot;才是显示进度信息的)。</li>
+<li>-z,   传输时进行压缩提高效率。</li>
+</ul>
+<ol start="5">
+<li><strong>指定新的docker目录</strong></li>
+</ol>
+<pre tabindex="0"><code>vim /lib/systemd/system/docker.service
+</code></pre><p>在ExecStart加入:</p>
+<pre tabindex="0"><code> --graph=/data/docker/lib/docker
+</code></pre><ol start="6">
+<li><strong>重启docker</strong></li>
+</ol>
+<pre tabindex="0"><code>sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo systemctl enable docker # 运行docker自动启动，这里可以不执行
+</code></pre><ol start="7">
+<li><strong>启动之后确认docker 没有问题，确认之前的容器和镜像都还在，然后删除旧的/var/lib/docker/目录</strong></li>
+</ol>
+<h2 id="参考文章">参考文章：<a hidden class="anchor" aria-hidden="true" href="#参考文章">#</a></h2>
+<ul>
+<li><a href="https://www.cnblogs.com/insist-forever/p/11739207.html?fileGuid=qQhpHWDVq8HrH9kj">https://www.cnblogs.com/insist-forever/p/11739207.html</a></li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/docker/">Docker</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">清水池塘</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

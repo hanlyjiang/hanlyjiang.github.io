@@ -1,0 +1,11 @@
+baseURL = 'https://anlyjiang.github.io/'
+languageCode = 'zh-cn'
+title = '清水池塘'
+theme = "PaperMod"
+
+[params]
+  author = "野生莲藕"
+  defaultTheme = "auto"
+  showReadingTime = true
+  showToc = true
+  comments = false

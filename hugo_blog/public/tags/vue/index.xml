@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Vue on 清水池塘</title>
+    <link>http://localhost:1313/tags/vue/</link>
+    <description>Recent content in Vue on 清水池塘</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Fri, 20 Mar 2020 10:18:50 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/vue/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Android-WebView中Java同JS的交互</title>
+      <link>http://localhost:1313/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/</link>
+      <pubDate>Fri, 20 Mar 2020 10:18:50 +0000</pubDate>
+      <guid>http://localhost:1313/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/</guid>
+      <description>&lt;p&gt;Android提供的几种JS同Java交互的方式介绍，通过一个实例介绍通过&lt;code&gt;evaluateJavascript&lt;/code&gt;调用JS方法。&lt;/p&gt;
+&lt;h2 id=&#34;android提供的js原生交互api&#34;&gt;Android提供的js原生交互API&lt;/h2&gt;
+&lt;h3 id=&#34;android调用-js-代码&#34;&gt;Android调用 JS 代码：&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;通过WebView的 &lt;strong&gt;loadUrl()&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;通过WebView的 &lt;strong&gt;evaluateJavascript()&lt;/strong&gt; 方法&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Android调用 JS 代码主要使用 第二种方法。&lt;/p&gt;
+&lt;h3 id=&#34;js-调用-android-代码&#34;&gt;JS 调用 Android 代码：&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;通过 WebView 的 addJavascriptInterface() 进行对象映射&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;通过&lt;strong&gt;WebChromeClient&lt;/strong&gt;的 &lt;strong&gt;onJsAlert&lt;/strong&gt;() 、&lt;strong&gt;onJsConfirm&lt;/strong&gt;()、&lt;strong&gt;onJsPrompt&lt;/strong&gt;() 方法回调拦截JS对话框&lt;strong&gt;alert&lt;/strong&gt;()、&lt;strong&gt;confirm&lt;/strong&gt;()、&lt;strong&gt;prompt&lt;/strong&gt;() 消息&lt;/li&gt;
+&lt;li&gt;通过&lt;strong&gt;WebViewClient&lt;/strong&gt;的&lt;strong&gt;shouldOverrideUrlLoading()&lt;/strong&gt; 方法回调拦截 url&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;第2和第3中方式能力有限，所以主要是第一种。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;官方示例代码：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;addJavaScriptInterface 注入原生对象到JS + 原生通过loadUrl 调用JS代码&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;class JsObject {
+@JavascriptInterface
+public String toString() { return &amp;#34;injectedObject&amp;#34;; }
+}
+webview.getSettings().setJavaScriptEnabled(true);
+// 注入Java对象到 JavaScript ，JS中可以通过 injectedObject 来调用原生代码
+webView.addJavascriptInterface(new JsObject(), &amp;#34;injectedObject&amp;#34;);
+webView.loadData(&amp;#34;&amp;#34;, &amp;#34;text/html&amp;#34;, null);
+webView.loadUrl(&amp;#34;javascript:alert(injectedObject.toString())&amp;#34;);
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;注意：&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Android 4.2（JELLY BEAN）及更高版本中只有被&lt;em&gt;JavascriptInterface&lt;/em&gt;注解的public方法才可以在js中调用； Android4.2以下设备上，所有public方法都可以被js访问（包括继承的）&lt;/li&gt;
+&lt;li&gt;通过&lt;em&gt;addJavaScriptInterface&lt;/em&gt;加入对象 ： 必须在注入对象之前启用JavaScript，并且注入的对象直到下次页面重新加载才会出现在JavaScript中。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;应用实例java同vue交互&#34;&gt;应用实例：Java同Vue交互&lt;/h2&gt;
+&lt;p&gt;我们需要在页面加载完毕之后更新数据，此时需要通过Java侧调用JS的方法来将数据传递给JS通知其更新；
+首先，我们需要在JS侧定义一个接收数据的方法，为了能让Java侧能方便找到，我们将方法定义到window对象上。
+然后在WebView中页面加载完毕（onPageFinished）后，调用 &lt;code&gt;webView.evaluateJavascript&lt;/code&gt; 来调用此JS方法；&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

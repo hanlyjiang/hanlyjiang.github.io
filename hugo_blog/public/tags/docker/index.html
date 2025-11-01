@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Docker | 清水池塘</title>
+<meta name="keywords" content="">
+<meta name="description" content="">
+<meta name="author" content="野生莲藕">
+<link rel="canonical" href="http://localhost:1313/tags/docker/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/tags/docker/index.xml" title="rss">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/tags/docker/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body class="list" id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="清水池塘 (Alt + H)">清水池塘</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header">
+  <h1>
+    Docker
+  </h1>
+</header>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Docker数据目录(/var/lib/docker)迁移
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>本文介绍如何安全的迁移Docker的数据目录/var/lib/docker
+为什么要迁移 虚拟机创建时，一般分配一个比较小的系统盘，然后挂载一个大容量的数据盘，docker默认情况下数据存储在系统盘(/var/lib/docker)目录，时间一久，会占满系统盘。 迁移步骤 首先需要停止docker服务 systemctl stop docker 通过命令df -h 先去看下磁盘大概的情况，找一个大的空间 创建docker的新目录，我这边找了data, 所以我这边的新目录地址是 /data/docker/lib/ mkdir -p /data/docker/lib 注：参数-p 确保目录名称存在，如果目录不存在的就新创建一个。
+开始迁移 rsync -avzP /var/lib/docker /data/docker/lib/ 先确认是否安装了rsync.
+参数解释：
+-a，归档模式，表示递归传输并保持文件属性。 -v，显示rsync过程中详细信息。可以使用&#34;-vvvv&#34;获取更详细信息。 -P，显示文件传输的进度信息。(实际上&#34;-P&#34;=&#34;–partial –progress&#34;，其中的&#34;–progress&#34;才是显示进度信息的)。 -z, 传输时进行压缩提高效率。 指定新的docker目录 vim /lib/systemd/system/docker.service 在ExecStart加入:
+--graph=/data/docker/lib/docker 重启docker sudo systemctl daemon-reload sudo systemctl restart docker sudo systemctl enable docker # 运行docker自动启动，这里可以不执行 启动之后确认docker 没有问题，确认之前的容器和镜像都还在，然后删除旧的/var/lib/docker/目录 参考文章： https://www.cnblogs.com/insist-forever/p/11739207.html </p>
+  </div>
+  <footer class="entry-footer"><span title='2021-04-21 16:51:40 +0000 UTC'>April 21, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Docker数据目录(/var/lib/docker)迁移" href="http://localhost:1313/posts/docker%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E8%BF%81%E7%A7%BB/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Docker构建Arm架构镜像-通用步骤
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>介绍ARM版本的Docker镜像的构建，包括ARM机器上Docker的安装，在ARM机器上构建镜像，及在amd64机器上使用buildx交叉构建arm版本镜像。
+前言 现在很多地方都对服务的国产化适配有所要求，一般的国产化平台都提供arm版本的linux云环境供我们进行服务部署，因此需要构建arm版本的镜像。
+测试机信息 CPU FT-1500A 4核 arm64 内存 8G OS 麒麟V10 包管理器 apt ARM机器上安装Docker Docker官方文档
+Docker支持如下系统及架构
+国产系统依据安装包的格式选择对应的参考系统即可，如麒麟v10基于ubuntu，可以按官方文档- Install Docker Engine on Ubuntu进行安装。
+查看系统信息 geostar@geostar-ft1500a:~$ cat /proc/version Linux version 4.4.131-20200515.kylin.desktop-generic (YHKYLIN-OS@Kylin) (gcc version 5.5.0 20171010 (Ubuntu/Linaro 5.5.0-12ubuntu1~16.04) ) #kylin SMP Fri May 15 11:29:10 CST 2020 这里可以看到系统是基于ubuntu16.04 的，所以我们添加ubuntu16.04（xenial）的软件源
+添加软件源 参考： https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/ https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/
+添加清华镜像软件源（arm架构）
+# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释 deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial main restricted universe multiverse # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial main restricted universe multiverse deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-updates main restricted universe multiverse # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-updates main restricted universe multiverse deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-backports main restricted universe multiverse # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-backports main restricted universe multiverse deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-security main restricted universe multiverse # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-security main restricted universe multiverse 更新：
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2020-08-19 17:20:59 +0000 UTC'>August 19, 2020</span>&nbsp;·&nbsp;<span>3 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <a class="entry-link" aria-label="post link to Docker构建Arm架构镜像-通用步骤" href="http://localhost:1313/posts/docker-arm%E6%9E%B6%E6%9E%84%E9%95%9C%E5%83%8F%E6%9E%84%E5%BB%BA-%E9%80%9A%E7%94%A8%E6%AD%A5%E9%AA%A4/"></a>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">清水池塘</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>
