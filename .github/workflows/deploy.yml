@@ -15,7 +15,7 @@ jobs:
           hugo-version: "latest"
           extended: true
       - name: Build
-        run: cp POST/ hugo_blog/content/posts/ ; cd hugo_blog && hugo --minify
+        run: cp POSTS/ hugo_blog/content/posts/ ; cd hugo_blog && hugo --minify
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
