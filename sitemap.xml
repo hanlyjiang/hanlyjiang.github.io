@@ -2,13 +2,34 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://hanlyjiang.github.io/series/blog%E9%85%8D%E7%BD%AE%E7%B3%BB%E5%88%97/</loc>
+    <lastmod>2025-11-01T22:39:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/tags/hugo/</loc>
+    <lastmod>2025-11-01T22:39:13+08:00</lastmod>
+  </url><url>
     <loc>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</loc>
     <lastmod>2025-11-01T22:39:13+08:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/posts/</loc>
     <lastmod>2025-11-01T22:39:13+08:00</lastmod>
   </url><url>
+    <loc>https://hanlyjiang.github.io/tags/</loc>
+    <lastmod>2025-11-01T22:39:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/categories/</loc>
+    <lastmod>2025-11-01T22:39:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/categories/%E6%8A%80%E6%9C%AF/</loc>
+    <lastmod>2025-11-01T22:39:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/tags/%E6%95%99%E7%A8%8B/</loc>
+    <lastmod>2025-11-01T22:39:13+08:00</lastmod>
+  </url><url>
     <loc>https://hanlyjiang.github.io/</loc>
+    <lastmod>2025-11-01T22:39:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/series/</loc>
     <lastmod>2025-11-01T22:39:13+08:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/posts/popupwindow-ding-bu-duo-xing-xian-shi/</loc>
@@ -21,9 +42,6 @@
     <lastmod>2022-03-13T23:18:16+00:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/tags/android/</loc>
-    <lastmod>2022-03-13T23:18:16+00:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/tags/</loc>
     <lastmod>2022-03-13T23:18:16+00:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/tags/%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/</loc>
@@ -125,16 +143,8 @@
     <loc>https://hanlyjiang.github.io/posts/about/</loc>
     <lastmod>2019-01-25T19:09:48+00:00</lastmod>
   </url><url>
-    <loc>https://hanlyjiang.github.io/tags/gridea/</loc>
-    <lastmod>2018-12-12T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/posts/hello-gridea/</loc>
-    <lastmod>2018-12-12T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>https://hanlyjiang.github.io/posts/android-shi-jian-ji-shou-shi/</loc>
     <lastmod>2018-02-20T10:13:24+00:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/series/</loc>
   </url><url>
     <loc>https://hanlyjiang.github.io/archives/</loc>
   </url><url>

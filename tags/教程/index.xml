@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>教程 on 清水池塘</title>
+    <link>https://hanlyjiang.github.io/tags/%E6%95%99%E7%A8%8B/</link>
+    <description>Recent content in 教程 on 清水池塘</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Sat, 01 Nov 2025 22:39:13 +0800</lastBuildDate>
+    <atom:link href="https://hanlyjiang.github.io/tags/%E6%95%99%E7%A8%8B/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Hugo博客配置</title>
+      <link>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</link>
+      <pubDate>Sat, 01 Nov 2025 22:39:13 +0800</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</guid>
+      <description>&lt;h2 id=&#34;安装&#34;&gt;安装&lt;/h2&gt;
+&lt;p&gt;此部分省略，可直接使用 AI 提供；&lt;/p&gt;
+&lt;h2 id=&#34;配置中文&#34;&gt;配置中文&lt;/h2&gt;
+&lt;h3 id=&#34;基础配置&#34;&gt;基础配置&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 配置语言&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;languageCode&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;zh-cn&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;defaultContentLanguage&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;zh-cn&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 所有语言都放入独立子目录 false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;defaultContentLanguageInSubdir&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;注意: 这里的语言是 zh-cn，但是 PaperMod 主题的多语言配置中对应的是 zh.yaml 文件&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;多语言翻译文件&#34;&gt;多语言翻译文件&lt;/h3&gt;
+&lt;p&gt;经过基础配置，部分界面已经是中文了，但是像阅读时间这种还是英文的，这里将 PaperMod 的主题中的文件拷贝过来；&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-SHELL&#34; data-lang=&#34;SHELL&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cp themes/PaperMod/i18n/zh.yaml i18n/zh-cn.yaml
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hugo server -D
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;参考&#34;&gt;参考&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.rzlnb.top/&#34;&gt;https://blog.rzlnb.top/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.yuweihung.com/posts/2021/papermod-lang-zh/&#34;&gt;https://www.yuweihung.com/posts/2021/papermod-lang-zh/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/adityatelange/hugo-PaperMod?tab=readme-ov-file&#34;&gt;https://github.com/adityatelange/hugo-PaperMod?tab=readme-ov-file&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/adityatelange/hugo-PaperMod/wiki/Features&#34;&gt;https://github.com/adityatelange/hugo-PaperMod/wiki/Features&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
+  </channel>
+</rss>
