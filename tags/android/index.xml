@@ -1,915 +1,187 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Android on 清水池塘</title><link>https://hanlyjiang.github.io/tags/android/</link><description>Recent content in Android on 清水池塘</description><generator>Hugo -- 0.152.2</generator><language>zh-cn</language><lastBuildDate>Sat, 19 Mar 2022 22:29:12 +0000</lastBuildDate><atom:link href="https://hanlyjiang.github.io/tags/android/index.xml" rel="self" type="application/rss+xml"/><item><title>Android Jacoco覆盖率统计配置</title><link>https://hanlyjiang.github.io/posts/android-jacoco-gradle-config/</link><pubDate>Sat, 19 Mar 2022 22:29:12 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/android-jacoco-gradle-config/</guid><description>&lt;p&gt;Android Jacoco 覆盖率统计Gradle配置，包括生成本地单元测试报告，仪器单元测试报告，合并两种测试的报告，合并两种测试的执行数据并在AndroidStudio的编辑器中查看每一行的覆盖率情况。&lt;/p&gt;
-&lt;h2 id="如何让测试任务生成-jacoco-覆盖率统计数据"&gt;如何让测试任务生成 Jacoco 覆盖率统计数据？&lt;/h2&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Android on 清水池塘</title>
+    <link>https://hanlyjiang.github.io/tags/android/</link>
+    <description>Recent content in Android on 清水池塘</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Sat, 19 Mar 2022 22:29:12 +0000</lastBuildDate>
+    <atom:link href="https://hanlyjiang.github.io/tags/android/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Android Jacoco覆盖率统计配置</title>
+      <link>https://hanlyjiang.github.io/posts/android-jacoco-gradle-config/</link>
+      <pubDate>Sat, 19 Mar 2022 22:29:12 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/android-jacoco-gradle-config/</guid>
+      <description>&lt;p&gt;Android Jacoco 覆盖率统计Gradle配置，包括生成本地单元测试报告，仪器单元测试报告，合并两种测试的报告，合并两种测试的执行数据并在AndroidStudio的编辑器中查看每一行的覆盖率情况。&lt;/p&gt;
+&lt;!-- more --&gt;
+&lt;h2 id=&#34;如何让测试任务生成-jacoco-覆盖率统计数据&#34;&gt;如何让测试任务生成 Jacoco 覆盖率统计数据？&lt;/h2&gt;
 &lt;p&gt;这里我们仅仅从Gradle任务来说，不考虑 AndroidStudio/IDEA。&lt;/p&gt;
-&lt;h3 id="本地单元测试test"&gt;本地单元测试（Test）&lt;/h3&gt;
-&lt;p&gt;对于本地单元测试来说，原先有一个 &lt;code&gt;testDebugUnitTest&lt;/code&gt; 的测试任务，如果不做配置，该任务只会生成测试通过情况的报告。只要应用 jacoco 插件，然后运行 &lt;code&gt;testDebugUnitTest&lt;/code&gt; 任务时，就会同时生成jacoco覆盖率统计&lt;strong&gt;执行数据文件&lt;/strong&gt;。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// build.gradle
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;apply(plugin = &lt;span style="color:#e6db74"&gt;&amp;#34;jacoco&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;之所以能这样是因为 jacoco 插件会给所有 Test 类型的任务添加 jacoco 的配置。&lt;/p&gt;
-&lt;p&gt;可以通过如下方式输出其执行数据文件路径：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;afterEvaluate {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; tasks.getByName(&lt;span style="color:#e6db74"&gt;&amp;#34;testDebugUnitTest&amp;#34;&lt;/span&gt;).apply {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; doLast {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; (&lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.extensions.getByName(&lt;span style="color:#e6db74"&gt;&amp;#34;jacoco&amp;#34;&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; JacocoTaskExtension).apply {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logger.lifecycle(&lt;span style="color:#e6db74"&gt;&amp;#34;testDebugUnitTest dest: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;${this.destinationFile?.absolutePath}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;执行情况如下：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-shell" data-lang="shell"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;testDebugUnitTest dest: /Users/hanlyjiang/Wksp/project/AndroidTestSample/app/build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="仪器单元测试androidtest"&gt;仪器单元测试（AndroidTest）&lt;/h3&gt;
-&lt;p&gt;仪器单元测试覆盖率数据的统计需要打开&lt;code&gt;testCoverageEnabled&lt;/code&gt;开关，然后会有一个&lt;code&gt;createDebugCoverageReport&lt;/code&gt; 的任务生成，同时也会生成html的报告。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// groovy
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;android &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; buildTypes &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; debug &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; testCoverageEnabled &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// kotlin
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;android &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; buildTypes &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; getByName&lt;span style="color:#f92672"&gt;(&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;debug&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;).&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;apply&lt;/span&gt; &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; isTestCoverageEnabled &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;连接设备执行该任务即可生成对应的执行数据文件及对应的覆盖率报告。&lt;/p&gt;</description></item><item><title> AAR Java8 接口 NoSuchMethodError 错误解决记录</title><link>https://hanlyjiang.github.io/posts/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/</link><pubDate>Sun, 13 Mar 2022 23:18:16 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/</guid><description>&lt;p&gt;遇到一个初看时非常诡异的问题，现已解决，特记录一下解决过程。&lt;/p&gt;
-&lt;h2 id="-是什么问题"&gt;🙋‍♀️ 是什么问题？&lt;/h2&gt;
-&lt;h3 id="错误日志"&gt;错误日志&lt;/h3&gt;
+&lt;h3 id=&#34;本地单元测试test&#34;&gt;本地单元测试（Test）&lt;/h3&gt;
+&lt;p&gt;对于本地单元测试来说，原先有一个 &lt;code&gt;testDebugUnitTest&lt;/code&gt; 的测试任务，如果不做配置，该任务只会生成测试通过情况的报告。只要应用 jacoco 插件，然后运行 &lt;code&gt;testDebugUnitTest&lt;/code&gt; 任务时，就会同时生成jacoco覆盖率统计&lt;strong&gt;执行数据文件&lt;/strong&gt;。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title> AAR Java8 接口 NoSuchMethodError 错误解决记录</title>
+      <link>https://hanlyjiang.github.io/posts/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/</link>
+      <pubDate>Sun, 13 Mar 2022 23:18:16 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/</guid>
+      <description>&lt;p&gt;遇到一个初看时非常诡异的问题，现已解决，特记录一下解决过程。&lt;/p&gt;
+&lt;!-- more --&gt;
+&lt;h2 id=&#34;-是什么问题&#34;&gt;🙋‍♀️ 是什么问题？&lt;/h2&gt;
+&lt;h3 id=&#34;错误日志&#34;&gt;错误日志&lt;/h3&gt;
 &lt;p&gt;APP运行过程中，忽然报了一个莫名其妙的错误： &lt;code&gt;NoSuchMethodError&lt;/code&gt;, 报错的地方是 rxjava3 的 &lt;code&gt;Disposable.disposed()&lt;/code&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-shell" data-lang="shell"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;E/AndroidRuntime: FATAL EXCEPTION: main
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Process: com.github.hanlyjiang.sample, PID: &lt;span style="color:#ae81ff"&gt;7357&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; java.lang.NoSuchMethodError: No static method disposed&lt;span style="color:#f92672"&gt;()&lt;/span&gt;Lio/reactivex/rxjava3/disposables/Disposable; in class Lio/reactivex/rxjava3/disposables/Disposable; or its super classes &lt;span style="color:#f92672"&gt;(&lt;/span&gt;declaration of &lt;span style="color:#e6db74"&gt;&amp;#39;io.reactivex.rxjava3.disposables.Disposable&amp;#39;&lt;/span&gt; appears in /data/app/~~veR3ZUFYzXjZ48FDcAW0Nw&lt;span style="color:#f92672"&gt;==&lt;/span&gt;/com.github.hanlyjiang.sample-bhuZG0wVNdVKs_mfxOh5gg&lt;span style="color:#f92672"&gt;==&lt;/span&gt;/base.apk&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at com.github.hanlyjiang.lib_mod.ViewTest.disposable&lt;span style="color:#f92672"&gt;(&lt;/span&gt;ViewTest.java:8&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at com.github.hanlyjiang.sample.MainActivity.lambda$onCreate$0&lt;span style="color:#f92672"&gt;(&lt;/span&gt;MainActivity.java:15&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at com.github.hanlyjiang.sample.MainActivity$$ExternalSyntheticLambda0.onClick&lt;span style="color:#f92672"&gt;(&lt;/span&gt;Unknown Source:0&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at android.view.View.performClick&lt;span style="color:#f92672"&gt;(&lt;/span&gt;View.java:7456&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at com.google.android.material.button.MaterialButton.performClick&lt;span style="color:#f92672"&gt;(&lt;/span&gt;MaterialButton.java:1119&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at android.view.View.performClickInternal&lt;span style="color:#f92672"&gt;(&lt;/span&gt;View.java:7433&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at android.view.View.access$3700&lt;span style="color:#f92672"&gt;(&lt;/span&gt;View.java:836&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at android.view.View$PerformClick.run&lt;span style="color:#f92672"&gt;(&lt;/span&gt;View.java:28832&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at android.os.Handler.handleCallback&lt;span style="color:#f92672"&gt;(&lt;/span&gt;Handler.java:938&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at android.os.Handler.dispatchMessage&lt;span style="color:#f92672"&gt;(&lt;/span&gt;Handler.java:99&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at android.os.Looper.loopOnce&lt;span style="color:#f92672"&gt;(&lt;/span&gt;Looper.java:201&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at android.os.Looper.loop&lt;span style="color:#f92672"&gt;(&lt;/span&gt;Looper.java:288&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at android.app.ActivityThread.main&lt;span style="color:#f92672"&gt;(&lt;/span&gt;ActivityThread.java:7902&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at java.lang.reflect.Method.invoke&lt;span style="color:#f92672"&gt;(&lt;/span&gt;Native Method&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run&lt;span style="color:#f92672"&gt;(&lt;/span&gt;RuntimeInit.java:548&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; at com.android.internal.os.ZygoteInit.main&lt;span style="color:#f92672"&gt;(&lt;/span&gt;ZygoteInit.java:933&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;E/AndroidRuntime: FATAL EXCEPTION: main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Process: com.github.hanlyjiang.sample, PID: &lt;span style=&#34;color:#ae81ff&#34;&gt;7357&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    java.lang.NoSuchMethodError: No static method disposed&lt;span style=&#34;color:#f92672&#34;&gt;()&lt;/span&gt;Lio/reactivex/rxjava3/disposables/Disposable; in class Lio/reactivex/rxjava3/disposables/Disposable; or its super classes &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;declaration of &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;io.reactivex.rxjava3.disposables.Disposable&amp;#39;&lt;/span&gt; appears in /data/app/~~veR3ZUFYzXjZ48FDcAW0Nw&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;/com.github.hanlyjiang.sample-bhuZG0wVNdVKs_mfxOh5gg&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;/base.apk&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at com.github.hanlyjiang.lib_mod.ViewTest.disposable&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ViewTest.java:8&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at com.github.hanlyjiang.sample.MainActivity.lambda$onCreate$0&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;MainActivity.java:15&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at com.github.hanlyjiang.sample.MainActivity$$ExternalSyntheticLambda0.onClick&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Unknown Source:0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at android.view.View.performClick&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;View.java:7456&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at com.google.android.material.button.MaterialButton.performClick&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;MaterialButton.java:1119&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at android.view.View.performClickInternal&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;View.java:7433&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at android.view.View.access$3700&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;View.java:836&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at android.view.View$PerformClick.run&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;View.java:28832&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at android.os.Handler.handleCallback&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Handler.java:938&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at android.os.Handler.dispatchMessage&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Handler.java:99&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at android.os.Looper.loopOnce&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Looper.java:201&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at android.os.Looper.loop&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Looper.java:288&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at android.app.ActivityThread.main&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ActivityThread.java:7902&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at java.lang.reflect.Method.invoke&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Native Method&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;RuntimeInit.java:548&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        at com.android.internal.os.ZygoteInit.main&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ZygoteInit.java:933&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
-&lt;p&gt;&lt;strong&gt;⏰ Tip&lt;/strong&gt;&lt;/p&gt;</description></item><item><title>Dagger 在Android库(SDK)模块中的使用实践</title><link>https://hanlyjiang.github.io/posts/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/</link><pubDate>Sun, 06 Mar 2022 15:11:54 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/</guid><description>&lt;p&gt;本文主要描述如何使用Dagger解决实际项目中遇到的问题，这两个问题是：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;⏰ Tip&lt;/strong&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Dagger 在Android库(SDK)模块中的使用实践</title>
+      <link>https://hanlyjiang.github.io/posts/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/</link>
+      <pubDate>Sun, 06 Mar 2022 15:11:54 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/</guid>
+      <description>&lt;p&gt;本文主要描述如何使用Dagger解决实际项目中遇到的问题，这两个问题是：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;如何在库（SDK）模块中使用Dagger依赖注入？&lt;/li&gt;
 &lt;li&gt;MVP中的Dagger依赖注入如何实现无感注入？&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;本文不会介绍如何使用Dagger，只专注于描述如上两个问题的解决的前因后果及解决方案。&lt;/p&gt;
-&lt;h2 id="背景"&gt;背景&lt;/h2&gt;
-&lt;p&gt;接手开发一个SDK，大致情况如下：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;该SDK内部有若干界面，包括Activity，Fragment等&lt;/li&gt;
-&lt;li&gt;使用MVP架构&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;逐渐发现内部依赖混乱，在得空后，遂对其依赖部分进行重构改造。&lt;/p&gt;
-&lt;h3 id="为什么使用依赖注入进行改造"&gt;为什么使用依赖注入进行改造？&lt;/h3&gt;
-&lt;p&gt;主要是依赖混乱，单例的滥用导致依赖关系不明显，无法管理，无法测试&lt;/p&gt;
-&lt;p&gt;某些对象，我们在很多类中都需要使用，如 Retrofit 的请求对象，代表信息的标识字段等，此时为了避免通过构造函数或者setter方法来传递，就直接起了个单例，还有很多其他类似的情况，最终导致单例有10多个，调用单例 getInstance 的地方更是数不胜数。&lt;/p&gt;
-&lt;p&gt;导致我们要对对应的代码进行单元测试做mock操作异常困难，&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;因为依赖关系太不明显，几乎得一行行找才能找到类或方法到底依赖了哪些对象&lt;/li&gt;
-&lt;li&gt;同时mock的过程也变得麻烦，由于没有作为类成员，所以无法简单通过mock替换 对应成员；&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h3 id="依赖注入改造的问题点"&gt;依赖注入改造的问题点&lt;/h3&gt;
-&lt;p&gt;主要有如下问题：&lt;/p&gt;
-&lt;!-- raw HTML omitted --&gt;
-&lt;!-- raw HTML omitted --&gt;
-&lt;p&gt;之所以提第一个问题，是因为Google 针对Android，在Dagger的基础上针对性的构建了一个Hilt 的依赖注入框架，能够减少Android中直接使用Dagger的模板代码。但是Hilt的使中有要求：&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;&lt;strong&gt;所有使用 Hilt 的应用都必须包含一个带有 &lt;code&gt;@HiltAndroidApp&lt;/code&gt; 注释的 &lt;code&gt;Application&lt;/code&gt; 类。&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;参考： &lt;a href="https://developer.android.google.cn/training/dependency-injection/hilt-android"&gt;使用 Hilt 实现依赖项注入 | Android 开发者 | Android Developers (google.cn)&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;也就是必须能控制住Application，如上所述，我们作为一个SDK的提供方：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;是没有机会修改Application的代码的&lt;/li&gt;
-&lt;li&gt;而且，我们也不能要求使用方去做这种限制；同时，如果使用方有使用 Hilt 呢，我们的代码是否会对其产生影响？&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;&lt;strong&gt;故，我们只能直接使用Dagger。&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;而另外一个问题在于MVP的架构限制，P 层需要持有V层的引用，也就是P依赖V，而V通常是Activity或者Fragment，而Activity及Fragment的创建过程由Android系统控制，所以在使用Dagger时我们需要添加一些模板代码（下方会说明），将 Activity及Fragment对象注入到 Dagger 的依赖图谱中。&lt;/p&gt;
-&lt;h2 id="没有-application-的问题解决"&gt;没有 Application 的问题解决&lt;/h2&gt;
-&lt;p&gt;首先，我们要解决的是没有Application的问题，那么没有Application会给我们带来哪些问题呢？&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;无法使用 Hilt&lt;/li&gt;
-&lt;li&gt;无法直接使用 dagger-android&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;这两个问题实际上是类似的，Hilt及Dagger-Android都是用于解决 Android 组件（Activity，Fragment，Service，BroadcastReceiver 等）的依赖注入的。但是他们都要求我们必须使用 Application。&lt;/p&gt;</description></item><item><title>Gradle学习指南-前言</title><link>https://hanlyjiang.github.io/posts/gradle-xue-xi-zhi-nan-qian-yan/</link><pubDate>Thu, 07 Oct 2021 22:07:09 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/gradle-xue-xi-zhi-nan-qian-yan/</guid><description>&lt;p&gt;这个对于安卓开发来说，Gradle可以不了解，但是又必须了解。&lt;/p&gt;
+&lt;!-- more --&gt;
+&lt;h2 id=&#34;背景&#34;&gt;背景&lt;/h2&gt;
+&lt;p&gt;接手开发一个SDK，大致情况如下：&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Gradle学习指南-前言</title>
+      <link>https://hanlyjiang.github.io/posts/gradle-xue-xi-zhi-nan-qian-yan/</link>
+      <pubDate>Thu, 07 Oct 2021 22:07:09 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/gradle-xue-xi-zhi-nan-qian-yan/</guid>
+      <description>&lt;!-- more --&gt;
+&lt;p&gt;这个对于安卓开发来说，Gradle可以不了解，但是又必须了解。&lt;/p&gt;
 &lt;p&gt;说不需要了解，是因为： 通过AndroidStudio建立工程的时候，默认就创建好了Gradle的项目结构及对应的任务，通过IDE来添加模块的时候，也可以自动的添加Gradle的配置。&lt;/p&gt;
-&lt;p&gt;说需要了解，是因为：有时候会遇到构建错误，还有时候需要改一改构建流程的默认行为，另外有些时候，需要自行扩展一个构建任务。&lt;/p&gt;
-&lt;p&gt;Gradle学习的一个难点在于，其学习资料非常零散，少有成体系的学习资料。当然，官方文档是很成体系的，官方文档也有不好的地方：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;纯英文；&lt;/li&gt;
-&lt;li&gt;版本更新之后，文档结构有变化。&lt;/li&gt;
-&lt;li&gt;官方文档对于安卓项目的说明没有（因为android的插件是google自行扩展的）&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;还有一个问题就是，前期gradle的脚本都是使用groovy来编写，我们要写脚本，需要去学习一门新的语言，虽然这个语言和java比较接近，但是由于没什么其他用途，加上需要编写gradle脚本的场景也不是那么常见，就会让觉得有点不值得投入，这两个因素结合起来，会劝退很多安卓开发人员。现在，gradle可以使用kotlin来编写其dsl脚本，学习成本会降低很多。&lt;/p&gt;
-&lt;p&gt;见到其wrapper的设计令我印象深刻，对比ant及maven需要手动去下载一份二进制副本，然后配置到环境变量中，而你获取到别人的gradle项目之后，直接使用wrapper脚本，就可以执行gradle任务，wrapper脚本会自动帮助你去获取一份gradle的二进制副本，就好像你直接执行gradle的二进制命令一样。&lt;/p&gt;
-&lt;p&gt;另外gradle也提供了方便的扩展机制，能对构建流程进行定制。&lt;/p&gt;
-&lt;p&gt;接下来，我将从安卓开发的视角，对Gradle的使用做一个整体的介绍。内容上会包括Gradle的一些基础概念，一些常见的Gradle任务介绍，Android的常见Gradle配置介绍，同时也会介绍自定义Gradle任务及Gradle插件。&lt;/p&gt;</description></item><item><title>简化Android库上传到Maven仓库的gradle配置</title><link>https://hanlyjiang.github.io/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/</link><pubDate>Tue, 01 Jun 2021 10:26:00 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/</guid><description>&lt;p&gt;配置 android 上传到 maven 中心仓库，发现配置的代码有点多，而且如果有多个库模块需要上传，则需要复制粘贴不少重复的配置代码，于是编写了一个 gradle 插件用于简化提取这个配置过程；&lt;/p&gt;
-&lt;h2 id="插件用途及效果"&gt;插件用途及效果&lt;/h2&gt;
-&lt;p&gt;本插件用于简化Android库上传到Maven中心仓库的配置，避免每个project的gradle中都放置一份重复较多的配置；&lt;/p&gt;
-&lt;p&gt;插件有如下功能：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;简化 maven-publish 插件的配置流程；&lt;/li&gt;
-&lt;li&gt;添加上传到Maven中心仓库的 publish 任务；&lt;/li&gt;
-&lt;li&gt;支持配置上传时是否包含 javadoc 及源码；&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h3 id="直接使用maven-publish插件的配置"&gt;直接使用maven-publish插件的配置：&lt;/h3&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;import&lt;/span&gt; org.gradle.api.publish.maven.MavenPom
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;plugins {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; id(&lt;span style="color:#e6db74"&gt;&amp;#34;com.android.library&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; id(&lt;span style="color:#e6db74"&gt;&amp;#34;signing&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;`&lt;/span&gt;maven-publish&lt;span style="color:#960050;background-color:#1e0010"&gt;`&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;android {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; defaultConfig {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; versionName(&lt;span style="color:#e6db74"&gt;&amp;#34;1.0.0-SNAPSHOT&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;dependencies {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;//
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;tasks.register(&lt;span style="color:#e6db74"&gt;&amp;#34;javadoc&amp;#34;&lt;/span&gt;, Javadoc&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;.java) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; group = &lt;span style="color:#e6db74"&gt;&amp;#34;publishing&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; dependsOn(&lt;span style="color:#e6db74"&gt;&amp;#34;assemble&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; source = android.sourceSets[&lt;span style="color:#e6db74"&gt;&amp;#34;main&amp;#34;&lt;/span&gt;].java.getSourceFiles()
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; classpath &lt;span style="color:#f92672"&gt;+=&lt;/span&gt; project.files(android.bootClasspath + &lt;span style="color:#a6e22e"&gt;File&lt;/span&gt;.pathSeparator)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (&lt;span style="color:#a6e22e"&gt;JavaVersion&lt;/span&gt;.current().isJava9Compatible) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; (options &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; StandardJavadocDocletOptions).addBooleanOption(&lt;span style="color:#e6db74"&gt;&amp;#34;html5&amp;#34;&lt;/span&gt;, &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; android.libraryVariants.forEach { libraryVariant &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; classpath &lt;span style="color:#f92672"&gt;+=&lt;/span&gt; libraryVariant.javaCompileProvider.&lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;().classpath
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; options.apply {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; encoding(&lt;span style="color:#e6db74"&gt;&amp;#34;UTF-8&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; charset(&lt;span style="color:#e6db74"&gt;&amp;#34;UTF-8&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; isFailOnError = &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; (&lt;span style="color:#66d9ef"&gt;this&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; StandardJavadocDocletOptions).apply {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// addStringOption(&amp;#34;Xdoclint:none&amp;#34;)
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; links&lt;span style="color:#f92672"&gt;?.&lt;/span&gt;add(&lt;span style="color:#e6db74"&gt;&amp;#34;https://developer.android.google.cn/reference/&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; links&lt;span style="color:#f92672"&gt;?.&lt;/span&gt;add(&lt;span style="color:#e6db74"&gt;&amp;#34;http://docs.oracle.com/javase/8/docs/api/&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;tasks.register(&lt;span style="color:#e6db74"&gt;&amp;#34;jarSource&amp;#34;&lt;/span&gt;, Jar&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;.java) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; group = &lt;span style="color:#e6db74"&gt;&amp;#34;publishing&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; from(android.sourceSets[&lt;span style="color:#e6db74"&gt;&amp;#34;main&amp;#34;&lt;/span&gt;].java.srcDirs)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; archiveClassifier.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;sources&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;tasks.register(&lt;span style="color:#e6db74"&gt;&amp;#34;jarJavadoc&amp;#34;&lt;/span&gt;, Jar&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;.java) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; group = &lt;span style="color:#e6db74"&gt;&amp;#34;publishing&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; dependsOn(&lt;span style="color:#e6db74"&gt;&amp;#34;javadoc&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; javadoc: Javadoc = tasks.getByName(&lt;span style="color:#e6db74"&gt;&amp;#34;javadoc&amp;#34;&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; Javadoc
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; from(javadoc.destinationDir)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; archiveClassifier.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;javadoc&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getMyPom&lt;/span&gt;(): Action&amp;lt;&lt;span style="color:#66d9ef"&gt;in&lt;/span&gt; MavenPom&amp;gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; Action&amp;lt;MavenPom&amp;gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;Android Common Utils Lib&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; description.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;Android Common Utils Library For HJ&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; url.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;https://github.com/hanlyjiang/lib_common_utils&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; licenses {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; license {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;The Apache License, Version 2.0&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; url.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;http://www.apache.org/licenses/LICENSE-2.0.txt&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; developers {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; developer {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; id.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;hanlyjiang&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;Hanly Jiang&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; email.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;hanlyjiang@outlook.com&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; scm {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; connection.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; developerConnection.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; url.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;https://github.com/hanlyjiang/lib_common_utils&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;afterEvaluate {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; publishing {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; publications {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; create&amp;lt;MavenPublication&amp;gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;release&amp;#34;&lt;/span&gt;) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; from(components.getByName(&lt;span style="color:#e6db74"&gt;&amp;#34;release&amp;#34;&lt;/span&gt;))
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; groupId = &lt;span style="color:#e6db74"&gt;&amp;#34;com.github.hanlyjiang&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; artifactId = &lt;span style="color:#e6db74"&gt;&amp;#34;android_common_utils&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; version = android.defaultConfig.versionName
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; pom(getMyPom())
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 添加javadoc
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; artifact(tasks.getByName(&lt;span style="color:#e6db74"&gt;&amp;#34;jarJavadoc&amp;#34;&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; Jar)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 添加source
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; artifact(tasks.getByName(&lt;span style="color:#e6db74"&gt;&amp;#34;jarSource&amp;#34;&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; Jar)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; repositories {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; ossrhCredentials = Action&amp;lt;PasswordCredentials&amp;gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; username = properties[&lt;span style="color:#e6db74"&gt;&amp;#34;ossrhUsername&amp;#34;&lt;/span&gt;].toString()
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; password = properties[&lt;span style="color:#e6db74"&gt;&amp;#34;ossrhPassword&amp;#34;&lt;/span&gt;].toString()
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// sonar的仓库，地址根据项目的版本号来确定是snapshot还是正式仓库
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; maven {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name = &lt;span style="color:#e6db74"&gt;&amp;#34;Sonartype&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; releasesRepoUrl = uri(&lt;span style="color:#e6db74"&gt;&amp;#34;https://oss.sonatype.org/service/local/staging/deploy/maven2&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; snapshotsRepoUrl = uri(&lt;span style="color:#e6db74"&gt;&amp;#34;https://oss.sonatype.org/content/repositories/snapshots/&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; url = &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (android.defaultConfig.versionName.toString().endsWith(&lt;span style="color:#e6db74"&gt;&amp;#34;SNAPSHOT&amp;#34;&lt;/span&gt;)) snapshotsRepoUrl &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt; releasesRepoUrl
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; credentials(ossrhCredentials)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// snapshot的地址：
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#75715e"&gt;// https://oss.sonatype.org/content/repositories/snapshots/com/github/hanlyjiang/android_common_utils/
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 项目本地的仓库
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; maven {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name = &lt;span style="color:#e6db74"&gt;&amp;#34;ProjectLocal&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; releasesRepoUrl = uri(layout.buildDirectory.dir(&lt;span style="color:#e6db74"&gt;&amp;#34;repos/releases&amp;#34;&lt;/span&gt;))
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; snapshotsRepoUrl = uri(layout.buildDirectory.dir(&lt;span style="color:#e6db74"&gt;&amp;#34;repos/snapshots&amp;#34;&lt;/span&gt;))
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; url = &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (android.defaultConfig.versionName.toString().endsWith(&lt;span style="color:#e6db74"&gt;&amp;#34;SNAPSHOT&amp;#34;&lt;/span&gt;)) snapshotsRepoUrl &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt; releasesRepoUrl
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; signing {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; sign(publishing.publications.getByName(&lt;span style="color:#e6db74"&gt;&amp;#34;release&amp;#34;&lt;/span&gt;))
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="使用androidmavenpubplugin简化后的配置"&gt;使用AndroidMavenPubPlugin简化后的配置：&lt;/h3&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;import&lt;/span&gt; org.gradle.api.publish.maven.MavenPom
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;plugins {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; id(&lt;span style="color:#e6db74"&gt;&amp;#34;com.android.library&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; id(&lt;span style="color:#e6db74"&gt;&amp;#34;signing&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;`&lt;/span&gt;maven-publish&lt;span style="color:#960050;background-color:#1e0010"&gt;`&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 引入我们本地仓库中的gradle插件
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; id(&lt;span style="color:#e6db74"&gt;&amp;#34;com.github.hanlyjiang.android_maven_pub&amp;#34;&lt;/span&gt;) version (&lt;span style="color:#e6db74"&gt;&amp;#34;0.0.5&amp;#34;&lt;/span&gt;) apply (&lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;android {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; defaultConfig {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; versionName(&lt;span style="color:#e6db74"&gt;&amp;#34;1.0.1-SNAPSHOT&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;dependencies {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;//
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;apply(plugin = &lt;span style="color:#e6db74"&gt;&amp;#34;com.github.hanlyjiang.android_maven_pub&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;configure&amp;lt;io.hanlyjiang.gradle.android.AndroidMavenPubPluginExtension&amp;gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; groupId.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;com.github.hanlyjiang&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; artifactId.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;android-common-utils&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; projectLocalRepoPath.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;local-maven-repo&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; mavenPomAction.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(Action&amp;lt;MavenPom&amp;gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;Android Common Utils Lib&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; description.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;Android Common Utils Library For HJ&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; url.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;https://github.com/hanlyjiang/lib_common_utils&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; properties.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; mapOf(
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;myProp&amp;#34;&lt;/span&gt; to &lt;span style="color:#e6db74"&gt;&amp;#34;value&amp;#34;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;prop.with.dots&amp;#34;&lt;/span&gt; to &lt;span style="color:#e6db74"&gt;&amp;#34;anotherValue&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; )
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; )
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; licenses {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; license {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;The Apache License, Version 2.0&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; url.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;http://www.apache.org/licenses/LICENSE-2.0.txt&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; developers {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; developer {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; id.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;hanlyjiang&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;Hanly Jiang&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; email.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;hanlyjiang@outlook.com&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; scm {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; connection.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; developerConnection.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; url.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;https://github.com/hanlyjiang/lib_common_utils&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; })
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="使用步骤"&gt;使用步骤&lt;/h2&gt;
-&lt;h3 id="引入插件"&gt;引入插件&lt;/h3&gt;
-&lt;p&gt;在需要使用的模块的build脚本中，引入我们的插件，同时引入 &lt;code&gt;maven-publish&lt;/code&gt; 插件和&lt;code&gt; signing&lt;/code&gt; 插件。&lt;/p&gt;</description></item><item><title>Android bindService流程</title><link>https://hanlyjiang.github.io/posts/androidbindservice-liu-cheng-fen-xi/</link><pubDate>Mon, 12 Apr 2021 10:18:50 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/androidbindservice-liu-cheng-fen-xi/</guid><description>&lt;p&gt;本文分析bindService的流程，首先我们通过阅读源码获取一个主线的调用地图，然后提出若干问题，包括：APP进程中如何获取AMS，AMS如何启动APP-service的进程，AMS中如何获取ApplicationThread并与之通讯，Service的启动及绑定流程；然后再通过源码一一解答。最后再整体总结梳理一下整体流程；&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;预先知识：&lt;/strong&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Binder通信机制&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id="整体分析与总结"&gt;整体分析与总结&lt;/h2&gt;
-&lt;h3 id="主线地图与问题提出"&gt;主线地图与问题提出&lt;/h3&gt;
-&lt;p&gt;我们从bindService一路跟踪，初步绘制了如下的调用序列图，我们可以以下面的图作为一个主线地图，避免走失，然后根据具体问题进行细节分析。&lt;/p&gt;
-&lt;!-- raw HTML omitted --&gt;
-&lt;p&gt;从上图中，我们提出如下问题：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;bindServiceCommon到IActivityManager的调用中，是如何获取到ActivityManagerService的？&lt;/li&gt;
-&lt;li&gt;AMS中如何获取ApplicationThread并与之通讯？
-&lt;ul&gt;
-&lt;li&gt;ApplicatoinThread的用途？ApplicationThread运行的进程是哪个？&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;进程如何启动-即AMS如何创建APP:server进程？&lt;/li&gt;
-&lt;li&gt;Service如何启动？&lt;/li&gt;
-&lt;li&gt;Service如何绑定？
-&lt;ul&gt;
-&lt;li&gt;ServiceConnection 的回调方法何时使用？&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h3 id="问题解答汇总"&gt;问题解答汇总&lt;/h3&gt;
-&lt;p&gt;我们将相关问题的结论提前到此小节，便于后续从比较抽象的层次上来进行复习及预览；&lt;/p&gt;
-&lt;h4 id="app进程如何获取ams"&gt;APP进程如何获取AMS？&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;APP进程中通过 &lt;code&gt;ServiceManager.getService(Context.ACTIVITY_SERVICE)&lt;/code&gt; 获取的ActivityManagerService的客户端操作代理对象（Proxy）。&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;该对象位于APP进程中，可以使用此对象（通过Binder进程间通信）来要求（位于system_process中）的ActivityManagerService进行对应的服务操作；&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4 id="ams如何获取applicationthread"&gt;AMS如何获取ApplicationThread？&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;APP进程在binderSerice时，将自己进程中的ApplicationThread取出，通过Binder机制传递给AMS进程，传递过程中会转换成一个Proxy对象；&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;ActivityManager.&lt;span style="color:#a6e22e"&gt;getService&lt;/span&gt;().&lt;span style="color:#a6e22e"&gt;bindIsolatedService&lt;/span&gt;(
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; mMainThread.&lt;span style="color:#a6e22e"&gt;getApplicationThread&lt;/span&gt;(), getActivityToken(), service,
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; service.&lt;span style="color:#a6e22e"&gt;resolveTypeIfNeeded&lt;/span&gt;(getContentResolver()),
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; sd, flags, instanceName, getOpPackageName(), user.&lt;span style="color:#a6e22e"&gt;getIdentifier&lt;/span&gt;());
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4 id="服务如何绑定服务如何启动进程如何启动"&gt;服务如何绑定？服务如何启动？进程如何启动？&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;进程启动&lt;/strong&gt;：
-&lt;ul&gt;
-&lt;li&gt;在独立的进程中运行的服务需要先将进程启动，进程的启动是通过APP进程，请求系统进程中的AMS来执行，通过AMS的&lt;code&gt;startProcessLocked&lt;/code&gt;方法启动进程，最终会通过socket接口请求zygote进程来启动进程。&lt;/li&gt;
-&lt;li&gt;在启动时会指定java的入口点为ActivityThread，即进程启动后会运行ActivityThread的main方法；&lt;/li&gt;
-&lt;li&gt;AMS中会记录启动的进程记录（ProcessRecord），对应的ProcessRecord中会记录进程对应的ApplicationThread；&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;服务启动&lt;/strong&gt;：
-&lt;ul&gt;
-&lt;li&gt;服务的启动需要请求AMS来完成&lt;/li&gt;
-&lt;li&gt;启动时需要先通过PID获取要启动到的ProcessRecord，通过ProcessRecord中记录的ApplicationThread来与对应的进程通信。&lt;/li&gt;
-&lt;li&gt;AMS通过ApplicationThread来通知对应的进程创建服务，ApplicationThread作为通信的接口，实际上最终会通过ActivityThread的handleCreateService来创建服务的实例；&lt;/li&gt;
-&lt;li&gt;服务创建时，是在APP进程（可能是独立的进程）中进行的，需要通过类加载器加载对应的Service的类，同时构造相应的上下文及资源对象等，然后构造对应的实例；&lt;/li&gt;
-&lt;li&gt;服务创建成功后，会记录到ActivityThread的一个Service列表中，以便后续管理；&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;服务绑定&lt;/strong&gt;：
-&lt;ul&gt;
-&lt;li&gt;服务绑定先在APP进程中，通过AMS代理对象发起请求，由AMS来安排bind（&lt;strong&gt;ActivityManagerService.bindIsolatedService&lt;/strong&gt;）;&lt;/li&gt;
-&lt;li&gt;然后具体的绑定动作还是通过IApplicationThread安排到APP的Service进程中，最终执行的&lt;code&gt;ActivityThread#handleBindService&lt;/code&gt;;&lt;/li&gt;
-&lt;li&gt;在APP进程中，会将Service取出，然后调用其onBind方法来获取IBinder远程操作对象；&lt;/li&gt;
-&lt;li&gt;之后再通过AMS调用 &lt;code&gt;ActivityManagerService#publishService&lt;/code&gt; 来通知绑定成功的通知到对应的需要绑定服务的APP进程；&lt;/li&gt;
-&lt;li&gt;publishService中会调用ServiceConnection的onServiceConnected方法通知服务连接了；&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3 id="整体流程总结"&gt;整体流程总结&lt;/h3&gt;
-&lt;blockquote&gt;
-&lt;p&gt;待补充&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id="详细分析解答问题"&gt;详细分析解答问题&lt;/h2&gt;
-&lt;h3 id="app进程中如何获取ams"&gt;APP进程中如何获取AMS？&lt;/h3&gt;
-&lt;blockquote&gt;
-&lt;p&gt;说明：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;第一次先逐项查看各个小节，最后再看此处的总结；&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;后续直接查看总结来快速获取结论；&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;==总结：==&lt;/p&gt;</description></item><item><title>搭建Android源码工作环境</title><link>https://hanlyjiang.github.io/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/</link><pubDate>Thu, 08 Apr 2021 10:18:50 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/</guid><description>&lt;ul&gt;
+&lt;p&gt;说需要了解，是因为：有时候会遇到构建错误，还有时候需要改一改构建流程的默认行为，另外有些时候，需要自行扩展一个构建任务。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>简化Android库上传到Maven仓库的gradle配置</title>
+      <link>https://hanlyjiang.github.io/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/</link>
+      <pubDate>Tue, 01 Jun 2021 10:26:00 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/</guid>
+      <description>&lt;p&gt;配置 android 上传到 maven 中心仓库，发现配置的代码有点多，而且如果有多个库模块需要上传，则需要复制粘贴不少重复的配置代码，于是编写了一个 gradle 插件用于简化提取这个配置过程；&lt;/p&gt;
+&lt;!-- more --&gt;
+&lt;h2 id=&#34;插件用途及效果&#34;&gt;插件用途及效果&lt;/h2&gt;
+&lt;p&gt;本插件用于简化Android库上传到Maven中心仓库的配置，避免每个project的gradle中都放置一份重复较多的配置；&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Android bindService流程</title>
+      <link>https://hanlyjiang.github.io/posts/androidbindservice-liu-cheng-fen-xi/</link>
+      <pubDate>Mon, 12 Apr 2021 10:18:50 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/androidbindservice-liu-cheng-fen-xi/</guid>
+      <description>&lt;p&gt;本文分析bindService的流程，首先我们通过阅读源码获取一个主线的调用地图，然后提出若干问题，包括：APP进程中如何获取AMS，AMS如何启动APP-service的进程，AMS中如何获取ApplicationThread并与之通讯，Service的启动及绑定流程；然后再通过源码一一解答。最后再整体总结梳理一下整体流程；&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>搭建Android源码工作环境</title>
+      <link>https://hanlyjiang.github.io/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/</link>
+      <pubDate>Thu, 08 Apr 2021 10:18:50 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/</guid>
+      <description>&lt;ul&gt;
 &lt;li&gt;简单介绍系统架构、编译环境的搭建&lt;/li&gt;
 &lt;li&gt;简单介绍利用 AndroidStudio 调试 system_process 进程的方法及编译更新部分系统模块的方式&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="android系统架构"&gt;Android系统架构&lt;/h2&gt;
+&lt;!-- more --&gt;
+&lt;h2 id=&#34;android系统架构&#34;&gt;Android系统架构&lt;/h2&gt;
 &lt;p&gt;Android 系统架构如下两图所示：&lt;/p&gt;
-&lt;p&gt;&lt;img alt="20210401092831" loading="lazy" src="https://s2.loli.net/2022/05/26/iVWSvDPlA9I4afd.png"&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img alt="20210401092925" loading="lazy" src="https://s2.loli.net/2022/05/26/3KYlCuj5zXc9EUs.png"&gt;&lt;/p&gt;
-&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;&lt;img alt=&#34;20210401092831&#34; loading=&#34;lazy&#34; src=&#34;https://s2.loli.net/2022/05/26/iVWSvDPlA9I4afd.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;20210401092925&#34; loading=&#34;lazy&#34; src=&#34;https://s2.loli.net/2022/05/26/3KYlCuj5zXc9EUs.png&#34;&gt;&lt;/p&gt;
+&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;应用框架&lt;/strong&gt;。应用框架最常被应用开发者使用。很多此类 API 都可以直接映射到底层 HAL 接口，并可提供与实现驱动程序相关的实用信息。&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Binder IPC&lt;/strong&gt;。Binder 进程间通信 (IPC) 机制允许应用框架跨越进程边界并调用 Android 系统服务代码，这使得高级框架 API 能与 Android 系统服务进行交互。在应用框架级别，开发者无法看到此类通信的过程，但一切似乎都在“按部就班地运行”。&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;系统服务&lt;/strong&gt;。系统服务是专注于特定功能的模块化组件，例如窗口管理器、搜索服务或通知管理器。应用框架 API 所提供的功能可与系统服务通信，以访问底层硬件。Android 包含两组服务：“系统”（诸如窗口管理器和通知管理器之类的服务）和“媒体”（与播放和录制媒体相关的服务）。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;硬件抽象层 (HAL)&lt;/strong&gt;。HAL 可定义一个标准接口以供硬件供应商实现，这可让 Android 忽略较低级别的驱动程序实现。借助 HAL，硬件开发者可以顺利实现相关功能，而不会影响或更改更高级别的系统。HAL 实现会被封装成模块，并会由 Android 系统适时地加载。如需了解详情，请参阅&lt;a href="https://source.android.google.cn/devices/architecture/hal?hl=zh-cn"&gt;硬件抽象层 (HAL)&lt;/a&gt;。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Linux 内核&lt;/strong&gt;。开发设备驱动程序与开发典型的 Linux 设备驱动程序类似。Android 使用的 Linux 内核版本包含一些特殊的补充功能，例如低内存终止守护进程（一个内存管理系统，可更主动地保留内存）、唤醒锁定（一种 &lt;a href="https://developer.android.google.cn/reference/android/os/PowerManager.html?hl=zh-cn"&gt;&lt;code&gt;PowerManager&lt;/code&gt;&lt;/a&gt; 系统服务）、Binder IPC 驱动程序，以及对移动嵌入式平台来说非常重要的其他功能。这些补充功能主要用于增强系统功能，不会影响驱动程序开发。可以使用任意版本的内核，只要它支持所需功能（如 Binder 驱动程序）即可。不过建议使用 Android 内核的最新版本。如需了解详情，请参阅&lt;a href="https://source.android.google.cn/setup/building-kernels?hl=zh-cn"&gt;构建内核&lt;/a&gt;一文。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;硬件抽象层 (HAL)&lt;/strong&gt;。HAL 可定义一个标准接口以供硬件供应商实现，这可让 Android 忽略较低级别的驱动程序实现。借助 HAL，硬件开发者可以顺利实现相关功能，而不会影响或更改更高级别的系统。HAL 实现会被封装成模块，并会由 Android 系统适时地加载。如需了解详情，请参阅&lt;a href=&#34;https://source.android.google.cn/devices/architecture/hal?hl=zh-cn&#34;&gt;硬件抽象层 (HAL)&lt;/a&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Linux 内核&lt;/strong&gt;。开发设备驱动程序与开发典型的 Linux 设备驱动程序类似。Android 使用的 Linux 内核版本包含一些特殊的补充功能，例如低内存终止守护进程（一个内存管理系统，可更主动地保留内存）、唤醒锁定（一种 &lt;a href=&#34;https://developer.android.google.cn/reference/android/os/PowerManager.html?hl=zh-cn&#34;&gt;&lt;code&gt;PowerManager&lt;/code&gt;&lt;/a&gt; 系统服务）、Binder IPC 驱动程序，以及对移动嵌入式平台来说非常重要的其他功能。这些补充功能主要用于增强系统功能，不会影响驱动程序开发。可以使用任意版本的内核，只要它支持所需功能（如 Binder 驱动程序）即可。不过建议使用 Android 内核的最新版本。如需了解详情，请参阅&lt;a href=&#34;https://source.android.google.cn/setup/building-kernels?hl=zh-cn&#34;&gt;构建内核&lt;/a&gt;一文。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;blockquote&gt;
-&lt;p&gt;以上部分内容来源： &lt;a href="https://source.android.google.cn/devices/architecture?hl=zh-cn"&gt;https://source.android.google.cn/devices/architecture?hl=zh-cn&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id="搭建开发环境并编译源码"&gt;搭建开发环境并编译源码&lt;/h2&gt;
-&lt;p&gt;本节将讨论 Android 11 源码下载和编译的方法、AndroidStudio开发环境的搭建方法，及 system_process 进程的调试方法等相关知识。&lt;/p&gt;
-&lt;h3 id="选择分支"&gt;选择分支&lt;/h3&gt;
-&lt;p&gt;可参考 source.android.google.cn 的文档 &lt;a href="https://source.android.google.cn/setup/start/build-numbers"&gt;代号、标记和 Build 号&lt;/a&gt; ，可以看到当前最新的版本及标记如下：&lt;/p&gt;</description></item><item><title>[译]Android开发所需要的矩阵知识</title><link>https://hanlyjiang.github.io/posts/android%E5%BC%80%E5%8F%91%E6%89%80%E9%9C%80%E8%A6%81%E7%9A%84%E7%9F%A9%E9%98%B5%E7%9F%A5%E8%AF%86/</link><pubDate>Mon, 08 Feb 2021 10:38:22 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/android%E5%BC%80%E5%8F%91%E6%89%80%E9%9C%80%E8%A6%81%E7%9A%84%E7%9F%A9%E9%98%B5%E7%9F%A5%E8%AF%86/</guid><description>&lt;p&gt;翻译国外文章，该文章介绍了Android开发中矩阵相关的数学知识，包括矩阵是什么？矩阵加法及乘法运算，2x2矩阵的变换，最后演进为Android中使用的3x3矩阵。文中图片及动图比较多，相对好懂。&lt;/p&gt;
+&lt;p&gt;以上部分内容来源： &lt;a href=&#34;https://source.android.google.cn/devices/architecture?hl=zh-cn&#34;&gt;https://source.android.google.cn/devices/architecture?hl=zh-cn&lt;/a&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>[译]Android开发所需要的矩阵知识</title>
+      <link>https://hanlyjiang.github.io/posts/android%E5%BC%80%E5%8F%91%E6%89%80%E9%9C%80%E8%A6%81%E7%9A%84%E7%9F%A9%E9%98%B5%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Mon, 08 Feb 2021 10:38:22 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/android%E5%BC%80%E5%8F%91%E6%89%80%E9%9C%80%E8%A6%81%E7%9A%84%E7%9F%A9%E9%98%B5%E7%9F%A5%E8%AF%86/</guid>
+      <description>&lt;p&gt;翻译国外文章，该文章介绍了Android开发中矩阵相关的数学知识，包括矩阵是什么？矩阵加法及乘法运算，2x2矩阵的变换，最后演进为Android中使用的3x3矩阵。文中图片及动图比较多，相对好懂。&lt;/p&gt;
+&lt;!-- more --&gt;
 &lt;blockquote&gt;
-&lt;p&gt;原文链接：https://i-rant.arnaudbos.com/matrices-for-developers/#technical-challenge&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;几周前，我在一个android-user-group频道上，有人问一个关于Android的Matrix.postScale（sx，sy，px，py）方法及其工作原理的问题，因为它“难以掌握”。&lt;/p&gt;
-&lt;p&gt;在2016年初，我在一个Android应用程序上完成了一个自由项目，在其中我必须实现一个令人兴奋的功能：&lt;/p&gt;
-&lt;p&gt;用户在购买并下载了岩壁的数字地形后，必须能够查看由以下部分组成的岩壁：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;悬崖的照片，&lt;/li&gt;
-&lt;li&gt;包含爬坡路线叠加层的SVG文件。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;用户必须具有随意平移和缩放的能力，并且必须具有“跟随”图片的路线层。&lt;/p&gt;
-&lt;table&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;APP截图1&lt;/th&gt;
-&lt;th&gt;APP截图2&lt;/th&gt;
-&lt;th&gt;APP截图3&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;!-- raw HTML omitted --&gt;&lt;/td&gt;
-&lt;td&gt;&lt;!-- raw HTML omitted --&gt;&lt;/td&gt;
-&lt;td&gt;&lt;!-- raw HTML omitted --&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2 id="技术挑战"&gt;技术挑战&lt;/h2&gt;
-&lt;p&gt;为了让攀爬路线的图层能够跟随用户的手势操作，我发现我不得不重载Android ImageView，在Canvas上绘制并处理手指手势。 作为一名优秀的工程师：我搜索了Stack Overflow😅 我发现需要&lt;code&gt;android.graphics.Matrix&lt;/code&gt;类进行2D转换。&lt;/p&gt;
-&lt;p&gt;这个类的问题在于，从方法名称来说，你能很清楚的了解它的作用，但是如果没有没有一定的数学背景知识，你很难了解它背后是怎么实现的，比方说下面是matrix的某个方法的API文档说明：&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;boolean postScale (float sx, float sy, float px, float py)&lt;/p&gt;
-&lt;p&gt;Postconcats the matrix with the specified scale. M’ = S(sx, sy, px, py) * M&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;从文档看起它可以通过某些参数缩放某些东西，并通过某种乘法来完成它。不过我还是有很多疑问：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;它到底是做什么的？ 缩放矩阵？ 那是什么意思，我想缩放画布…&lt;/li&gt;
-&lt;li&gt;我应该使用preScale还是postScale？ 当我从从手势检测代码获取输入参数，然后进入尝试和错误的无限循环时，是否需要尝试同时使用这两个方法？&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;因此，在开发过程的这一刻，我意识到在完成大学的头两年后，我需要重新学习很多年前关于矩阵的基本数学技能。&lt;/p&gt;
-&lt;p&gt;在搜寻网络资料时，我发现了很多不错的资源，并且能够再次学习一些数学知识。 通过将我的理解应用到Java和Android中的代码，它还帮助我解决了2D转换问题。 因此，考虑到我在上面提到的频道上进行的讨论，似乎我不是唯一一个在矩阵中苦苦挣扎的人，试图弄明白这一点，并在Android的Matrix类和方法中使用这些技能，所以我想我会写一篇文章，第一部分是关于矩阵的，第二部分“&lt;a href="https://i-rant.arnaudbos.com/2d-transformations-android-java/"&gt;使用Android和Java进行2D转换&lt;/a&gt;”是关于如何在Java和Android上将关于矩阵的知识应用到代码中。&lt;/p&gt;
-&lt;h2 id="matrix是什么"&gt;Matrix是什么？&lt;/h2&gt;
-&lt;p&gt;我在可汗学院（Khan Academy）上发现一门&lt;a href="https://www.khanacademy.org/math/algebra-home/alg-matrices"&gt;关于矩阵的很好的代数课程&lt;/a&gt;。&lt;/p&gt;</description></item><item><title>编写一个Android Gradle插件</title><link>https://hanlyjiang.github.io/posts/%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AAandroid-gradle%E6%8F%92%E4%BB%B6/</link><pubDate>Sun, 20 Sep 2020 10:18:50 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AAandroid-gradle%E6%8F%92%E4%BB%B6/</guid><description>&lt;p&gt;gradle有三种编写插件的方式，我们这里使用在项目中的buildSrc模块中编写插件的方式，自定义了一个应用于Android项目的根据flavor过滤so库的gradle插件；&lt;/p&gt;
-&lt;h2 id="概述"&gt;概述&lt;/h2&gt;
-&lt;p&gt;自定义gradle插件有如下三种方式（&lt;a href="https://docs.gradle.org/current/userguide/custom_plugins.html#sec:packaging_a_plugin"&gt;🔗链接&lt;/a&gt;）：&lt;/p&gt;
+&lt;p&gt;原文链接：https://i-rant.arnaudbos.com/matrices-for-developers/#technical-challenge&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>编写一个Android Gradle插件</title>
+      <link>https://hanlyjiang.github.io/posts/%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AAandroid-gradle%E6%8F%92%E4%BB%B6/</link>
+      <pubDate>Sun, 20 Sep 2020 10:18:50 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AAandroid-gradle%E6%8F%92%E4%BB%B6/</guid>
+      <description>&lt;p&gt;gradle有三种编写插件的方式，我们这里使用在项目中的buildSrc模块中编写插件的方式，自定义了一个应用于Android项目的根据flavor过滤so库的gradle插件；&lt;/p&gt;
+&lt;!-- more --&gt;
+&lt;h2 id=&#34;概述&#34;&gt;概述&lt;/h2&gt;
+&lt;p&gt;自定义gradle插件有如下三种方式（&lt;a href=&#34;https://docs.gradle.org/current/userguide/custom_plugins.html#sec:packaging_a_plugin&#34;&gt;🔗链接&lt;/a&gt;）：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;在buildscript中直接编写；&lt;/li&gt;
 &lt;li&gt;在buildSrc项目中编写插件代码；&lt;/li&gt;
 &lt;li&gt;在独立的项目中编写插件代码；&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;这里我们将使用buildSrc方式实现一个gradle插件。&lt;/p&gt;
-&lt;h2 id="新建-buildsrc-module"&gt;新建 buildSrc module&lt;/h2&gt;
-&lt;p&gt;gradle会在项目中寻找名称为buildSrc模块，将其加载为gradle的插件代码目录。所以我们直接通过菜单新建一个名为 buildSrc 的java/kotlin模块。&lt;/p&gt;
-&lt;p&gt;然后在build.gradle中添加相关的plugin(java-gradle-plugin)及依赖：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;plugins &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; id &lt;span style="color:#e6db74"&gt;&amp;#39;java&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; id &lt;span style="color:#e6db74"&gt;&amp;#39;java-gradle-plugin&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; id &lt;span style="color:#e6db74"&gt;&amp;#34;org.jetbrains.kotlin.jvm&amp;#34;&lt;/span&gt; version &lt;span style="color:#e6db74"&gt;&amp;#39;1.3.61&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;group &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;io.github.hanlyjiang.gradle&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;version &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;0.0.2&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;dependencies &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; testCompile group: &lt;span style="color:#e6db74"&gt;&amp;#39;junit&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; name: &lt;span style="color:#e6db74"&gt;&amp;#39;junit&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; version: &lt;span style="color:#e6db74"&gt;&amp;#39;4.12&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 添加android相关build tools依赖，以便使用 android gradle 相关的API
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; compile &lt;span style="color:#e6db74"&gt;&amp;#39;com.android.tools.build:gradle:3.2.0&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="编写插件"&gt;编写插件&lt;/h2&gt;
-&lt;h3 id="需求简介"&gt;需求简介&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;**应用场景：**我们的产品中集成了两种VPN SDK，但是具体到每个项目上面，都只会落地到具体的一种，这个时候需要排除对应的SDK的SO库以减小APP包大小，不同的地区的打包配置通过flavor来进行区分配置，即每个地区会对应不同的flavor；&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;&lt;strong&gt;需求提取&lt;/strong&gt;： 这里实际上我们需要的是能够根据flavor，在打包过程中移除指定的so文件；&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;&lt;strong&gt;实现思路：&lt;/strong&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;flavor配置方式：在flavor中配置一个buildConfigField字段，用于指定我们的flavor需要的配置&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 配置VPN类型
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;buildConfigField &lt;span style="color:#e6db74"&gt;&amp;#34;String&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;VPN_TYPE&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;\&amp;#34;$VpnType.SANG_FOR\&amp;#34;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;插件配置：我们使用一个so_exclude配置来指定具体的exclude规则，包含两个字段。&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;buildConfigFieldKey 用于指定之前在flavor中定义的配置；&lt;/li&gt;
-&lt;li&gt;configMap 为一个配置表，指定上面的字段可取的值，即对应值应该exclude的so文件列表；&lt;/li&gt;
-&lt;/ul&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;so_exclude &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;/**
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * 使用VPN_TYPE 来设置so过滤的规则
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; buildConfigFieldKey &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;VPN_TYPE&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; configMap &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;VpnType&lt;span style="color:#f92672"&gt;.&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;H3C_iNode&lt;/span&gt;&lt;span style="color:#f92672"&gt;.&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;name&lt;/span&gt;&lt;span style="color:#f92672"&gt;()):&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 新华三过滤深信服的
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;lib/armeabi-v7a/libauth_forward.so&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;lib/armeabi-v7a/libhttps.so&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;lib/armeabi-v7a/libpkcs12cert.so&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;lib/armeabi-v7a/libsvpnservice.so&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;],&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;VpnType&lt;span style="color:#f92672"&gt;.&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;SANG_FOR&lt;/span&gt;&lt;span style="color:#f92672"&gt;.&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;name&lt;/span&gt;&lt;span style="color:#f92672"&gt;())&lt;/span&gt; &lt;span style="color:#f92672"&gt;:&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 深信服过滤新华三的
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;lib/armeabi-v7a/libies.so&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;],&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;VpnType&lt;span style="color:#f92672"&gt;.&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;NONE&lt;/span&gt;&lt;span style="color:#f92672"&gt;.&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;name&lt;/span&gt;&lt;span style="color:#f92672"&gt;())&lt;/span&gt; &lt;span style="color:#f92672"&gt;:&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 如配置成 NONE，则过滤掉所有的VPN的
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#75715e"&gt;// 深信服的so
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;lib/armeabi-v7a/libauth_forward.so&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;lib/armeabi-v7a/libhttps.so&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;lib/armeabi-v7a/libpkcs12cert.so&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;lib/armeabi-v7a/libsvpnservice.so&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// inode的so
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;lib/armeabi-v7a/libies.so&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;]&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;]&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3 id="定义插件及使用插件简介"&gt;定义插件及使用插件简介&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;插件需要继承 &lt;code&gt;org.gradle.api.Plugin&lt;/code&gt;，可在Plugin对构建流程进行自定义（如：创建任务，定义任务关系，修改已有任务动作等）&lt;/li&gt;
-&lt;li&gt;插件如果需要能够读取一些配置，可通过 &lt;code&gt;project.extensions.create&lt;/code&gt; 来从build.gradle中提取&lt;/li&gt;
-&lt;li&gt;如需在自己的 android代码模块中使用插件，通过 &lt;code&gt;apply plugin: 插件类引用即可&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3 id="插件实现"&gt;插件实现&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;插件的实现如下：
-&lt;ul&gt;
-&lt;li&gt;读取 so_exclude 配置，存储到 extension（类型为 FlavorSoExcludePluginExtension ）中&lt;/li&gt;
-&lt;li&gt;读取 android 的配置，找到 AppExtension类型的配置，也就是应用了 &lt;code&gt;apply application&lt;/code&gt; 的模块的配置，我们的项目中只有一个app模块应用此配置-即我们的apk模块；&lt;/li&gt;
-&lt;li&gt;遍历所有变体，获取对应变体的 so_exclude 对应的配置字段的值，建立flavor到配置值的映射表；&lt;/li&gt;
-&lt;li&gt;修改 packageApplication 任务，让其在执行之前即删除待打包临时目录中的对应so文件；&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;package&lt;/span&gt; io.github.hanlyjiang.gradle.plugin.soexclude
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;import&lt;/span&gt; com.android.build.gradle.AppExtension
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;import&lt;/span&gt; com.android.build.gradle.api.ApkVariantOutput
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;import&lt;/span&gt; org.gradle.api.Plugin
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;import&lt;/span&gt; org.gradle.api.Project
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;import&lt;/span&gt; org.gradle.api.logging.LogLevel
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;import&lt;/span&gt; org.gradle.api.logging.Logger
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;import&lt;/span&gt; org.gradle.api.logging.Logging
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;import&lt;/span&gt; java.io.File
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;/**
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * so 插件的 gradle 配置实体
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;open&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;FlavorSoExcludePluginExtension&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;/**
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * so 过滤配置表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; configMap: Map&amp;lt;String, List&amp;lt;String&amp;gt;&amp;gt;? = &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;/**
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * 配置字段的名称
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; buildConfigFieldKey: String = &lt;span style="color:#a6e22e"&gt;FlavorSoExcludePlugin&lt;/span&gt;.DEFAULT_CONFIG_KEY
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;/**
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * flavor so 打包过滤配置
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; *
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * ## 用法说明：
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; *
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * 1. 在build.gradle 中引入插件 &amp;lt;code&amp;gt;apply plugin: FlavorSoExcludePlugin&amp;lt;/code&amp;gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * 2. 添加 so_exclude 配置段：
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; *
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * ```groovy
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * so_exclude {
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * buildConfigFieldKey = &amp;#34;VPN_TYPE&amp;#34;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * configMap = [
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * (VpnType.H3C_iNode.name()): [
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * &amp;#34;lib/armeabi-v7a/libauth_forward.so&amp;#34;,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * &amp;#34;lib/armeabi-v7a/libhttps.so&amp;#34;,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * &amp;#34;lib/armeabi-v7a/libpkcs12cert.so&amp;#34;,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * &amp;#34;lib/armeabi-v7a/libsvpnservice.so&amp;#34;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * ],
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * (VpnType.SANG_FOR.name()) : [
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * &amp;#34;lib/armeabi-v7a/libies.so&amp;#34;,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * ],
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * (VpnType.NONE.name()) : [
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * // 深信服的so
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * &amp;#34;lib/armeabi-v7a/libauth_forward.so&amp;#34;,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * &amp;#34;lib/armeabi-v7a/libhttps.so&amp;#34;,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * &amp;#34;lib/armeabi-v7a/libpkcs12cert.so&amp;#34;,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * &amp;#34;lib/armeabi-v7a/libsvpnservice.so&amp;#34;,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * // inode的so
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * &amp;#34;lib/armeabi-v7a/libies.so&amp;#34;,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * ]
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * ]
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; *}
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; *```
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * 3. 在flavor的配置中添加 buildConfigField 配置，如：
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * ```
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * buildConfigField &amp;#34;String&amp;#34;, &amp;#34;VPN_TYPE&amp;#34;, &amp;#34;\&amp;#34;$VpnType.H3C_iNode\&amp;#34;&amp;#34;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * ```
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * 其中字段的名称为 之前 so_exclude 中配置的 `buildConfigFieldKey` 字段，对应的值为 configMap 中的 key ，如此配置后，打包时就会将configMap对应key中的so列表过滤掉
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * @author hanlyjiang 09/20/20 2:42 PM
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * @version 1.0
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;FlavorSoExcludePlugin&lt;/span&gt; : Plugin&amp;lt;Project&amp;gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;companion&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;const&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; PLUGIN_NAME = &lt;span style="color:#e6db74"&gt;&amp;#34;FlavorSoExcludePlugin&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;const&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; DEFAULT_CONFIG_KEY = &lt;span style="color:#e6db74"&gt;&amp;#34;SO_EXCLUDE&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;const&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; DEBUG = &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; logger: Logger = &lt;span style="color:#a6e22e"&gt;Logging&lt;/span&gt;.getLogger(FlavorSoExcludePlugin&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;.java)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;logInfo&lt;/span&gt;(msg: String) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logger.log(&lt;span style="color:#a6e22e"&gt;LogLevel&lt;/span&gt;.LIFECYCLE, &lt;span style="color:#e6db74"&gt;&amp;#34;&amp;lt;- &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$PLUGIN&lt;/span&gt;&lt;span style="color:#e6db74"&gt;_NAME: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$msg&lt;/span&gt;&lt;span style="color:#e6db74"&gt; -&amp;gt;&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;logDebug&lt;/span&gt;(msg: String) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (DEBUG) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logInfo(msg)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;lateinit&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; extension: FlavorSoExcludePluginExtension
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;apply&lt;/span&gt;(project: Project) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 添加自己的配置
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; extension = project.extensions.create(&lt;span style="color:#e6db74"&gt;&amp;#34;so_exclude&amp;#34;&lt;/span&gt;, FlavorSoExcludePluginExtension&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;.java)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 创建一个打印配置的任务，用于定义
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; task = project.tasks.create(&lt;span style="color:#e6db74"&gt;&amp;#34;printConfig&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; task.group = &lt;span style="color:#e6db74"&gt;&amp;#34;soExclude-plugin&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; task.doLast {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logInfo(&lt;span style="color:#e6db74"&gt;&amp;#34;-- 配置字段：buildConfigFieldKey= &amp;#34;&lt;/span&gt; + extension.buildConfigFieldKey)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logInfo(&lt;span style="color:#e6db74"&gt;&amp;#34;-- 当前配置：&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; extension.configMap&lt;span style="color:#f92672"&gt;?.&lt;/span&gt;run {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.keys.forEach { key &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logInfo(&lt;span style="color:#e6db74"&gt;&amp;#34;-- config: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$key&lt;/span&gt;&lt;span style="color:#e6db74"&gt; -- &amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(key)&lt;span style="color:#f92672"&gt;?.&lt;/span&gt;forEach {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logInfo(&lt;span style="color:#e6db74"&gt;&amp;#34;values: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$it&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logInfo(&lt;span style="color:#e6db74"&gt;&amp;#34;------------------ &amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 获取android的配置
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; androidExtensions = project.extensions.getByName(&lt;span style="color:#e6db74"&gt;&amp;#34;android&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logInfo(&lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt; + androidExtensions.javaClass)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (androidExtensions &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; AppExtension) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// applicatoin类型的就进行任务处理
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; initPackageOptions(project, androidExtensions)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;/**
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * vpn 配置
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; configMap: MutableMap&amp;lt;String, String&amp;gt; = HashMap()
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;initPackageOptions&lt;/span&gt;(project: Project, android: AppExtension) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; project.afterEvaluate {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; android.productFlavors.all {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; flavorName = &lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;.name
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logDebug(&lt;span style="color:#e6db74"&gt;&amp;#34;--productFlavors : &lt;/span&gt;&lt;span style="color:#e6db74"&gt;${it.name}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; soExcludeConfig = &lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;.buildConfigFields[extension.buildConfigFieldKey]&lt;span style="color:#f92672"&gt;?.&lt;/span&gt;run {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; soExcludeConfig = &lt;span style="color:#66d9ef"&gt;value&lt;/span&gt;.replace(&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;\&amp;#34;&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logDebug(&lt;span style="color:#e6db74"&gt;&amp;#34;--productFlavors : &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$flavorName&lt;/span&gt;&lt;span style="color:#e6db74"&gt;, soExcludeConfig: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$soExcludeConfig&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; configMap[flavorName] = soExcludeConfig
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; android.applicationVariants.all { variant &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logDebug(&lt;span style="color:#e6db74"&gt;&amp;#34;app variant flavorName: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;${variant.flavorName}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; flavorName = variant.flavorName
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; configKey = configMap[flavorName]
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; variant.outputs.forEach { output &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (output &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; ApkVariantOutput) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;//核心逻辑：修改packageApplication任务，在生成apk包之前，删除打包临时目录中的so文件即可避免打包so到apk中
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; output.packageApplication.doFirst {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; output.packageApplication.jniFolders.all {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// jniFolder 目录为最后打包apk时，用于存放so文件的临时目录
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; logInfo(&lt;span style="color:#e6db74"&gt;&amp;#34;变体名称: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;${variant.flavorName}&lt;/span&gt;&lt;span style="color:#e6db74"&gt; , configKey: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;${configKey}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;, jniFolders: &amp;#34;&lt;/span&gt; + &lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;.absoluteFile)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; handleExclude(&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;, configKey);
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;handleExclude&lt;/span&gt;(jniFolder: File?, configKey: String?) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; extension.configMap&lt;span style="color:#f92672"&gt;?.&lt;/span&gt;run {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; soExcludeList: List&amp;lt;String&amp;gt;? = &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(configKey)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; soExcludeList&lt;span style="color:#f92672"&gt;?.&lt;/span&gt;run {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; deleteJniSoFiles(jniFolder, *(soExcludeList.toTypedArray()))
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;deleteJniSoFiles&lt;/span&gt;(jniFolder: File?, &lt;span style="color:#66d9ef"&gt;vararg&lt;/span&gt; files: String) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; (item &lt;span style="color:#66d9ef"&gt;in&lt;/span&gt; files) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; file = File(jniFolder, item)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;file&lt;/span&gt;.exists()) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; deleteResult = &lt;span style="color:#66d9ef"&gt;file&lt;/span&gt;.delete()
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logInfo(&lt;span style="color:#e6db74"&gt;&amp;#34;删除so文件 &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$item&lt;/span&gt;&lt;span style="color:#e6db74"&gt; : &lt;/span&gt;&lt;span style="color:#e6db74"&gt;${if (deleteResult) &amp;#34;成功&amp;#34; else &amp;#34;失败&amp;#34;}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="使用枚举进行配置"&gt;使用枚举进行配置&lt;/h2&gt;
-&lt;p&gt;我们在buildSrc中定义一个枚举类，用于约定可以配置的值，即可以清晰定义配置值避免配置时直接写字符串容易出错，又可以支持代码自动补全方便配置。&lt;/p&gt;</description></item><item><title>Android-WebView中Java同JS的交互</title><link>https://hanlyjiang.github.io/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/</link><pubDate>Fri, 20 Mar 2020 10:18:50 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/</guid><description>&lt;p&gt;Android提供的几种JS同Java交互的方式介绍，通过一个实例介绍通过&lt;code&gt;evaluateJavascript&lt;/code&gt;调用JS方法。&lt;/p&gt;
-&lt;h2 id="android提供的js原生交互api"&gt;Android提供的js原生交互API&lt;/h2&gt;
-&lt;h3 id="android调用-js-代码"&gt;Android调用 JS 代码：&lt;/h3&gt;
+&lt;p&gt;这里我们将使用buildSrc方式实现一个gradle插件。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Android-WebView中Java同JS的交互</title>
+      <link>https://hanlyjiang.github.io/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/</link>
+      <pubDate>Fri, 20 Mar 2020 10:18:50 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/</guid>
+      <description>&lt;p&gt;Android提供的几种JS同Java交互的方式介绍，通过一个实例介绍通过&lt;code&gt;evaluateJavascript&lt;/code&gt;调用JS方法。&lt;/p&gt;
+&lt;!-- more --&gt;
+&lt;h2 id=&#34;android提供的js原生交互api&#34;&gt;Android提供的js原生交互API&lt;/h2&gt;
+&lt;h3 id=&#34;android调用-js-代码&#34;&gt;Android调用 JS 代码：&lt;/h3&gt;
 &lt;ol&gt;
 &lt;li&gt;通过WebView的 &lt;strong&gt;loadUrl()&lt;/strong&gt;&lt;/li&gt;
 &lt;li&gt;通过WebView的 &lt;strong&gt;evaluateJavascript()&lt;/strong&gt; 方法&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;Android调用 JS 代码主要使用 第二种方法。&lt;/p&gt;
-&lt;h3 id="js-调用-android-代码"&gt;JS 调用 Android 代码：&lt;/h3&gt;
+&lt;h3 id=&#34;js-调用-android-代码&#34;&gt;JS 调用 Android 代码：&lt;/h3&gt;
 &lt;ol&gt;
 &lt;li&gt;&lt;strong&gt;通过 WebView 的 addJavascriptInterface() 进行对象映射&lt;/strong&gt;&lt;/li&gt;
 &lt;li&gt;通过&lt;strong&gt;WebChromeClient&lt;/strong&gt;的 &lt;strong&gt;onJsAlert&lt;/strong&gt;() 、&lt;strong&gt;onJsConfirm&lt;/strong&gt;()、&lt;strong&gt;onJsPrompt&lt;/strong&gt;() 方法回调拦截JS对话框&lt;strong&gt;alert&lt;/strong&gt;()、&lt;strong&gt;confirm&lt;/strong&gt;()、&lt;strong&gt;prompt&lt;/strong&gt;() 消息&lt;/li&gt;
 &lt;li&gt;通过&lt;strong&gt;WebViewClient&lt;/strong&gt;的&lt;strong&gt;shouldOverrideUrlLoading()&lt;/strong&gt; 方法回调拦截 url&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;第2和第3中方式能力有限，所以主要是第一种。&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;官方示例代码：&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;addJavaScriptInterface 注入原生对象到JS + 原生通过loadUrl 调用JS代码&lt;/p&gt;
-&lt;pre tabindex="0"&gt;&lt;code&gt;class JsObject {
-@JavascriptInterface
-public String toString() { return &amp;#34;injectedObject&amp;#34;; }
-}
-webview.getSettings().setJavaScriptEnabled(true);
-// 注入Java对象到 JavaScript ，JS中可以通过 injectedObject 来调用原生代码
-webView.addJavascriptInterface(new JsObject(), &amp;#34;injectedObject&amp;#34;);
-webView.loadData(&amp;#34;&amp;#34;, &amp;#34;text/html&amp;#34;, null);
-webView.loadUrl(&amp;#34;javascript:alert(injectedObject.toString())&amp;#34;);
-&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
-&lt;p&gt;&lt;strong&gt;注意：&lt;/strong&gt;&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;Android 4.2（JELLY BEAN）及更高版本中只有被&lt;em&gt;JavascriptInterface&lt;/em&gt;注解的public方法才可以在js中调用； Android4.2以下设备上，所有public方法都可以被js访问（包括继承的）&lt;/li&gt;
-&lt;li&gt;通过&lt;em&gt;addJavaScriptInterface&lt;/em&gt;加入对象 ： 必须在注入对象之前启用JavaScript，并且注入的对象直到下次页面重新加载才会出现在JavaScript中。&lt;/li&gt;
-&lt;/ol&gt;
-&lt;/blockquote&gt;
-&lt;h2 id="应用实例java同vue交互"&gt;应用实例：Java同Vue交互&lt;/h2&gt;
-&lt;p&gt;我们需要在页面加载完毕之后更新数据，此时需要通过Java侧调用JS的方法来将数据传递给JS通知其更新；
-首先，我们需要在JS侧定义一个接收数据的方法，为了能让Java侧能方便找到，我们将方法定义到window对象上。
-然后在WebView中页面加载完毕（onPageFinished）后，调用 &lt;code&gt;webView.evaluateJavascript&lt;/code&gt; 来调用此JS方法；&lt;/p&gt;</description></item><item><title>Android事件及手势</title><link>https://hanlyjiang.github.io/posts/android-shi-jian-ji-shou-shi/</link><pubDate>Tue, 20 Feb 2018 10:13:24 +0000</pubDate><guid>https://hanlyjiang.github.io/posts/android-shi-jian-ji-shou-shi/</guid><description>&lt;p&gt;android事件基础及手势，主要关注各种手势的使用及其计算原理 。&lt;/p&gt;
-&lt;h2 id="android事件基础"&gt;Android事件基础&lt;/h2&gt;
+&lt;p&gt;第2和第3中方式能力有限，所以主要是第一种。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Android事件及手势</title>
+      <link>https://hanlyjiang.github.io/posts/android-shi-jian-ji-shou-shi/</link>
+      <pubDate>Tue, 20 Feb 2018 10:13:24 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/android-shi-jian-ji-shou-shi/</guid>
+      <description>&lt;p&gt;android事件基础及手势，主要关注各种手势的使用及其计算原理 。&lt;/p&gt;
+&lt;!-- more --&gt;
+&lt;h2 id=&#34;android事件基础&#34;&gt;Android事件基础&lt;/h2&gt;
 &lt;p&gt;这里我们主要关注概念&lt;/p&gt;
-&lt;h3 id="事件监听器及事件处理程序"&gt;事件监听器及事件处理程序&lt;/h3&gt;
-&lt;p&gt;可直接查看 &lt;a href="https://developer.android.google.cn/guide/topics/ui/ui-events"&gt;官方文档&lt;/a&gt;，此处仅做简要描述；&lt;/p&gt;
-&lt;h4 id="事件监听器"&gt;事件监听器&lt;/h4&gt;
+&lt;h3 id=&#34;事件监听器及事件处理程序&#34;&gt;事件监听器及事件处理程序&lt;/h3&gt;
+&lt;p&gt;可直接查看 &lt;a href=&#34;https://developer.android.google.cn/guide/topics/ui/ui-events&#34;&gt;官方文档&lt;/a&gt;，此处仅做简要描述；&lt;/p&gt;
+&lt;h4 id=&#34;事件监听器&#34;&gt;事件监听器&lt;/h4&gt;
 &lt;p&gt;View类的包含一个回调方法的接口，通过setXXXListener来定义事件处理程序；&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;事件监听器是 &lt;code&gt;View&lt;/code&gt; 类中包含一个回调方法的接口。当用户与界面项目之间的互动触发已注册监听器的 View 对象时，Android 框架将调用这些方法。&lt;/p&gt;
-&lt;p&gt;事件监听器接口中包含以下回调方法：onClick()，onLongClick()，onFocusChange()，onKey()，onTouch()，onCreateContextMenu()&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;我们重点关注onTouch：&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;onTouch()： 在 &lt;code&gt;View.OnTouchListener&lt;/code&gt; 中。当用户执行可视为触摸事件的操作时，包括按下、释放或屏幕上的任何移动手势（在项目边界内），系统会调用此方法。&lt;/p&gt;
-&lt;p&gt;此方法返回一个布尔值，指示监听器是否处理完此事件。重要的是，此事件可以拥有多个分先后顺序的操作。因此，如果在收到 down 操作事件时返回 false，则表示您并未处理完此事件，而且对其后续操作也不感兴趣。因此，您无需执行事件内的任何其他操作，如手势或最终的 up 操作事件。&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h4 id="事件处理程序"&gt;事件处理程序&lt;/h4&gt;
-&lt;p&gt;直接引用官方文档描述：&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;如果您从 View 构建自定义组件，则可定义几种回调方法，用作默认事件处理程序。在有关&lt;a href="https://developer.android.google.cn/guide/topics/ui/custom-components"&gt;自定义 View 组件&lt;/a&gt;的文档中，您将了解一些用于事件处理的常见回调，包括：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;onKeyDown(int, KeyEvent)&lt;/code&gt;：在发生新的按键事件时调用。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;onKeyUp(int, KeyEvent)&lt;/code&gt;：在发生 key up 事件时调用。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;onTrackballEvent(MotionEvent)&lt;/code&gt;：在发生轨迹球动作事件时调用。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;onTouchEvent(MotionEvent)&lt;/code&gt;：在发生触屏动作事件时调用。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;onFocusChanged(boolean, int, Rect)&lt;/code&gt;：在 View 对象获得或失去焦点时调用。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;还有一些其他方法值得您注意，尽管它们并非 View 类的一部分，但可能会直接影响所能采取的事件处理方式。因此，在管理布局内更复杂的事件时，不妨考虑使用以下其他方法：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;Activity.dispatchTouchEvent(MotionEvent)&lt;/code&gt;：此方法允许 &lt;code&gt;Activity&lt;/code&gt; 在所有触摸事件分派给窗口之前截获它们。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;ViewGroup.onInterceptTouchEvent(MotionEvent)&lt;/code&gt;：此方法允许 &lt;code&gt;ViewGroup&lt;/code&gt; 监视分派给子级 View 的事件。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;ViewParent.requestDisallowInterceptTouchEvent(boolean)&lt;/code&gt;：对父级 View 调用此方法，可指示不应使用 &lt;code&gt;onInterceptTouchEvent(MotionEvent)&lt;/code&gt; 截获触摸事件。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;这里我们重点关注 &lt;code&gt;onTouchEvent(MotionEvent)&lt;/code&gt; 即在发生触屏动作事件时调用的回调方法；&lt;/p&gt;
-&lt;h3 id="触摸手势"&gt;触摸手势&lt;/h3&gt;
-&lt;p&gt;手势可以让用户通过触摸来与屏幕元素进行交互；&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;用户交户角度的手势划分&lt;/strong&gt;：&lt;/p&gt;
-&lt;table&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;手势类型&lt;/th&gt;
-&lt;th&gt;具体手势-不同类型之间有重复&lt;/th&gt;
-&lt;th&gt;解释&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;导航手势&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;实现导航作用&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;点击 - Tap&lt;/td&gt;
-&lt;td&gt;如：点击按钮跳转到另外一个页面&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;滚动和拖移 - Scroll&amp;amp;Pan&lt;/td&gt;
-&lt;td&gt;如：滑动图片列表或拖动以浏览地图&lt;!-- raw HTML omitted --&gt;&lt;!-- raw HTML omitted --&gt;Scroll - 快速拖动并抬起手指时发生的一种滚动 &lt;!-- raw HTML omitted --&gt; Pan-拖移，慢速移动&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;拖动/拖拽 - Drag&lt;/td&gt;
-&lt;td&gt;用户在触摸屏上拖动手指时发生的一种滚动&lt;!-- raw HTML omitted --&gt;如：按住底部sheet并向屏幕顶部拖动&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;轻扫 - Swipe&lt;/td&gt;
-&lt;td&gt;单个手指触摸屏幕并快速地朝任意一个方向滑动&lt;!-- raw HTML omitted --&gt;如：左右滑动以在不同的Tab页中切换&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;捏合/缩放 - Pinch&lt;/td&gt;
-&lt;td&gt;双指或多指捏合&lt;!-- raw HTML omitted --&gt;如：在一个图片列表中缩放一个item进入大图查看界面&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;动作手势&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;执行某种动作&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;点击 - Tap&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;长按 - Long press&lt;/td&gt;
-&lt;td&gt;如：长按选中&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;轻扫 - Swipe&lt;/td&gt;
-&lt;td&gt;如：轻扫item展现删除/收藏按钮&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;变换手势&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;用于改变元素大小，位置，旋转角度，实现变换效果&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;双击 - Double tap&lt;/td&gt;
-&lt;td&gt;如：双击缩放图片&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;捏合/缩放 - Pinch&lt;/td&gt;
-&lt;td&gt;如：缩放查看图片细节&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;组合手势&lt;/td&gt;
-&lt;td&gt;如：地图中的放大缩小&amp;amp;旋转&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;/td&gt;
-&lt;td&gt;选取并拖动 - Pick up&amp;amp;Move&lt;/td&gt;
-&lt;td&gt;长按选择元素 + 拖动元素&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;blockquote&gt;
-&lt;p&gt;&lt;a href="https://material.io/design/interaction/gestures.html"&gt;来源&lt;/a&gt;及手势的动画效果可以看这里： &lt;a href="https://material.io/design/interaction/gestures.html#types-of-gestures"&gt;material.io&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>
+&lt;p&gt;事件监听器是 &lt;code&gt;View&lt;/code&gt; 类中包含一个回调方法的接口。当用户与界面项目之间的互动触发已注册监听器的 View 对象时，Android 框架将调用这些方法。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

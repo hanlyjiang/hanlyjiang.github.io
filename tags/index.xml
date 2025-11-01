@@ -1,1 +1,124 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Tags on 清水池塘</title><link>https://hanlyjiang.github.io/tags/</link><description>Recent content in Tags on 清水池塘</description><generator>Hugo -- 0.152.2</generator><language>zh-cn</language><lastBuildDate>Sat, 19 Mar 2022 22:29:12 +0000</lastBuildDate><atom:link href="https://hanlyjiang.github.io/tags/index.xml" rel="self" type="application/rss+xml"/><item><title>Android</title><link>https://hanlyjiang.github.io/tags/android/</link><pubDate>Sat, 19 Mar 2022 22:29:12 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/android/</guid><description/></item><item><title>测试</title><link>https://hanlyjiang.github.io/tags/%E6%B5%8B%E8%AF%95/</link><pubDate>Sat, 19 Mar 2022 22:29:12 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/%E6%B5%8B%E8%AF%95/</guid><description/></item><item><title>问题解决</title><link>https://hanlyjiang.github.io/tags/%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/</link><pubDate>Sun, 13 Mar 2022 23:18:16 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/</guid><description/></item><item><title>依赖注入</title><link>https://hanlyjiang.github.io/tags/%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/</link><pubDate>Sun, 06 Mar 2022 15:11:54 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/</guid><description/></item><item><title>开源框架</title><link>https://hanlyjiang.github.io/tags/%E5%BC%80%E6%BA%90%E6%A1%86%E6%9E%B6/</link><pubDate>Sun, 06 Mar 2022 15:11:54 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/%E5%BC%80%E6%BA%90%E6%A1%86%E6%9E%B6/</guid><description/></item><item><title>源码分析</title><link>https://hanlyjiang.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</link><pubDate>Sun, 06 Mar 2022 15:11:54 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</guid><description/></item><item><title>Gradle</title><link>https://hanlyjiang.github.io/tags/gradle/</link><pubDate>Thu, 24 Feb 2022 22:29:04 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/gradle/</guid><description/></item><item><title>Arduino</title><link>https://hanlyjiang.github.io/tags/arduino/</link><pubDate>Thu, 02 Dec 2021 14:16:46 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/arduino/</guid><description/></item><item><title>工具</title><link>https://hanlyjiang.github.io/tags/%E5%B7%A5%E5%85%B7/</link><pubDate>Tue, 01 Jun 2021 10:26:00 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/%E5%B7%A5%E5%85%B7/</guid><description/></item><item><title>CICD</title><link>https://hanlyjiang.github.io/tags/cicd/</link><pubDate>Wed, 26 May 2021 16:12:17 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/cicd/</guid><description/></item><item><title>Gitlab</title><link>https://hanlyjiang.github.io/tags/gitlab/</link><pubDate>Wed, 26 May 2021 16:12:17 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/gitlab/</guid><description/></item><item><title>Docker</title><link>https://hanlyjiang.github.io/tags/docker/</link><pubDate>Wed, 21 Apr 2021 16:51:40 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/docker/</guid><description/></item><item><title>工作</title><link>https://hanlyjiang.github.io/tags/%E5%B7%A5%E4%BD%9C/</link><pubDate>Thu, 08 Apr 2021 16:48:23 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/%E5%B7%A5%E4%BD%9C/</guid><description/></item><item><title>Vue</title><link>https://hanlyjiang.github.io/tags/vue/</link><pubDate>Fri, 20 Mar 2020 10:18:50 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/vue/</guid><description/></item><item><title>WebView</title><link>https://hanlyjiang.github.io/tags/webview/</link><pubDate>Fri, 20 Mar 2020 10:18:50 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/webview/</guid><description/></item><item><title>Gridea</title><link>https://hanlyjiang.github.io/tags/gridea/</link><pubDate>Wed, 12 Dec 2018 00:00:00 +0000</pubDate><guid>https://hanlyjiang.github.io/tags/gridea/</guid><description/></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Tags on 清水池塘</title>
+    <link>https://hanlyjiang.github.io/tags/</link>
+    <description>Recent content in Tags on 清水池塘</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Sat, 19 Mar 2022 22:29:12 +0000</lastBuildDate>
+    <atom:link href="https://hanlyjiang.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Android</title>
+      <link>https://hanlyjiang.github.io/tags/android/</link>
+      <pubDate>Sat, 19 Mar 2022 22:29:12 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/android/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>测试</title>
+      <link>https://hanlyjiang.github.io/tags/%E6%B5%8B%E8%AF%95/</link>
+      <pubDate>Sat, 19 Mar 2022 22:29:12 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/%E6%B5%8B%E8%AF%95/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>问题解决</title>
+      <link>https://hanlyjiang.github.io/tags/%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/</link>
+      <pubDate>Sun, 13 Mar 2022 23:18:16 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>开源框架</title>
+      <link>https://hanlyjiang.github.io/tags/%E5%BC%80%E6%BA%90%E6%A1%86%E6%9E%B6/</link>
+      <pubDate>Sun, 06 Mar 2022 15:11:54 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/%E5%BC%80%E6%BA%90%E6%A1%86%E6%9E%B6/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>依赖注入</title>
+      <link>https://hanlyjiang.github.io/tags/%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/</link>
+      <pubDate>Sun, 06 Mar 2022 15:11:54 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>源码分析</title>
+      <link>https://hanlyjiang.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</link>
+      <pubDate>Sun, 06 Mar 2022 15:11:54 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Gradle</title>
+      <link>https://hanlyjiang.github.io/tags/gradle/</link>
+      <pubDate>Thu, 24 Feb 2022 22:29:04 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/gradle/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Arduino</title>
+      <link>https://hanlyjiang.github.io/tags/arduino/</link>
+      <pubDate>Thu, 02 Dec 2021 14:16:46 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/arduino/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>工具</title>
+      <link>https://hanlyjiang.github.io/tags/%E5%B7%A5%E5%85%B7/</link>
+      <pubDate>Tue, 01 Jun 2021 10:26:00 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/%E5%B7%A5%E5%85%B7/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>CICD</title>
+      <link>https://hanlyjiang.github.io/tags/cicd/</link>
+      <pubDate>Wed, 26 May 2021 16:12:17 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/cicd/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Gitlab</title>
+      <link>https://hanlyjiang.github.io/tags/gitlab/</link>
+      <pubDate>Wed, 26 May 2021 16:12:17 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/gitlab/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Docker</title>
+      <link>https://hanlyjiang.github.io/tags/docker/</link>
+      <pubDate>Wed, 21 Apr 2021 16:51:40 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/docker/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>工作</title>
+      <link>https://hanlyjiang.github.io/tags/%E5%B7%A5%E4%BD%9C/</link>
+      <pubDate>Thu, 08 Apr 2021 16:48:23 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/%E5%B7%A5%E4%BD%9C/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Vue</title>
+      <link>https://hanlyjiang.github.io/tags/vue/</link>
+      <pubDate>Fri, 20 Mar 2020 10:18:50 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/vue/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>WebView</title>
+      <link>https://hanlyjiang.github.io/tags/webview/</link>
+      <pubDate>Fri, 20 Mar 2020 10:18:50 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/webview/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Gridea</title>
+      <link>https://hanlyjiang.github.io/tags/gridea/</link>
+      <pubDate>Wed, 12 Dec 2018 00:00:00 +0000</pubDate>
+      <guid>https://hanlyjiang.github.io/tags/gridea/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>
