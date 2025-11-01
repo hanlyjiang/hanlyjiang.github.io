@@ -1456,7 +1456,7 @@ builder镜像和base镜像的构建arm及x86两个架构的镜像构建可以合
 
 ### hasura 是什么？
 
-引用[hasura官方]([https://github.com/hasura/graphql-engine/blob/master/translations/README.chinese.md](https://github.com/hasura/graphql-engine/blob/master/translations/README.chinese.md)
+引用[hasura官方](https://github.com/hasura/graphql-engine/blob/master/translations/README.chinese.md
 )的介绍
 
 > Hasura GraphQL引擎是一个高性能的GraphQL服务器，可为您提供 **Postgres上开箱即用的实时GraphQL API**， 响应数据库事件的 [**Webhook触发器**](https://github.com/hasura/graphql-engine/blob/master/event-triggers.md)，以及用于业务逻辑处理的 [**远端Schema**](https://github.com/hasura/graphql-engine/blob/master/remote-schemas.md)。

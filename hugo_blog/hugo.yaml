@@ -1,47 +1,129 @@
-baseURL: https://hanlyjiang.github.io/
-languageCode: zh-cn
-title: 清水池塘
-theme: PaperMod
-taxonomies:
-  category: categories
-  tag: tags
-menu:
-  main:
-    - identifier: home
-      name: 首页
-      url: /
-      weight: 1
-      pre: <i class='fas fa-home'></i>
-    - identifier: archives
-      name: 归档
-      url: /archives/
-      weight: 2
-      pre: <i class='fas fa-tags'></i>
-    - identifier: tags
-      name: 标签
-      url: /tags/
-      weight: 4
-    - identifier: search
-      name: 搜索
-      url: /search/
-      weight: 5
+baseURL: "https://hanlyjiang.github.io/"
+languageCode: "zh-cn"
+title: "清水池塘"
+theme: "PaperMod"
+
+enableInlineShortcodes: true
+enableEmoji: true
+enableRobotsTXT: true
+hasCJKLanguage: true
+
+buildDrafts: false
+buildFuture: false
+buildExpired: false
+
+pagination:
+  pagerSize : 15
+
+summaryLength: 140
+
+minify:
+  disableXML: true
+
+# 自定义文章永久链接格式为 `/:title/`
+permalinks:
+  post: "/:title/"
+
+defaultContentLanguage: "zh-cn"
+defaultContentLanguageInSubdir: false
+
+languages:
+  zh-cn:
+    languageName: "简中"
+    weight: 1
+    params:
+      homeInfoParams:
+        Title: "最淡的墨水，也胜过最强的记忆"
+        Content: >
+          ## 记录，是与时间的对话；文字，是记忆的延伸。
+    menu:
+      main:
+        - identifier: home
+          name: 首页
+          url: /
+          weight: 1
+          pre: <i class='fas fa-home'></i>
+        - identifier: archives
+          name: 归档
+          url: /archives/
+          weight: 2
+          pre: <i class='fas fa-tags'></i>
+        - identifier: tags
+          name: 标签
+          url: /tags/
+          weight: 4
+        - identifier: search
+          name: 搜索
+          url: /search/
+          weight: 5
+
+
+outputs:
+  home:
+    - "HTML"
+    - "RSS"
+    - "JSON"
+
 params:
-  author: 野生莲藕
-  defaultTheme: auto
-  showReadingTime: true
-  showToc: true
-  comments: true
-  ShowPostNavLinks: true
+  env: "production"
+  description: "记录与分享"
+  author: "野生莲藕"
+  defaultTheme: "auto"
   ShowCodeCopyButtons: true
-  TocOpen: false
-  ShowWordCount: true
-  ShowRssButtonInSectionTermList: true
-  ShowShareButtons: false
+  ShowReadingTime: true
+  ShowPostNavLinks: true
   ShowBreadCrumbs: true
-  search:
-    enabled: true
-  archive:
-    enabled: true
+  ShowWordCounts: true
+  ShowLastMod: true
+  ShowToc: true
+  TocOpen: true
+  comments: true
+  DateFormat: "2006年1月2日"
+
+  # 网站左上角标签配置
+  label:
+    text: "清水池塘"
+    icon: "/img/site-img.png"
+    iconHeight: 35
+
+  # 社交图标 (新增 umami 统计页面链接)
+#  socialIcons:
+#    - name: "github"
+#      url: "https://github.com/rbetree"
+#    - name: "email"
+#      url: "mailto:rzlrong@outlook.com"
+#    - name: "rss"
+#      url: "index.xml"
+#    - name: "link"
+#      url: "https://umami.rzlnb.top/share/ymNY5tcAN7soVhBW/blog.rzlnb.top"
+
+  # Favicon 和 Apple Touch Icon 配置
   assets:
-    disableHLJS: false
-    disableFontAwesome: false
+    favicon: "/img/site-icon.png"
+    # ... 其他尺寸图标
+
+  # 列表页和文章页的封面显示策略
+  cover:
+    hidden: false
+    hiddenInList: false
+    hiddenInSingle: true
+
+  # 搜索配置
+  fuseOpts:
+    keys: ["title", "permalink", "summary"]
+    # ... 其他搜索选项
+
+  # 页脚版权年份
+  StartYear: 2024
+  EndYear: 2025
+
+# 允许在 Markdown 中使用原始 HTML
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+
+# 添加 series（系列）作为一种分类方式
+taxonomies:
+  tag: tags
+  series: series

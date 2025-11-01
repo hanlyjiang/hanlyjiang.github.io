@@ -2,7 +2,7 @@
 /* === ✅ 改进后的代码块样式 === */
 pre, code {
   font-family: "Inter", "Noto Sans SC", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  font-size: 18px;        /* ✅ 提高字号 */
+  font-size: 18px; /* ✅ 提高字号 */
   line-height: 1.6;
   border-radius: 10px;
   word-break: break-word;
@@ -13,3 +13,60 @@ pre code {
   background: transparent !important;
   padding: 0;
 }
+
+/* 调整首页欢迎区域 vertical 位置 */
+.home-info {
+  margin-top: -5rem; /* 负值上移，正值下移 */
+  margin-bottom: -5rem; /* 负值上移，正值下移 */
+  padding-left: 2px;
+}
+
+
+.home-info .entry-header h1 {
+  font-size: 1.5rem;
+}
+
+.home-info h2 {
+  font-size: 1.0rem;
+}
+
+/* 可选：让整体更紧凑 */
+.home-info .home-info-content {
+  padding: 0.5rem 1rem;
+  line-height: 1.4;
+}
+
+
+/* 字体定义
+ */
+@font-face {
+  font-family: 'FZJZXF';
+  src: url('/fonts/FZJZXF-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-main: 'FZJZXF', 'Microsoft YaHei', sans-serif;
+}
+
+body {
+  font-family: var(--font-main);
+}
+
+/* 注册字体 */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Regular.woff2') format('woff2'),
+       url('/fonts/JetBrainsMono-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 应用于代码块 */
+code, pre, pre code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
