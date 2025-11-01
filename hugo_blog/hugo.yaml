@@ -1,0 +1,47 @@
+baseURL: https://hanlyjiang.github.io/
+languageCode: zh-cn
+title: 清水池塘
+theme: PaperMod
+taxonomies:
+  category: categories
+  tag: tags
+menu:
+  main:
+    - identifier: home
+      name: 首页
+      url: /
+      weight: 1
+      pre: <i class='fas fa-home'></i>
+    - identifier: archives
+      name: 归档
+      url: /archives/
+      weight: 2
+      pre: <i class='fas fa-tags'></i>
+    - identifier: tags
+      name: 标签
+      url: /tags/
+      weight: 4
+    - identifier: search
+      name: 搜索
+      url: /search/
+      weight: 5
+params:
+  author: 野生莲藕
+  defaultTheme: auto
+  showReadingTime: true
+  showToc: true
+  comments: true
+  ShowPostNavLinks: true
+  ShowCodeCopyButtons: true
+  TocOpen: false
+  ShowWordCount: true
+  ShowRssButtonInSectionTermList: true
+  ShowShareButtons: false
+  ShowBreadCrumbs: true
+  search:
+    enabled: true
+  archive:
+    enabled: true
+  assets:
+    disableHLJS: false
+    disableFontAwesome: false
