@@ -101,7 +101,7 @@ APP进程中如何获取AMS？
 ==总结：==">
 <meta name="author" content="野生莲藕">
 <link rel="canonical" href="http://localhost:1313/posts/androidbindservice-liu-cheng-fen-xi/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.baa878dc2137a9eb6809ce7efb1433a118a28d4a76b76609ea793ca884f04fb1.css" integrity="sha256-uqh43CE3qetoCc5&#43;&#43;xQzoRiijUp2t2YJ6nk8qITwT7E=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
@@ -203,7 +203,7 @@ APP进程中如何获取AMS？
     <h1 class="post-title entry-hint-parent">
       Android bindService流程
     </h1>
-    <div class="post-meta"><span title='2021-04-12 10:18:50 +0000 UTC'>April 12, 2021</span>&nbsp;·&nbsp;<span>22 min</span>&nbsp;·&nbsp;<span>野生莲藕</span>
+    <div class="post-meta"><span title='2021-04-12 10:18:50 +0000 UTC'>April 12, 2021</span>&nbsp;·&nbsp;<span>22 min</span>&nbsp;·&nbsp;<span>4643 words</span>&nbsp;·&nbsp;<span>野生莲藕</span>
 
 </div>
   </header> <div class="toc">
@@ -1988,6 +1988,19 @@ APP进程中如何获取AMS？
       <li><a href="http://localhost:1313/tags/android/">Android</a></li>
       <li><a href="http://localhost:1313/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a></li>
     </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/idea-shi-yong-ji-qiao-zhi-dao-hang/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>IDEA使用技巧之导航</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/%E5%B7%A5%E4%BD%9C%E4%BA%A4%E6%8E%A5-gitlab%E7%9B%B8%E5%85%B3/">
+    <span class="title">Next »</span>
+    <br>
+    <span>工作交接-Gitlab相关</span>
+  </a>
+</nav>
+
   </footer>
 </article>
     </main>
@@ -2066,6 +2079,53 @@ APP进程中如何获取AMS？
         }
     })
 
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
 </script>
 </body>
 

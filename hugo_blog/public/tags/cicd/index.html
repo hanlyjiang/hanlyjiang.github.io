@@ -10,7 +10,7 @@
 <meta name="description" content="">
 <meta name="author" content="野生莲藕">
 <link rel="canonical" href="http://localhost:1313/tags/cicd/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.baa878dc2137a9eb6809ce7efb1433a118a28d4a76b76609ea793ca884f04fb1.css" integrity="sha256-uqh43CE3qetoCc5&#43;&#43;xQzoRiijUp2t2YJ6nk8qITwT7E=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
@@ -137,7 +137,7 @@
 gitlab-ci.yml 配置 variables: # 配置仓库环境 DOCKER_REGISTRY: zh-registry.colorless.com.cn DOCKER_NAMESPACE: colorless DEPLOY_PATH: /Wksp/colorlessWork/colorless-deploy/deploy/ # 配置镜像服务名 SERVICE_NAME: graphql-token stages: - test - build - build_image - deploy # 引入代码检查任务 #include: # local: ci/gitlab-ci-sonar.yml build:jar: # 部分模块若不使用1.8编译会报错 image: maven:3.6.3-jdk-8 stage: build script: - mvn package - mkdir _archiver - cp target/*.jar _archiver/ - ls -lh _archiver/ artifacts: name: &#34;dist-$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA&#34; paths: - _archiver/*.jar # 生成的归档包比较大，我们只保留短时间 expire_in: 1 hours tags: - common-build only: - master - web build:docker: stage: build_image script: # 登录公司的Harbor，注意必须在环境变量配置 HARBOR_PWD - echo $HARBOR_PWD | docker login --username=$HARBOR_USER $DOCKER_REGISTRY --password-stdin # 定义镜像TAG - IMAGE_NAME=$DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$CI_COMMIT_SHORT_SHA - echo &#34;Docker build options $DOCKER_OPTIONS, set DOCKER_OPTIONS to --no-cache force rebuild all stage&#34; - cp _archiver/*.jar docker/ # build镜像 - JAR_FILE=`ls docker/ | grep -E *.jar` - echo $JAR_FILE - docker build $DOCKER_OPTIONS --build-arg JAR_FILE=$JAR_FILE -t $IMAGE_NAME ./docker/ # 推送镜像 - docker push $IMAGE_NAME - echo &#34;镜像构建完成：$IMAGE_NAME&#34; tags: - docker only: - master - web deploy: stage: deploy script: - echo $HARBOR_PWD | docker login --username=$HARBOR_USER $DOCKER_REGISTRY --password-stdin - cd $DEPLOY_PATH - source deploy.sh - update_service $DOCKER_NAMESPACE $SERVICE_NAME $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$CI_COMMIT_SHORT_SHA environment: name: test_env_deploy url: $APP_URL/ when: manual only: - branches - web tags: - deploy_graphql 注意 deploy 任务中定义的环境配置：
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-05-26 16:12:17 +0000 UTC'>May 26, 2021</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-05-26 16:12:17 +0000 UTC'>May 26, 2021</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>1477 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to Gitlab持续集成与持续部署-实例" href="http://localhost:1313/posts/gitlab-chi-xu-ji-cheng-yu-chi-xu-bu-shu-shi-li/"></a>
 </article>
     </main>

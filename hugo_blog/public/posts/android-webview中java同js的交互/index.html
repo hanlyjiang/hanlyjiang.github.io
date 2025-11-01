@@ -46,7 +46,7 @@ Android 4.2（JELLY BEAN）及更高版本中只有被JavascriptInterface注解�
 然后在WebView中页面加载完毕（onPageFinished）后，调用 webView.evaluateJavascript 来调用此JS方法；">
 <meta name="author" content="野生莲藕">
 <link rel="canonical" href="http://localhost:1313/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.baa878dc2137a9eb6809ce7efb1433a118a28d4a76b76609ea793ca884f04fb1.css" integrity="sha256-uqh43CE3qetoCc5&#43;&#43;xQzoRiijUp2t2YJ6nk8qITwT7E=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
@@ -148,7 +148,7 @@ Android 4.2（JELLY BEAN）及更高版本中只有被JavascriptInterface注解�
     <h1 class="post-title entry-hint-parent">
       Android-WebView中Java同JS的交互
     </h1>
-    <div class="post-meta"><span title='2020-03-20 10:18:50 +0000 UTC'>March 20, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>野生莲藕</span>
+    <div class="post-meta"><span title='2020-03-20 10:18:50 +0000 UTC'>March 20, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>280 words</span>&nbsp;·&nbsp;<span>野生莲藕</span>
 
 </div>
   </header> <div class="toc">
@@ -319,6 +319,19 @@ webView.loadUrl(&#34;javascript:alert(injectedObject.toString())&#34;);
       <li><a href="http://localhost:1313/tags/webview/">WebView</a></li>
       <li><a href="http://localhost:1313/tags/vue/">Vue</a></li>
     </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/gitlab-%E5%AE%89%E8%A3%85%E5%B9%B6%E9%85%8D%E7%BD%AEgitlab/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Gitlab安装配置</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/about/">
+    <span class="title">Next »</span>
+    <br>
+    <span>关于</span>
+  </a>
+</nav>
+
   </footer>
 </article>
     </main>
@@ -397,6 +410,53 @@ webView.loadUrl(&#34;javascript:alert(injectedObject.toString())&#34;);
         }
     })
 
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
 </script>
 </body>
 

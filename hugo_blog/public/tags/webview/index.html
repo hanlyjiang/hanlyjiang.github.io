@@ -10,7 +10,7 @@
 <meta name="description" content="">
 <meta name="author" content="野生莲藕">
 <link rel="canonical" href="http://localhost:1313/tags/webview/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.baa878dc2137a9eb6809ce7efb1433a118a28d4a76b76609ea793ca884f04fb1.css" integrity="sha256-uqh43CE3qetoCc5&#43;&#43;xQzoRiijUp2t2YJ6nk8qITwT7E=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
@@ -127,7 +127,7 @@ class JsObject { @JavascriptInterface public String toString() { return &#34;inj
 Android 4.2（JELLY BEAN）及更高版本中只有被JavascriptInterface注解的public方法才可以在js中调用； Android4.2以下设备上，所有public方法都可以被js访问（包括继承的） 通过addJavaScriptInterface加入对象 ： 必须在注入对象之前启用JavaScript，并且注入的对象直到下次页面重新加载才会出现在JavaScript中。 应用实例：Java同Vue交互 我们需要在页面加载完毕之后更新数据，此时需要通过Java侧调用JS的方法来将数据传递给JS通知其更新； 首先，我们需要在JS侧定义一个接收数据的方法，为了能让Java侧能方便找到，我们将方法定义到window对象上。 然后在WebView中页面加载完毕（onPageFinished）后，调用 webView.evaluateJavascript 来调用此JS方法；
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2020-03-20 10:18:50 +0000 UTC'>March 20, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2020-03-20 10:18:50 +0000 UTC'>March 20, 2020</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>280 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to Android-WebView中Java同JS的交互" href="http://localhost:1313/posts/android-webview%E4%B8%ADjava%E5%90%8Cjs%E7%9A%84%E4%BA%A4%E4%BA%92/"></a>
 </article>
     </main>

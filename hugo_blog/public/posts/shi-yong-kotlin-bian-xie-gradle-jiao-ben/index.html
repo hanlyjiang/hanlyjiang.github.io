@@ -73,7 +73,7 @@ Kotlin DSL 脚本命名
 Groovy DSL script 文件使用 .gradle 扩展文件名">
 <meta name="author" content="野生莲藕">
 <link rel="canonical" href="http://localhost:1313/posts/shi-yong-kotlin-bian-xie-gradle-jiao-ben/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.eeb89a78c656674ce158b20f62e4a7f0df3efcc39e395e2e295bbad7c4bc61a3.css" integrity="sha256-7riaeMZWZ0zhWLIPYuSn8N8&#43;/MOeOV4uKVu618S8YaM=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
@@ -175,7 +175,7 @@ Groovy DSL script 文件使用 .gradle 扩展文件名">
     <h1 class="post-title entry-hint-parent">
       使用Kotlin编写gradle脚本
     </h1>
-    <div class="post-meta"><span title='2022-02-24 22:29:04 +0000 UTC'>February 24, 2022</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>野生莲藕</span>
+    <div class="post-meta"><span title='2022-02-24 22:29:04 +0000 UTC'>February 24, 2022</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>761 words</span>&nbsp;·&nbsp;<span>野生莲藕</span>
 
 </div>
   </header> <div class="toc">
@@ -676,6 +676,19 @@ Groovy DSL script 文件使用 .gradle 扩展文件名">
     <ul class="post-tags">
       <li><a href="http://localhost:1313/tags/gradle/">Gradle</a></li>
     </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/dagger-zai-android-ku-sdkmo-kuai-zhong-de-shi-yong-shi-jian/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Dagger 在Android库(SDK)模块中的使用实践</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/clion-da-jian-arduino-kai-fa-huan-jing/">
+    <span class="title">Next »</span>
+    <br>
+    <span>CLion搭建Arduino开发环境</span>
+  </a>
+</nav>
+
   </footer>
 </article>
     </main>
@@ -754,6 +767,53 @@ Groovy DSL script 文件使用 .gradle 扩展文件名">
         }
     })
 
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
 </script>
 </body>
 

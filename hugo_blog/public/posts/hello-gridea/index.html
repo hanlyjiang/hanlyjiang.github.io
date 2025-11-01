@@ -29,7 +29,7 @@ Gridea 主页
 😘 Enjoy~">
 <meta name="author" content="野生莲藕">
 <link rel="canonical" href="http://localhost:1313/posts/hello-gridea/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.baa878dc2137a9eb6809ce7efb1433a118a28d4a76b76609ea793ca884f04fb1.css" integrity="sha256-uqh43CE3qetoCc5&#43;&#43;xQzoRiijUp2t2YJ6nk8qITwT7E=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
@@ -131,7 +131,7 @@ Gridea 主页
     <h1 class="post-title entry-hint-parent">
       Hello Gridea
     </h1>
-    <div class="post-meta"><span title='2018-12-12 00:00:00 +0000 UTC'>December 12, 2018</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>野生莲藕</span>
+    <div class="post-meta"><span title='2018-12-12 00:00:00 +0000 UTC'>December 12, 2018</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>60 words</span>&nbsp;·&nbsp;<span>野生莲藕</span>
 
 </div>
   </header> <div class="toc">
@@ -177,6 +177,19 @@ Gridea 主页
     <ul class="post-tags">
       <li><a href="http://localhost:1313/tags/gridea/">Gridea</a></li>
     </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/about/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>关于</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/android-shi-jian-ji-shou-shi/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Android事件及手势</span>
+  </a>
+</nav>
+
   </footer>
 </article>
     </main>
@@ -255,6 +268,53 @@ Gridea 主页
         }
     })
 
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
 </script>
 </body>
 

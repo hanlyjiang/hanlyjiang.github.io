@@ -34,7 +34,7 @@
 待补图。 可参考： http://www.taichi-maker.com/homepage/reference-index/arduino-library-index/liquidcrystal-library/">
 <meta name="author" content="野生莲藕">
 <link rel="canonical" href="http://localhost:1313/posts/arduino-lcd-ku-an-zhuang-yu-shi-yong/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.eeb89a78c656674ce158b20f62e4a7f0df3efcc39e395e2e295bbad7c4bc61a3.css" integrity="sha256-7riaeMZWZ0zhWLIPYuSn8N8&#43;/MOeOV4uKVu618S8YaM=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
@@ -136,7 +136,7 @@
     <h1 class="post-title entry-hint-parent">
       Arduino LCD库安装与使用
     </h1>
-    <div class="post-meta"><span title='2021-11-30 09:43:24 +0000 UTC'>November 30, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>野生莲藕</span>
+    <div class="post-meta"><span title='2021-11-30 09:43:24 +0000 UTC'>November 30, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>34 words</span>&nbsp;·&nbsp;<span>野生莲藕</span>
 
 </div>
   </header> <div class="toc">
@@ -189,6 +189,19 @@
     <ul class="post-tags">
       <li><a href="http://localhost:1313/tags/arduino/">Arduino</a></li>
     </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/hong-meng-kai-fa-ru-men/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>鸿蒙开发基础知识</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/gradle-xue-xi-zhi-nan-qian-yan/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Gradle学习指南-前言</span>
+  </a>
+</nav>
+
   </footer>
 </article>
     </main>
@@ -267,6 +280,53 @@
         }
     })
 
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
 </script>
 </body>
 

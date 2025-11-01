@@ -9,3 +9,10 @@ theme = "PaperMod"
   showReadingTime = true
   showToc = true
   comments = false
+  ShowPostNavLinks = true
+  ShowCodeCopyButtons = true
+  TocOpen = false
+  ShowWordCount = true
+
+
+  

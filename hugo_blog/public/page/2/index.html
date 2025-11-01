@@ -11,7 +11,7 @@
 <meta name="description" content="">
 <meta name="author" content="野生莲藕">
 <link rel="canonical" href="http://localhost:1313/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.eeb89a78c656674ce158b20f62e4a7f0df3efcc39e395e2e295bbad7c4bc61a3.css" integrity="sha256-7riaeMZWZ0zhWLIPYuSn8N8&#43;/MOeOV4uKVu618S8YaM=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
@@ -120,7 +120,7 @@
 简化 maven-publish 插件的配置流程； 添加上传到Maven中心仓库的 publish 任务； 支持配置上传时是否包含 javadoc 及源码； 直接使用maven-publish插件的配置： import org.gradle.api.publish.maven.MavenPom plugins { id(&#34;com.android.library&#34;) id(&#34;signing&#34;) `maven-publish` } android { defaultConfig { versionName(&#34;1.0.0-SNAPSHOT&#34;) } } dependencies { // } tasks.register(&#34;javadoc&#34;, Javadoc::class.java) { group = &#34;publishing&#34; dependsOn(&#34;assemble&#34;) source = android.sourceSets[&#34;main&#34;].java.getSourceFiles() classpath &#43;= project.files(android.bootClasspath &#43; File.pathSeparator) if (JavaVersion.current().isJava9Compatible) { (options as StandardJavadocDocletOptions).addBooleanOption(&#34;html5&#34;, true) } android.libraryVariants.forEach { libraryVariant -&gt; classpath &#43;= libraryVariant.javaCompileProvider.get().classpath } options.apply { encoding(&#34;UTF-8&#34;) charset(&#34;UTF-8&#34;) isFailOnError = false (this as StandardJavadocDocletOptions).apply { // addStringOption(&#34;Xdoclint:none&#34;) links?.add(&#34;https://developer.android.google.cn/reference/&#34;) links?.add(&#34;http://docs.oracle.com/javase/8/docs/api/&#34;) } } } tasks.register(&#34;jarSource&#34;, Jar::class.java) { group = &#34;publishing&#34; from(android.sourceSets[&#34;main&#34;].java.srcDirs) archiveClassifier.set(&#34;sources&#34;) } tasks.register(&#34;jarJavadoc&#34;, Jar::class.java) { group = &#34;publishing&#34; dependsOn(&#34;javadoc&#34;) val javadoc: Javadoc = tasks.getByName(&#34;javadoc&#34;) as Javadoc from(javadoc.destinationDir) archiveClassifier.set(&#34;javadoc&#34;) } fun getMyPom(): Action&lt;in MavenPom&gt; { return Action&lt;MavenPom&gt; { name.set(&#34;Android Common Utils Lib&#34;) description.set(&#34;Android Common Utils Library For HJ&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) licenses { license { name.set(&#34;The Apache License, Version 2.0&#34;) url.set(&#34;http://www.apache.org/licenses/LICENSE-2.0.txt&#34;) } } developers { developer { id.set(&#34;hanlyjiang&#34;) name.set(&#34;Hanly Jiang&#34;) email.set(&#34;hanlyjiang@outlook.com&#34;) } } scm { connection.set(&#34;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&#34;) developerConnection.set(&#34;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) } } } afterEvaluate { publishing { publications { create&lt;MavenPublication&gt;(&#34;release&#34;) { from(components.getByName(&#34;release&#34;)) groupId = &#34;com.github.hanlyjiang&#34; artifactId = &#34;android_common_utils&#34; version = android.defaultConfig.versionName pom(getMyPom()) // 添加javadoc artifact(tasks.getByName(&#34;jarJavadoc&#34;) as Jar) // 添加source artifact(tasks.getByName(&#34;jarSource&#34;) as Jar) } } repositories { val ossrhCredentials = Action&lt;PasswordCredentials&gt; { username = properties[&#34;ossrhUsername&#34;].toString() password = properties[&#34;ossrhPassword&#34;].toString() } // sonar的仓库，地址根据项目的版本号来确定是snapshot还是正式仓库 maven { name = &#34;Sonartype&#34; val releasesRepoUrl = uri(&#34;https://oss.sonatype.org/service/local/staging/deploy/maven2&#34;) val snapshotsRepoUrl = uri(&#34;https://oss.sonatype.org/content/repositories/snapshots/&#34;) url = if (android.defaultConfig.versionName.toString().endsWith(&#34;SNAPSHOT&#34;)) snapshotsRepoUrl else releasesRepoUrl credentials(ossrhCredentials) // snapshot的地址： // https://oss.sonatype.org/content/repositories/snapshots/com/github/hanlyjiang/android_common_utils/ } // 项目本地的仓库 maven { name = &#34;ProjectLocal&#34; val releasesRepoUrl = uri(layout.buildDirectory.dir(&#34;repos/releases&#34;)) val snapshotsRepoUrl = uri(layout.buildDirectory.dir(&#34;repos/snapshots&#34;)) url = if (android.defaultConfig.versionName.toString().endsWith(&#34;SNAPSHOT&#34;)) snapshotsRepoUrl else releasesRepoUrl } } } signing { sign(publishing.publications.getByName(&#34;release&#34;)) } } 使用AndroidMavenPubPlugin简化后的配置： import org.gradle.api.publish.maven.MavenPom plugins { id(&#34;com.android.library&#34;) id(&#34;signing&#34;) `maven-publish` // 引入我们本地仓库中的gradle插件 id(&#34;com.github.hanlyjiang.android_maven_pub&#34;) version (&#34;0.0.5&#34;) apply (false) } android { defaultConfig { versionName(&#34;1.0.1-SNAPSHOT&#34;) } } dependencies { // } apply(plugin = &#34;com.github.hanlyjiang.android_maven_pub&#34;) configure&lt;io.hanlyjiang.gradle.android.AndroidMavenPubPluginExtension&gt; { groupId.set(&#34;com.github.hanlyjiang&#34;) artifactId.set(&#34;android-common-utils&#34;) projectLocalRepoPath.set(&#34;local-maven-repo&#34;) mavenPomAction.set(Action&lt;MavenPom&gt; { name.set(&#34;Android Common Utils Lib&#34;) description.set(&#34;Android Common Utils Library For HJ&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) properties.set( mapOf( &#34;myProp&#34; to &#34;value&#34;, &#34;prop.with.dots&#34; to &#34;anotherValue&#34; ) ) licenses { license { name.set(&#34;The Apache License, Version 2.0&#34;) url.set(&#34;http://www.apache.org/licenses/LICENSE-2.0.txt&#34;) } } developers { developer { id.set(&#34;hanlyjiang&#34;) name.set(&#34;Hanly Jiang&#34;) email.set(&#34;hanlyjiang@outlook.com&#34;) } } scm { connection.set(&#34;scm:git:git://github.com/hanlyjiang/lib_common_utils.git&#34;) developerConnection.set(&#34;scm:git:ssh://github.com/hanlyjiang/lib_common_utils.git&#34;) url.set(&#34;https://github.com/hanlyjiang/lib_common_utils&#34;) } }) } 使用步骤 引入插件 在需要使用的模块的build脚本中，引入我们的插件，同时引入 maven-publish 插件和 signing 插件。
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-06-01 10:26:00 +0000 UTC'>June 1, 2021</span>&nbsp;·&nbsp;<span>5 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-06-01 10:26:00 +0000 UTC'>June 1, 2021</span>&nbsp;·&nbsp;<span>5 min</span>&nbsp;·&nbsp;<span>884 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to 简化Android库上传到Maven仓库的gradle配置" href="http://localhost:1313/posts/jian-hua-android-ku-shang-chuan-dao-maven-cang-ku-de-gradle-pei-zhi/"></a>
 </article>
 
@@ -149,7 +149,7 @@
 gitlab-ci.yml 配置 variables: # 配置仓库环境 DOCKER_REGISTRY: zh-registry.colorless.com.cn DOCKER_NAMESPACE: colorless DEPLOY_PATH: /Wksp/colorlessWork/colorless-deploy/deploy/ # 配置镜像服务名 SERVICE_NAME: graphql-token stages: - test - build - build_image - deploy # 引入代码检查任务 #include: # local: ci/gitlab-ci-sonar.yml build:jar: # 部分模块若不使用1.8编译会报错 image: maven:3.6.3-jdk-8 stage: build script: - mvn package - mkdir _archiver - cp target/*.jar _archiver/ - ls -lh _archiver/ artifacts: name: &#34;dist-$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA&#34; paths: - _archiver/*.jar # 生成的归档包比较大，我们只保留短时间 expire_in: 1 hours tags: - common-build only: - master - web build:docker: stage: build_image script: # 登录公司的Harbor，注意必须在环境变量配置 HARBOR_PWD - echo $HARBOR_PWD | docker login --username=$HARBOR_USER $DOCKER_REGISTRY --password-stdin # 定义镜像TAG - IMAGE_NAME=$DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$CI_COMMIT_SHORT_SHA - echo &#34;Docker build options $DOCKER_OPTIONS, set DOCKER_OPTIONS to --no-cache force rebuild all stage&#34; - cp _archiver/*.jar docker/ # build镜像 - JAR_FILE=`ls docker/ | grep -E *.jar` - echo $JAR_FILE - docker build $DOCKER_OPTIONS --build-arg JAR_FILE=$JAR_FILE -t $IMAGE_NAME ./docker/ # 推送镜像 - docker push $IMAGE_NAME - echo &#34;镜像构建完成：$IMAGE_NAME&#34; tags: - docker only: - master - web deploy: stage: deploy script: - echo $HARBOR_PWD | docker login --username=$HARBOR_USER $DOCKER_REGISTRY --password-stdin - cd $DEPLOY_PATH - source deploy.sh - update_service $DOCKER_NAMESPACE $SERVICE_NAME $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$SERVICE_NAME:$CI_COMMIT_SHORT_SHA environment: name: test_env_deploy url: $APP_URL/ when: manual only: - branches - web tags: - deploy_graphql 注意 deploy 任务中定义的环境配置：
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-05-26 16:12:17 +0000 UTC'>May 26, 2021</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-05-26 16:12:17 +0000 UTC'>May 26, 2021</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>1477 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to Gitlab持续集成与持续部署-实例" href="http://localhost:1313/posts/gitlab-chi-xu-ji-cheng-yu-chi-xu-bu-shu-shi-li/"></a>
 </article>
 
@@ -166,7 +166,7 @@ gitlab-ci.yml 配置 variables: # 配置仓库环境 DOCKER_REGISTRY: zh-registr
 -a，归档模式，表示递归传输并保持文件属性。 -v，显示rsync过程中详细信息。可以使用&#34;-vvvv&#34;获取更详细信息。 -P，显示文件传输的进度信息。(实际上&#34;-P&#34;=&#34;–partial –progress&#34;，其中的&#34;–progress&#34;才是显示进度信息的)。 -z, 传输时进行压缩提高效率。 指定新的docker目录 vim /lib/systemd/system/docker.service 在ExecStart加入:
 --graph=/data/docker/lib/docker 重启docker sudo systemctl daemon-reload sudo systemctl restart docker sudo systemctl enable docker # 运行docker自动启动，这里可以不执行 启动之后确认docker 没有问题，确认之前的容器和镜像都还在，然后删除旧的/var/lib/docker/目录 参考文章： https://www.cnblogs.com/insist-forever/p/11739207.html </p>
   </div>
-  <footer class="entry-footer"><span title='2021-04-21 16:51:40 +0000 UTC'>April 21, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-04-21 16:51:40 +0000 UTC'>April 21, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>55 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to Docker数据目录(/var/lib/docker)迁移" href="http://localhost:1313/posts/docker%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E8%BF%81%E7%A7%BB/"></a>
 </article>
 
@@ -185,7 +185,7 @@ gitlab-ci.yml 配置 variables: # 配置仓库环境 DOCKER_REGISTRY: zh-registr
 删除记录： 按 ==Delete== 或者 ==⌫==
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-04-21 14:12:14 +0000 UTC'>April 21, 2021</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-04-21 14:12:14 +0000 UTC'>April 21, 2021</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>339 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to IDEA使用技巧之导航" href="http://localhost:1313/posts/idea-shi-yong-ji-qiao-zhi-dao-hang/"></a>
 </article>
 
@@ -210,7 +210,7 @@ ActivityManager.getService().bindIsolatedService( mMainThread.getApplicationThre
 ==总结：==
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-04-12 10:18:50 +0000 UTC'>April 12, 2021</span>&nbsp;·&nbsp;<span>22 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-04-12 10:18:50 +0000 UTC'>April 12, 2021</span>&nbsp;·&nbsp;<span>22 min</span>&nbsp;·&nbsp;<span>4643 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to Android bindService流程" href="http://localhost:1313/posts/androidbindservice-liu-cheng-fen-xi/"></a>
 </article>
 
@@ -229,7 +229,7 @@ sonarqube （206） 部署目录：/data/_data/sonarqube 一般只需要启动�
 # 部署 docker stack deploy -c docker-compose.yml sonarqube # 停止 docker stack down sonarqube # 重新启动 docker stack up sonarqube -c docker-compose.yml yapi（208） 部署目录： /data/yapi-docker-deploy # 启动命令 docker stack deploy -c docker-compose.yml yapi # 其他维护命令基于yapi的stack执行即可 mattermost相关（206） mattermost相关请联系段春先
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-04-08 16:48:23 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-04-08 16:48:23 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>1480 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to 工作交接-Gitlab相关" href="http://localhost:1313/posts/%E5%B7%A5%E4%BD%9C%E4%BA%A4%E6%8E%A5-gitlab%E7%9B%B8%E5%85%B3/"></a>
 </article>
 
@@ -250,7 +250,7 @@ sonarqube （206） 部署目录：/data/_data/sonarqube 一般只需要启动�
 推送tag到github：git push origin refs/tags/v1.3.3:v1.3.3
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-04-08 16:46:15 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-04-08 16:46:15 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>2 min</span>&nbsp;·&nbsp;<span>282 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to 移动中心交接" href="http://localhost:1313/posts/%E7%A7%BB%E5%8A%A8%E4%B8%AD%E5%BF%83%E4%BA%A4%E6%8E%A5/"></a>
 </article>
 
@@ -270,7 +270,7 @@ Docker支持如下系统及架构
 查看系统信息 geostar@geostar-ft1500a:~$ cat /proc/version Linux version 4.4.131-20200515.kylin.desktop-generic (YHKYLIN-OS@Kylin) (gcc version 5.5.0 20171010 (Ubuntu/Linaro 5.5.0-12ubuntu1~16.04) ) #kylin SMP Fri May 15 11:29:10 CST 2020 这里可以看到系统是基于ubuntu16.04 的，所以我们添加ubuntu16.04（xenial）的软件源
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-04-08 15:10:06 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>34 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-04-08 15:10:06 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>34 min</span>&nbsp;·&nbsp;<span>7129 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to GeoPanel容器化" href="http://localhost:1313/posts/geopanel-rong-qi-hua/"></a>
 </article>
 
@@ -286,7 +286,7 @@ Docker支持如下系统及架构
 选择分支 可参考 source.android.google.cn 的文档 代号、标记和 Build 号 ，可以看到当前最新的版本及标记如下：
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2021-04-08 10:18:50 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>6 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-04-08 10:18:50 +0000 UTC'>April 8, 2021</span>&nbsp;·&nbsp;<span>6 min</span>&nbsp;·&nbsp;<span>1134 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to 搭建Android源码工作环境" href="http://localhost:1313/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/"></a>
 </article>
 
@@ -303,7 +303,7 @@ Docker支持如下系统及架构
 .DS_Store */.DS_Store # 自己的本地草稿 typora 远程同步时，会将此文件放入到output目录下，然后将output目录推送到github上，为了避免将其中的某些文件推入到远程仓库，故可以通过此方式定义gitignore
 </p>
   </div>
-  <footer class="entry-footer"><span title='2021-04-05 11:58:07 +0000 UTC'>April 5, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
+  <footer class="entry-footer"><span title='2021-04-05 11:58:07 +0000 UTC'>April 5, 2021</span>&nbsp;·&nbsp;<span>1 min</span>&nbsp;·&nbsp;<span>14 words</span>&nbsp;·&nbsp;<span>野生莲藕</span></footer>
   <a class="entry-link" aria-label="post link to Gridea使用小记" href="http://localhost:1313/posts/gridea%E4%BD%BF%E7%94%A8%E5%B0%8F%E8%AE%B0/"></a>
 </article>
 <footer class="page-footer">

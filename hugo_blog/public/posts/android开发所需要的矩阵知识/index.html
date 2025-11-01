@@ -53,7 +53,7 @@ Matrix是什么？
 我在可汗学院（Khan Academy）上发现一门关于矩阵的很好的代数课程。">
 <meta name="author" content="野生莲藕">
 <link rel="canonical" href="http://localhost:1313/posts/android%E5%BC%80%E5%8F%91%E6%89%80%E9%9C%80%E8%A6%81%E7%9A%84%E7%9F%A9%E9%98%B5%E7%9F%A5%E8%AF%86/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.fd5566c526ae48aadabd950798a2dc3568536401560eae5caac3765a42a9e7b5.css" integrity="sha256-/VVmxSauSKravZUHmKLcNWhTZAFWDq5cqsN2WkKp57U=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.baa878dc2137a9eb6809ce7efb1433a118a28d4a76b76609ea793ca884f04fb1.css" integrity="sha256-uqh43CE3qetoCc5&#43;&#43;xQzoRiijUp2t2YJ6nk8qITwT7E=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
@@ -155,7 +155,7 @@ Matrix是什么？
     <h1 class="post-title entry-hint-parent">
       [译]Android开发所需要的矩阵知识
     </h1>
-    <div class="post-meta"><span title='2021-02-08 10:38:22 +0000 UTC'>February 8, 2021</span>&nbsp;·&nbsp;<span>23 min</span>&nbsp;·&nbsp;<span>野生莲藕</span>
+    <div class="post-meta"><span title='2021-02-08 10:38:22 +0000 UTC'>February 8, 2021</span>&nbsp;·&nbsp;<span>23 min</span>&nbsp;·&nbsp;<span>4790 words</span>&nbsp;·&nbsp;<span>野生莲藕</span>
 
 </div>
   </header> <div class="toc">
@@ -1052,6 +1052,19 @@ $$</p>
     <ul class="post-tags">
       <li><a href="http://localhost:1313/tags/android/">Android</a></li>
     </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/gridea%E4%BD%BF%E7%94%A8%E5%B0%8F%E8%AE%B0/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Gridea使用小记</span>
+  </a>
+  <a class="next" href="http://localhost:1313/posts/%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AAandroid-gradle%E6%8F%92%E4%BB%B6/">
+    <span class="title">Next »</span>
+    <br>
+    <span>编写一个Android Gradle插件</span>
+  </a>
+</nav>
+
   </footer>
 </article>
     </main>
@@ -1130,6 +1143,53 @@ $$</p>
         }
     })
 
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
 </script>
 </body>
 
