@@ -16,9 +16,8 @@ jobs:
           extended: true
       - name: Build
         run: |
-            cp -r typora/POSTS/ hugo_blog/content/posts/ || true
-            cd hugo_blog
-            hugo --minify
+            source _scripts/deploy_hugo.sh
+            deploy_hugo
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
