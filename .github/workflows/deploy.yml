@@ -15,7 +15,10 @@ jobs:
           hugo-version: "latest"
           extended: true
       - name: Build
-        run: cp typora/POSTS/ hugo_blog/content/posts/ ; cd hugo_blog && hugo --minify
+        run: |
+            cp -r typora/POSTS/ hugo_blog/content/posts/ || true
+            cd hugo_blog
+            hugo --minify
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
