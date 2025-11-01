@@ -5,6 +5,7 @@ theme: "PaperMod"
 # 配置语言
 languageCode: zh-cn
 defaultContentLanguage: zh-cn
+# 所有语言都放入独立子目录 false
 defaultContentLanguageInSubdir: false
 
 enableInlineShortcodes: true
@@ -80,7 +81,7 @@ params:
   ShowWordCounts: true
   ShowLastMod: true
   ShowToc: true
-  TocOpen: true
+  TocOpen: false
   comments: true
   DateFormat: "2006年1月2日"
 
