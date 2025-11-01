@@ -15,12 +15,15 @@ theme = "PaperMod"
   name = "首页"
   url = "/"
   weight = 1
+  pre = "<i class='fas fa-home'></i>"    # 在文本前加图标
 
 [[menu.main]]
   identifier = "archives"
   name = "归档"
   url = "/archives/"
   weight = 2
+  pre = "<i class='fas fa-tags'></i>"
+
 
 #[[menu.main]]
 #  identifier = "categories"
@@ -63,4 +66,8 @@ theme = "PaperMod"
   # 归档设置（PaperMod 有时使用 params.archive）
   [params.archive]
     enabled = true
+
+  [params.assets]
+    disableHLJS = false
+    disableFontAwesome = false
   
