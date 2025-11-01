@@ -69,6 +69,7 @@ params:
   description: "记录与分享"
   author: "野生莲藕"
   defaultTheme: "auto"
+  disableThemeToggle: false
   ShowCodeCopyButtons: true
   ShowReadingTime: true
   ShowPostNavLinks: true
