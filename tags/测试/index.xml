@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>测试 on 清水池塘</title><link>https://anlyjiang.github.io/tags/%E6%B5%8B%E8%AF%95/</link><description>Recent content in 测试 on 清水池塘</description><generator>Hugo -- 0.152.2</generator><language>zh-cn</language><lastBuildDate>Sat, 19 Mar 2022 22:29:12 +0000</lastBuildDate><atom:link href="https://anlyjiang.github.io/tags/%E6%B5%8B%E8%AF%95/index.xml" rel="self" type="application/rss+xml"/><item><title>Android Jacoco覆盖率统计配置</title><link>https://anlyjiang.github.io/posts/android-jacoco-gradle-config/</link><pubDate>Sat, 19 Mar 2022 22:29:12 +0000</pubDate><guid>https://anlyjiang.github.io/posts/android-jacoco-gradle-config/</guid><description>&lt;p&gt;Android Jacoco 覆盖率统计Gradle配置，包括生成本地单元测试报告，仪器单元测试报告，合并两种测试的报告，合并两种测试的执行数据并在AndroidStudio的编辑器中查看每一行的覆盖率情况。&lt;/p&gt;
+&lt;h2 id="如何让测试任务生成-jacoco-覆盖率统计数据"&gt;如何让测试任务生成 Jacoco 覆盖率统计数据？&lt;/h2&gt;
+&lt;p&gt;这里我们仅仅从Gradle任务来说，不考虑 AndroidStudio/IDEA。&lt;/p&gt;
+&lt;h3 id="本地单元测试test"&gt;本地单元测试（Test）&lt;/h3&gt;
+&lt;p&gt;对于本地单元测试来说，原先有一个 &lt;code&gt;testDebugUnitTest&lt;/code&gt; 的测试任务，如果不做配置，该任务只会生成测试通过情况的报告。只要应用 jacoco 插件，然后运行 &lt;code&gt;testDebugUnitTest&lt;/code&gt; 任务时，就会同时生成jacoco覆盖率统计&lt;strong&gt;执行数据文件&lt;/strong&gt;。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// build.gradle
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;apply(plugin = &lt;span style="color:#e6db74"&gt;&amp;#34;jacoco&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;之所以能这样是因为 jacoco 插件会给所有 Test 类型的任务添加 jacoco 的配置。&lt;/p&gt;
+&lt;p&gt;可以通过如下方式输出其执行数据文件路径：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;afterEvaluate {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; tasks.getByName(&lt;span style="color:#e6db74"&gt;&amp;#34;testDebugUnitTest&amp;#34;&lt;/span&gt;).apply {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; doLast {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; (&lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.extensions.getByName(&lt;span style="color:#e6db74"&gt;&amp;#34;jacoco&amp;#34;&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; JacocoTaskExtension).apply {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; logger.lifecycle(&lt;span style="color:#e6db74"&gt;&amp;#34;testDebugUnitTest dest: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;${this.destinationFile?.absolutePath}&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;执行情况如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-shell" data-lang="shell"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;testDebugUnitTest dest: /Users/hanlyjiang/Wksp/project/AndroidTestSample/app/build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="仪器单元测试androidtest"&gt;仪器单元测试（AndroidTest）&lt;/h3&gt;
+&lt;p&gt;仪器单元测试覆盖率数据的统计需要打开&lt;code&gt;testCoverageEnabled&lt;/code&gt;开关，然后会有一个&lt;code&gt;createDebugCoverageReport&lt;/code&gt; 的任务生成，同时也会生成html的报告。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// groovy
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;android &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; buildTypes &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; debug &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; testCoverageEnabled &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// kotlin
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;android &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; buildTypes &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; getByName&lt;span style="color:#f92672"&gt;(&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;debug&amp;#34;&lt;/span&gt;&lt;span style="color:#f92672"&gt;).&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;apply&lt;/span&gt; &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; isTestCoverageEnabled &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;连接设备执行该任务即可生成对应的执行数据文件及对应的覆盖率报告。&lt;/p&gt;</description></item></channel></rss>

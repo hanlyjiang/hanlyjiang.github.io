@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Docker on 清水池塘</title><link>https://anlyjiang.github.io/tags/docker/</link><description>Recent content in Docker on 清水池塘</description><generator>Hugo -- 0.152.2</generator><language>zh-cn</language><lastBuildDate>Wed, 21 Apr 2021 16:51:40 +0000</lastBuildDate><atom:link href="https://anlyjiang.github.io/tags/docker/index.xml" rel="self" type="application/rss+xml"/><item><title>Docker数据目录(/var/lib/docker)迁移</title><link>https://anlyjiang.github.io/posts/docker%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E8%BF%81%E7%A7%BB/</link><pubDate>Wed, 21 Apr 2021 16:51:40 +0000</pubDate><guid>https://anlyjiang.github.io/posts/docker%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E8%BF%81%E7%A7%BB/</guid><description>&lt;p&gt;本文介绍如何安全的迁移Docker的数据目录/var/lib/docker&lt;/p&gt;
+&lt;h2 id="为什么要迁移"&gt;为什么要迁移&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;虚拟机创建时，一般分配一个比较小的系统盘，然后挂载一个大容量的数据盘，docker默认情况下数据存储在系统盘(/var/lib/docker)目录，时间一久，会占满系统盘。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="迁移步骤"&gt;迁移步骤&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;首先需要停止docker服务&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;systemctl stop docker
+&lt;/code&gt;&lt;/pre&gt;&lt;ol start="2"&gt;
+&lt;li&gt;&lt;strong&gt;通过命令df -h 先去看下磁盘大概的情况，找一个大的空间&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;创建docker的新目录，我这边找了data, 所以我这边的新目录地址是 /data/docker/lib/&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;
+mkdir -p /data/docker/lib
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;注：参数-p 确保目录名称存在，如果目录不存在的就新创建一个。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ol start="4"&gt;
+&lt;li&gt;&lt;strong&gt;开始迁移&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;rsync -avzP /var/lib/docker /data/docker/lib/
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;先确认是否安装了rsync.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;参数解释：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;-a，归档模式，表示递归传输并保持文件属性。&lt;/li&gt;
+&lt;li&gt;-v，显示rsync过程中详细信息。可以使用&amp;quot;-vvvv&amp;quot;获取更详细信息。&lt;/li&gt;
+&lt;li&gt;-P，显示文件传输的进度信息。(实际上&amp;quot;-P&amp;quot;=&amp;quot;&amp;ndash;partial &amp;ndash;progress&amp;quot;，其中的&amp;quot;&amp;ndash;progress&amp;quot;才是显示进度信息的)。&lt;/li&gt;
+&lt;li&gt;-z,   传输时进行压缩提高效率。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start="5"&gt;
+&lt;li&gt;&lt;strong&gt;指定新的docker目录&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;vim /lib/systemd/system/docker.service
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;在ExecStart加入:&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt; --graph=/data/docker/lib/docker
+&lt;/code&gt;&lt;/pre&gt;&lt;ol start="6"&gt;
+&lt;li&gt;&lt;strong&gt;重启docker&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo systemctl enable docker # 运行docker自动启动，这里可以不执行
+&lt;/code&gt;&lt;/pre&gt;&lt;ol start="7"&gt;
+&lt;li&gt;&lt;strong&gt;启动之后确认docker 没有问题，确认之前的容器和镜像都还在，然后删除旧的/var/lib/docker/目录&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id="参考文章"&gt;参考文章：&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.cnblogs.com/insist-forever/p/11739207.html?fileGuid=qQhpHWDVq8HrH9kj"&gt;https://www.cnblogs.com/insist-forever/p/11739207.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>Docker构建Arm架构镜像-通用步骤</title><link>https://anlyjiang.github.io/posts/docker-arm%E6%9E%B6%E6%9E%84%E9%95%9C%E5%83%8F%E6%9E%84%E5%BB%BA-%E9%80%9A%E7%94%A8%E6%AD%A5%E9%AA%A4/</link><pubDate>Wed, 19 Aug 2020 17:20:59 +0000</pubDate><guid>https://anlyjiang.github.io/posts/docker-arm%E6%9E%B6%E6%9E%84%E9%95%9C%E5%83%8F%E6%9E%84%E5%BB%BA-%E9%80%9A%E7%94%A8%E6%AD%A5%E9%AA%A4/</guid><description>&lt;p&gt;介绍ARM版本的Docker镜像的构建，包括ARM机器上Docker的安装，在ARM机器上构建镜像，及在amd64机器上使用buildx交叉构建arm版本镜像。&lt;/p&gt;
+&lt;h2 id="前言"&gt;前言&lt;/h2&gt;
+&lt;p&gt;现在很多地方都对服务的国产化适配有所要求，一般的国产化平台都提供arm版本的linux云环境供我们进行服务部署，因此需要构建arm版本的镜像。&lt;/p&gt;
+&lt;h2 id="测试机信息"&gt;测试机信息&lt;/h2&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="text-align: left"&gt;CPU&lt;/th&gt;
+&lt;th style="text-align: left"&gt;FT-1500A 4核 arm64&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style="text-align: left"&gt;内存&lt;/td&gt;
+&lt;td style="text-align: left"&gt;8G&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="text-align: left"&gt;OS&lt;/td&gt;
+&lt;td style="text-align: left"&gt;麒麟V10&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="text-align: left"&gt;包管理器&lt;/td&gt;
+&lt;td style="text-align: left"&gt;apt&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="arm机器上安装docker"&gt;ARM机器上安装Docker&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href="https://docs.docker.com/engine/install/?fileGuid=0l3NVKX0BgflYN3R"&gt;Docker官方文档&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Docker支持如下系统及架构&lt;/p&gt;
+&lt;p&gt;&lt;img alt="图片" loading="lazy" src="https://gitee.com/hanlyjiang/image-repo/raw/master/imgs/20210408172838.png!thumbnail"&gt;&lt;/p&gt;
+&lt;p&gt;国产系统依据安装包的格式选择对应的参考系统即可，如麒麟v10基于ubuntu，可以按&lt;a href="https://docs.docker.com/engine/install/ubuntu/?fileGuid=0l3NVKX0BgflYN3R"&gt;官方文档- Install Docker Engine on Ubuntu&lt;/a&gt;进行安装。&lt;/p&gt;
+&lt;h3 id="查看系统信息"&gt;查看系统信息&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-plain" data-lang="plain"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;geostar@geostar-ft1500a:~$ cat /proc/version
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Linux version 4.4.131-20200515.kylin.desktop-generic (YHKYLIN-OS@Kylin) (gcc version 5.5.0 20171010 (Ubuntu/Linaro 5.5.0-12ubuntu1~16.04) ) #kylin SMP Fri May 15 11:29:10 CST 2020
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里可以看到系统是基于ubuntu16.04 的，所以我们添加ubuntu16.04（xenial）的软件源&lt;/p&gt;
+&lt;h3 id="添加软件源"&gt;添加软件源&lt;/h3&gt;
+&lt;blockquote&gt;
+&lt;p&gt;参考：
+&lt;a href="https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/"&gt;https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/&lt;/a&gt;
+&lt;a href="https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/"&gt;https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;添加清华镜像软件源（arm架构）&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-plain" data-lang="plain"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial main restricted universe multiverse
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial main restricted universe multiverse
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-updates main restricted universe multiverse
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-updates main restricted universe multiverse
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-backports main restricted universe multiverse
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-backports main restricted universe multiverse
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-security main restricted universe multiverse
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ xenial-security main restricted universe multiverse
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;更新：&lt;/p&gt;</description></item></channel></rss>

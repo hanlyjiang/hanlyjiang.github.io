@@ -1,0 +1,347 @@
+<!doctype html><html lang=en dir=auto data-theme=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>PopupWindow 顶部多行显示 | 清水池塘</title><meta name=keywords content><meta name=description content='这里我们以解决 PopupWindow 显示的一个问题作为目标来进行分析。
+问题描述
+想要的效果
+在控件上方显示，可能是单行，也可能是多行。
+
+实现方式
+使用 showAsDropdown 时，可通过 yOffset 参数指定Y轴方向上的偏移量：
+偏移量 = anchorView.height + popupWindow.height
+
+对于第 2 种单行的弹出框来说，实现起来比较简单:
+class RawPopupWindowActivity : DemoButtonsActivity() {
+
+    private var popupWindow: PopupWindow? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        addButton("单行Popup") { v -> showPopup(v, Constants.TEXT_SHORT) }
+        addButton("多行Popup") { v -> showPopup(v, Constants.TEXT_MEDIUM) }
+        addButton("多行Popup") { v -> showPopup(v, Constants.TEXT_LONG) }
+    }
+
+    private fun showPopup(anchorView: View, content: String) {
+        popupWindow?.run {
+            dismiss()
+        }
+        popupWindow = PopupWindow(applicationContext).apply {
+            isOutsideTouchable = true
+            PopupHelper(applicationContext).run {
+                contentView = binding.root
+                setText(content)
+            }
+            width = WindowManager.LayoutParams.WRAP_CONTENT
+            height = WindowManager.LayoutParams.WRAP_CONTENT
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+          	// 测量高度
+            contentView.measure(
+                View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.UNSPECIFIED)
+            )
+          	// 显示时向上移动 anchorView.height + contentView.measuredHeight 
+            showAsDropDown(anchorView, 0, -(anchorView.height + contentView.measuredHeight))
+        }
+    }
+}
+实现效果及问题
+最终效果如下：'><meta name=author content="野生莲藕"><link rel=canonical href=https://anlyjiang.github.io/posts/popupwindow-ding-bu-duo-xing-xian-shi/><link crossorigin=anonymous href=/assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css integrity="sha256-NDzEgLn/yPBMy+XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as=style><link rel=icon href=https://anlyjiang.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://anlyjiang.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://anlyjiang.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://anlyjiang.github.io/apple-touch-icon.png><link rel=mask-icon href=https://anlyjiang.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://anlyjiang.github.io/posts/popupwindow-ding-bu-duo-xing-xian-shi/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51);color-scheme:dark}.list{background:var(--theme)}.toc{background:var(--entry)}}@media(prefers-color-scheme:light){.list::-webkit-scrollbar-thumb{border-color:var(--code-bg)}}</style></noscript><script>localStorage.getItem("pref-theme")==="dark"?document.querySelector("html").dataset.theme="dark":localStorage.getItem("pref-theme")==="light"?document.querySelector("html").dataset.theme="light":window.matchMedia("(prefers-color-scheme: dark)").matches?document.querySelector("html").dataset.theme="dark":document.querySelector("html").dataset.theme="light"</script><meta property="og:url" content="https://anlyjiang.github.io/posts/popupwindow-ding-bu-duo-xing-xian-shi/"><meta property="og:site_name" content="清水池塘"><meta property="og:title" content=" PopupWindow 顶部多行显示"><meta property="og:description" content='这里我们以解决 PopupWindow 显示的一个问题作为目标来进行分析。
+问题描述 想要的效果 在控件上方显示，可能是单行，也可能是多行。
+实现方式 使用 showAsDropdown 时，可通过 yOffset 参数指定Y轴方向上的偏移量：
+偏移量 = anchorView.height + popupWindow.height
+对于第 2 种单行的弹出框来说，实现起来比较简单:
+class RawPopupWindowActivity : DemoButtonsActivity() { private var popupWindow: PopupWindow? = null override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState) addButton("单行Popup") { v -> showPopup(v, Constants.TEXT_SHORT) } addButton("多行Popup") { v -> showPopup(v, Constants.TEXT_MEDIUM) } addButton("多行Popup") { v -> showPopup(v, Constants.TEXT_LONG) } } private fun showPopup(anchorView: View, content: String) { popupWindow?.run { dismiss() } popupWindow = PopupWindow(applicationContext).apply { isOutsideTouchable = true PopupHelper(applicationContext).run { contentView = binding.root setText(content) } width = WindowManager.LayoutParams.WRAP_CONTENT height = WindowManager.LayoutParams.WRAP_CONTENT setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)) // 测量高度 contentView.measure( View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.UNSPECIFIED) ) // 显示时向上移动 anchorView.height + contentView.measuredHeight showAsDropDown(anchorView, 0, -(anchorView.height + contentView.measuredHeight)) } } } 实现效果及问题 最终效果如下：'><meta property="og:locale" content="zh-cn"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2022-04-16T22:57:53+00:00"><meta property="article:modified_time" content="2022-04-16T22:57:53+00:00"><meta name=twitter:card content="summary"><meta name=twitter:title content=" PopupWindow 顶部多行显示"><meta name=twitter:description content='这里我们以解决 PopupWindow 显示的一个问题作为目标来进行分析。
+问题描述
+想要的效果
+在控件上方显示，可能是单行，也可能是多行。
+
+实现方式
+使用 showAsDropdown 时，可通过 yOffset 参数指定Y轴方向上的偏移量：
+偏移量 = anchorView.height + popupWindow.height
+
+对于第 2 种单行的弹出框来说，实现起来比较简单:
+class RawPopupWindowActivity : DemoButtonsActivity() {
+
+    private var popupWindow: PopupWindow? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        addButton("单行Popup") { v -> showPopup(v, Constants.TEXT_SHORT) }
+        addButton("多行Popup") { v -> showPopup(v, Constants.TEXT_MEDIUM) }
+        addButton("多行Popup") { v -> showPopup(v, Constants.TEXT_LONG) }
+    }
+
+    private fun showPopup(anchorView: View, content: String) {
+        popupWindow?.run {
+            dismiss()
+        }
+        popupWindow = PopupWindow(applicationContext).apply {
+            isOutsideTouchable = true
+            PopupHelper(applicationContext).run {
+                contentView = binding.root
+                setText(content)
+            }
+            width = WindowManager.LayoutParams.WRAP_CONTENT
+            height = WindowManager.LayoutParams.WRAP_CONTENT
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+          	// 测量高度
+            contentView.measure(
+                View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.UNSPECIFIED)
+            )
+          	// 显示时向上移动 anchorView.height + contentView.measuredHeight 
+            showAsDropDown(anchorView, 0, -(anchorView.height + contentView.measuredHeight))
+        }
+    }
+}
+实现效果及问题
+最终效果如下：'><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"https://anlyjiang.github.io/posts/"},{"@type":"ListItem","position":2,"name":" PopupWindow 顶部多行显示","item":"https://anlyjiang.github.io/posts/popupwindow-ding-bu-duo-xing-xian-shi/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":" PopupWindow 顶部多行显示","name":" PopupWindow 顶部多行显示","description":"这里我们以解决 PopupWindow 显示的一个问题作为目标来进行分析。\n问题描述 想要的效果 在控件上方显示，可能是单行，也可能是多行。\n实现方式 使用 showAsDropdown 时，可通过 yOffset 参数指定Y轴方向上的偏移量：\n偏移量 = anchorView.height + popupWindow.height\n对于第 2 种单行的弹出框来说，实现起来比较简单:\nclass RawPopupWindowActivity : DemoButtonsActivity() { private var popupWindow: PopupWindow? = null override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState) addButton(\u0026#34;单行Popup\u0026#34;) { v -\u0026gt; showPopup(v, Constants.TEXT_SHORT) } addButton(\u0026#34;多行Popup\u0026#34;) { v -\u0026gt; showPopup(v, Constants.TEXT_MEDIUM) } addButton(\u0026#34;多行Popup\u0026#34;) { v -\u0026gt; showPopup(v, Constants.TEXT_LONG) } } private fun showPopup(anchorView: View, content: String) { popupWindow?.run { dismiss() } popupWindow = PopupWindow(applicationContext).apply { isOutsideTouchable = true PopupHelper(applicationContext).run { contentView = binding.root setText(content) } width = WindowManager.LayoutParams.WRAP_CONTENT height = WindowManager.LayoutParams.WRAP_CONTENT setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)) // 测量高度 contentView.measure( View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.UNSPECIFIED) ) // 显示时向上移动 anchorView.height + contentView.measuredHeight showAsDropDown(anchorView, 0, -(anchorView.height + contentView.measuredHeight)) } } } 实现效果及问题 最终效果如下：\n","keywords":[],"articleBody":"这里我们以解决 PopupWindow 显示的一个问题作为目标来进行分析。\n问题描述 想要的效果 在控件上方显示，可能是单行，也可能是多行。\n实现方式 使用 showAsDropdown 时，可通过 yOffset 参数指定Y轴方向上的偏移量：\n偏移量 = anchorView.height + popupWindow.height\n对于第 2 种单行的弹出框来说，实现起来比较简单:\nclass RawPopupWindowActivity : DemoButtonsActivity() { private var popupWindow: PopupWindow? = null override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState) addButton(\"单行Popup\") { v -\u003e showPopup(v, Constants.TEXT_SHORT) } addButton(\"多行Popup\") { v -\u003e showPopup(v, Constants.TEXT_MEDIUM) } addButton(\"多行Popup\") { v -\u003e showPopup(v, Constants.TEXT_LONG) } } private fun showPopup(anchorView: View, content: String) { popupWindow?.run { dismiss() } popupWindow = PopupWindow(applicationContext).apply { isOutsideTouchable = true PopupHelper(applicationContext).run { contentView = binding.root setText(content) } width = WindowManager.LayoutParams.WRAP_CONTENT height = WindowManager.LayoutParams.WRAP_CONTENT setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)) // 测量高度 contentView.measure( View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.UNSPECIFIED) ) // 显示时向上移动 anchorView.height + contentView.measuredHeight showAsDropDown(anchorView, 0, -(anchorView.height + contentView.measuredHeight)) } } } 实现效果及问题 最终效果如下：\n可以看到垂直方向上：\n单行的没有偏移 两行的有些许偏移 多行的偏移就非常大了 这是因为我们测量的时候并不是按照PopupWindow本身的测量方式进行测量的，所以height的值不匹配真实高度。\nWindow添加过程 showAsDropDown // android/widget/PopupWindow.java public void showAsDropDown(View anchor, int xoff, int yoff) { showAsDropDown(anchor, xoff, yoff, DEFAULT_ANCHORED_GRAVITY); } public void showAsDropDown(View anchor, int xoff, int yoff, int gravity) { if (isShowing() || !hasContentView()) { return; } // 关闭 mDecorView 上的动画 TransitionManager.endTransitions(mDecorView); // 建下方 attachToAnchor(anchor, xoff, yoff, gravity); mIsShowing = true; mIsDropdown = true; // 根据传递进来的参数，设置布局参数 final WindowManager.LayoutParams p = createPopupLayoutParams(anchor.getApplicationWindowToken()); // 创建 DecorView BackgroundView ContentView 几个层次的包装 preparePopup(p); final boolean aboveAnchor = findDropDownPosition(anchor, p, xoff, yoff, p.width, p.height, gravity, mAllowScrollingAnchorParent); updateAboveAnchor(aboveAnchor); p.accessibilityIdOfAnchor = (anchor != null) ? anchor.getAccessibilityViewId() : -1; invokePopup(p); } attachToAnchor protected void attachToAnchor(View anchor, int xoff, int yoff, int gravity) { detachFromAnchor(); final ViewTreeObserver vto = anchor.getViewTreeObserver(); if (vto != null) { vto.addOnScrollChangedListener(mOnScrollChangedListener); } // View被添加到Window或者从Window上分离时的监听 anchor.addOnAttachStateChangeListener(mOnAnchorDetachedListener); final View anchorRoot = anchor.getRootView(); anchorRoot.addOnAttachStateChangeListener(mOnAnchorRootDetachedListener); // 因为布局变化导致View的边界变化时的监听 anchorRoot.addOnLayoutChangeListener(mOnLayoutChangeListener); // 存储 锚View 的一些信息 mAnchor = new WeakReference\u003c\u003e(anchor); mAnchorRoot = new WeakReference\u003c\u003e(anchorRoot); mIsAnchorRootAttached = anchorRoot.isAttachedToWindow(); mParentRootView = mAnchorRoot; mAnchorXoff = xoff; mAnchorYoff = yoff; mAnchoredGravity = gravity; } 从这里得到如下信息：\nmAnchor： 锚View （弱引用） mAnchorRoot： 锚View的顶层View (弱引用) mParentRootView ： mAnchorRoot （强引用） createPopupLayoutParams 就是 LayoutParams 设置\nprotected final WindowManager.LayoutParams createPopupLayoutParams(IBinder token) { final WindowManager.LayoutParams p = new WindowManager.LayoutParams(); p.gravity = computeGravity(); p.flags = computeFlags(p.flags); p.type = mWindowLayoutType; p.token = token; p.softInputMode = mSoftInputMode; p.windowAnimations = computeAnimationResource(); // 设置了背景时，从背景Drawable取像素格式 if (mBackground != null) { p.format = mBackground.getOpacity(); } else { p.format = PixelFormat.TRANSLUCENT; } if (mHeightMode \u003c 0) { p.height = mLastHeight = mHeightMode; } else { p.height = mLastHeight = mHeight; } if (mWidthMode \u003c 0) { p.width = mLastWidth = mWidthMode; } else { p.width = mLastWidth = mWidth; } p.privateFlags = PRIVATE_FLAG_WILL_NOT_REPLACE_ON_RELAUNCH | PRIVATE_FLAG_LAYOUT_CHILD_WINDOW_IN_PARENT_FRAME; // Used for debugging. p.setTitle(\"PopupWindow:\" + Integer.toHexString(hashCode())); return p; } preparePopup private void preparePopup(WindowManager.LayoutParams p) { // When a background is available, we embed the content view within // another view that owns the background drawable. if (mBackground != null) { mBackgroundView = createBackgroundView(mContentView); mBackgroundView.setBackground(mBackground); } else { mBackgroundView = mContentView; } mDecorView = createDecorView(mBackgroundView); } 总体就是为了创建如下层次的 View：\n不过， DecorView 上有附加效果，主要是事件和动画相关的。后面具体进行分析。\nfindDropDownPosition 就像其注释说的，计算PopupWindow 在屏幕上面的位置：\n如果PopupWindow太高，无法放置到anchor的下方，则会检测上层是否有可滚动的视图，并向上滚动以获取可用空间。 如果父布局无法滚动，popupWindow会放置到anchor的上方。 protected boolean findDropDownPosition(View anchor, WindowManager.LayoutParams outParams, int xOffset, int yOffset, int width, int height, int gravity, boolean allowScroll) { // 获取 anchor宽高 final int anchorHeight = anchor.getHeight(); final int anchorWidth = anchor.getWidth(); // 允许重叠时，会先上移动 anchor 的高度 if (mOverlapAnchor) { yOffset -= anchorHeight; } // 先尝试将位置放置在anchor的左下角并加上偏移量 // 获取anchor的rootView在屏幕上的位置 appScreenLocation final int[] appScreenLocation = mTmpAppLocation; final View appRootView = getAppRootView(anchor); appRootView.getLocationOnScreen(appScreenLocation); // 获取 anchor 在屏幕上的位置 screenLocation final int[] screenLocation = mTmpScreenLocation; anchor.getLocationOnScreen(screenLocation); // 计算初步的绘制位置 final int[] drawingLocation = mTmpDrawingLocation; drawingLocation[0] = screenLocation[0] - appScreenLocation[0]; drawingLocation[1] = screenLocation[1] - appScreenLocation[1]; outParams.x = drawingLocation[0] + xOffset; outParams.y = drawingLocation[1] + anchorHeight + yOffset; // 如果宽高参数为 MATCH_PARENT 时，根据外层可用空间计算真正的具体宽高数值 final Rect displayFrame = new Rect(); appRootView.getWindowVisibleDisplayFrame(displayFrame); if (width == MATCH_PARENT) { width = displayFrame.right - displayFrame.left; } if (height == MATCH_PARENT) { height = displayFrame.bottom - displayFrame.top; } // Let the window manager know to align the top to y. outParams.gravity = computeGravity(); outParams.width = width; outParams.height = height; // 第一阶段完成 // 第二阶段：尝试（在不调整大小的情况下）调整Popup的垂直方向，通过返回值可以判断垂直方向上是否够用 final boolean fitsVertical = tryFitVertical(outParams, yOffset, height, anchorHeight, drawingLocation[1], screenLocation[1], displayFrame.top, displayFrame.bottom, false); // 第三阶段：接下来,尝试（在不调整大小的情况下）调整Popup的水平方向，通过返回值可以判断水平方向上是否够用 final boolean fitsHorizontal = tryFitHorizontal(outParams, xOffset, width, anchorWidth, drawingLocation[0], screenLocation[0], displayFrame.left, displayFrame.right, false); // 第四阶段：如果无法满足Popup的显示，则尝试滚动父View if (!fitsVertical || !fitsHorizontal) { final int scrollX = anchor.getScrollX(); final int scrollY = anchor.getScrollY(); final Rect r = new Rect(scrollX, scrollY, scrollX + width + xOffset, scrollY + height + anchorHeight + yOffset); if (allowScroll \u0026\u0026 anchor.requestRectangleOnScreen(r, true)) { // Reset for the new anchor position. anchor.getLocationOnScreen(screenLocation); drawingLocation[0] = screenLocation[0] - appScreenLocation[0]; drawingLocation[1] = screenLocation[1] - appScreenLocation[1]; outParams.x = drawingLocation[0] + xOffset; outParams.y = drawingLocation[1] + anchorHeight + yOffset; // Preserve the gravity adjustment. if (hgrav == Gravity.RIGHT) { outParams.x -= width - anchorWidth; } } // Try to fit the popup again and allowing resizing. tryFitVertical(outParams, yOffset, height, anchorHeight, drawingLocation[1], screenLocation[1], displayFrame.top, displayFrame.bottom, mClipToScreen); tryFitHorizontal(outParams, xOffset, width, anchorWidth, drawingLocation[0], screenLocation[0], displayFrame.left, displayFrame.right, mClipToScreen); } // Return whether the popup's top edge is above the anchor's top edge. return outParams.y \u003c drawingLocation[1]; } 第一阶段的计算过程如下，得到最后的x，y值：\ntryFitVertical private boolean tryFitVertical(@NonNull LayoutParams outParams, int yOffset, int height, int anchorHeight, int drawingLocationY, int screenLocationY, int displayFrameTop, int displayFrameBottom, boolean allowResize) { // 计算Y方向上的 offset，screenLocationY为anchorView的Y，drawingLocationY为popup的Y final int winOffsetY = screenLocationY - drawingLocationY; // anchor final int anchorTopInScreen = outParams.y + winOffsetY; final int spaceBelow = displayFrameBottom - anchorTopInScreen; if (anchorTopInScreen \u003e= displayFrameTop \u0026\u0026 height \u003c= spaceBelow) { return true; } final int spaceAbove = anchorTopInScreen - anchorHeight - displayFrameTop; if (height \u003c= spaceAbove) { // Move everything up. if (mOverlapAnchor) { yOffset += anchorHeight; } outParams.y = drawingLocationY - height + yOffset; return true; } if (positionInDisplayVertical(outParams, height, drawingLocationY, screenLocationY, displayFrameTop, displayFrameBottom, allowResize)) { return true; } return false; } tryFitHorizontal ","wordCount":"880","inLanguage":"en","datePublished":"2022-04-16T22:57:53Z","dateModified":"2022-04-16T22:57:53Z","author":{"@type":"Person","name":"野生莲藕"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://anlyjiang.github.io/posts/popupwindow-ding-bu-duo-xing-xian-shi/"},"publisher":{"@type":"Organization","name":"清水池塘","logo":{"@type":"ImageObject","url":"https://anlyjiang.github.io/favicon.ico"}}}</script></head><body id=top><header class=header><nav class=nav><div class=logo><a href=https://anlyjiang.github.io/ accesskey=h title="清水池塘 (Alt + H)">清水池塘</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme">
+<svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+<svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu></ul></nav></header><main class=main><article class=post-single><header class=post-header><h1 class="post-title entry-hint-parent">PopupWindow 顶部多行显示</h1><div class=post-meta><span title='2022-04-16 22:57:53 +0000 UTC'>April 16, 2022</span>&nbsp;·&nbsp;<span>5 min</span>&nbsp;·&nbsp;<span>野生莲藕</span></div></header><div class=toc><details><summary accesskey=c title="(Alt + C)"><span class=details>Table of Contents</span></summary><div class=inner><ul><li><a href=#%e9%97%ae%e9%a2%98%e6%8f%8f%e8%bf%b0 aria-label=问题描述>问题描述</a><ul><li><a href=#%e6%83%b3%e8%a6%81%e7%9a%84%e6%95%88%e6%9e%9c aria-label=想要的效果>想要的效果</a></li><li><a href=#%e5%ae%9e%e7%8e%b0%e6%96%b9%e5%bc%8f aria-label=实现方式>实现方式</a></li><li><a href=#%e5%ae%9e%e7%8e%b0%e6%95%88%e6%9e%9c%e5%8f%8a%e9%97%ae%e9%a2%98 aria-label=实现效果及问题>实现效果及问题</a></li></ul></li><li><a href=#window%e6%b7%bb%e5%8a%a0%e8%bf%87%e7%a8%8b aria-label=Window添加过程>Window添加过程</a><ul><li><a href=#showasdropdown aria-label=showAsDropDown>showAsDropDown</a></li><li><a href=#attachtoanchor aria-label=attachToAnchor>attachToAnchor</a></li><li><a href=#createpopuplayoutparams aria-label=createPopupLayoutParams>createPopupLayoutParams</a></li><li><a href=#preparepopup aria-label=preparePopup>preparePopup</a></li><li><a href=#finddropdownposition aria-label=findDropDownPosition>findDropDownPosition</a><ul><li><a href=#tryfitvertical aria-label=tryFitVertical>tryFitVertical</a></li><li><a href=#tryfithorizontal aria-label=tryFitHorizontal>tryFitHorizontal</a></li></ul></li></ul></li></ul></div></details></div><div class=post-content><p>这里我们以解决 PopupWindow 显示的一个问题作为目标来进行分析。</p><h2 id=问题描述>问题描述<a hidden class=anchor aria-hidden=true href=#问题描述>#</a></h2><h3 id=想要的效果>想要的效果<a hidden class=anchor aria-hidden=true href=#想要的效果>#</a></h3><p>在控件上方显示，可能是单行，也可能是多行。</p><h3 id=实现方式>实现方式<a hidden class=anchor aria-hidden=true href=#实现方式>#</a></h3><p>使用 <code>showAsDropdown</code> 时，可通过 yOffset 参数指定Y轴方向上的偏移量：</p><p><code>偏移量 = anchorView.height + popupWindow.height</code></p><p>对于第 2 种单行的弹出框来说，实现起来比较简单:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>RawPopupWindowActivity</span> : DemoButtonsActivity() {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>var</span> popupWindow: PopupWindow? = <span style=color:#66d9ef>null</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>onCreate</span>(savedInstanceState: Bundle?) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>super</span>.onCreate(savedInstanceState)
+</span></span><span style=display:flex><span>        addButton(<span style=color:#e6db74>&#34;单行Popup&#34;</span>) { v <span style=color:#f92672>-&gt;</span> showPopup(v, <span style=color:#a6e22e>Constants</span>.TEXT_SHORT) }
+</span></span><span style=display:flex><span>        addButton(<span style=color:#e6db74>&#34;多行Popup&#34;</span>) { v <span style=color:#f92672>-&gt;</span> showPopup(v, <span style=color:#a6e22e>Constants</span>.TEXT_MEDIUM) }
+</span></span><span style=display:flex><span>        addButton(<span style=color:#e6db74>&#34;多行Popup&#34;</span>) { v <span style=color:#f92672>-&gt;</span> showPopup(v, <span style=color:#a6e22e>Constants</span>.TEXT_LONG) }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>showPopup</span>(anchorView: View, content: String) {
+</span></span><span style=display:flex><span>        popupWindow<span style=color:#f92672>?.</span>run {
+</span></span><span style=display:flex><span>            dismiss()
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        popupWindow = PopupWindow(applicationContext).apply {
+</span></span><span style=display:flex><span>            isOutsideTouchable = <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>            PopupHelper(applicationContext).run {
+</span></span><span style=display:flex><span>                contentView = binding.root
+</span></span><span style=display:flex><span>                setText(content)
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            width = <span style=color:#a6e22e>WindowManager</span>.<span style=color:#a6e22e>LayoutParams</span>.WRAP_CONTENT
+</span></span><span style=display:flex><span>            height = <span style=color:#a6e22e>WindowManager</span>.<span style=color:#a6e22e>LayoutParams</span>.WRAP_CONTENT
+</span></span><span style=display:flex><span>            setBackgroundDrawable(ColorDrawable(<span style=color:#a6e22e>Color</span>.TRANSPARENT))
+</span></span><span style=display:flex><span>          	<span style=color:#75715e>// 测量高度
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>            contentView.measure(
+</span></span><span style=display:flex><span>                <span style=color:#a6e22e>View</span>.<span style=color:#a6e22e>MeasureSpec</span>.makeMeasureSpec(width, <span style=color:#a6e22e>View</span>.<span style=color:#a6e22e>MeasureSpec</span>.UNSPECIFIED),
+</span></span><span style=display:flex><span>                <span style=color:#a6e22e>View</span>.<span style=color:#a6e22e>MeasureSpec</span>.makeMeasureSpec(height, <span style=color:#a6e22e>View</span>.<span style=color:#a6e22e>MeasureSpec</span>.UNSPECIFIED)
+</span></span><span style=display:flex><span>            )
+</span></span><span style=display:flex><span>          	<span style=color:#75715e>// 显示时向上移动 anchorView.height + contentView.measuredHeight 
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>            showAsDropDown(anchorView, <span style=color:#ae81ff>0</span>, -(anchorView.height + contentView.measuredHeight))
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=实现效果及问题>实现效果及问题<a hidden class=anchor aria-hidden=true href=#实现效果及问题>#</a></h3><p>最终效果如下：</p><p>可以看到垂直方向上：</p><ul><li>单行的没有偏移</li><li>两行的有些许偏移</li><li>多行的偏移就非常大了</li></ul><p>这是因为我们测量的时候并不是按照PopupWindow本身的测量方式进行测量的，所以height的值不匹配真实高度。</p><h2 id=window添加过程>Window添加过程<a hidden class=anchor aria-hidden=true href=#window添加过程>#</a></h2><h3 id=showasdropdown>showAsDropDown<a hidden class=anchor aria-hidden=true href=#showasdropdown>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#75715e>// android/widget/PopupWindow.java    </span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>showAsDropDown</span>(View anchor, <span style=color:#66d9ef>int</span> xoff, <span style=color:#66d9ef>int</span> yoff) {
+</span></span><span style=display:flex><span>    showAsDropDown(anchor, xoff, yoff, DEFAULT_ANCHORED_GRAVITY);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>showAsDropDown</span>(View anchor, <span style=color:#66d9ef>int</span> xoff, <span style=color:#66d9ef>int</span> yoff, <span style=color:#66d9ef>int</span> gravity) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (isShowing() <span style=color:#f92672>||</span> <span style=color:#f92672>!</span>hasContentView()) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>				<span style=color:#75715e>// 关闭 mDecorView 上的动画</span>
+</span></span><span style=display:flex><span>        TransitionManager.<span style=color:#a6e22e>endTransitions</span>(mDecorView);
+</span></span><span style=display:flex><span>				<span style=color:#75715e>// 建下方</span>
+</span></span><span style=display:flex><span>        attachToAnchor(anchor, xoff, yoff, gravity);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        mIsShowing <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>        mIsDropdown <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>				<span style=color:#75715e>// 根据传递进来的参数，设置布局参数</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> WindowManager.<span style=color:#a6e22e>LayoutParams</span> p <span style=color:#f92672>=</span>
+</span></span><span style=display:flex><span>                createPopupLayoutParams(anchor.<span style=color:#a6e22e>getApplicationWindowToken</span>());
+</span></span><span style=display:flex><span>  			<span style=color:#75715e>// 创建 DecorView BackgroundView ContentView 几个层次的包装</span>
+</span></span><span style=display:flex><span>        preparePopup(p);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> aboveAnchor <span style=color:#f92672>=</span> findDropDownPosition(anchor, p, xoff, yoff,
+</span></span><span style=display:flex><span>                p.<span style=color:#a6e22e>width</span>, p.<span style=color:#a6e22e>height</span>, gravity, mAllowScrollingAnchorParent);
+</span></span><span style=display:flex><span>        updateAboveAnchor(aboveAnchor);
+</span></span><span style=display:flex><span>        p.<span style=color:#a6e22e>accessibilityIdOfAnchor</span> <span style=color:#f92672>=</span> (anchor <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) <span style=color:#f92672>?</span> anchor.<span style=color:#a6e22e>getAccessibilityViewId</span>() : <span style=color:#f92672>-</span>1;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        invokePopup(p);
+</span></span><span style=display:flex><span>    }
+</span></span></code></pre></div><h3 id=attachtoanchor>attachToAnchor<a hidden class=anchor aria-hidden=true href=#attachtoanchor>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>    <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>attachToAnchor</span>(View anchor, <span style=color:#66d9ef>int</span> xoff, <span style=color:#66d9ef>int</span> yoff, <span style=color:#66d9ef>int</span> gravity) {
+</span></span><span style=display:flex><span>        detachFromAnchor();
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> ViewTreeObserver vto <span style=color:#f92672>=</span> anchor.<span style=color:#a6e22e>getViewTreeObserver</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (vto <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>            vto.<span style=color:#a6e22e>addOnScrollChangedListener</span>(mOnScrollChangedListener);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// View被添加到Window或者从Window上分离时的监听</span>
+</span></span><span style=display:flex><span>        anchor.<span style=color:#a6e22e>addOnAttachStateChangeListener</span>(mOnAnchorDetachedListener);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> View anchorRoot <span style=color:#f92672>=</span> anchor.<span style=color:#a6e22e>getRootView</span>();
+</span></span><span style=display:flex><span>        anchorRoot.<span style=color:#a6e22e>addOnAttachStateChangeListener</span>(mOnAnchorRootDetachedListener);
+</span></span><span style=display:flex><span>      	<span style=color:#75715e>// 因为布局变化导致View的边界变化时的监听</span>
+</span></span><span style=display:flex><span>        anchorRoot.<span style=color:#a6e22e>addOnLayoutChangeListener</span>(mOnLayoutChangeListener);
+</span></span><span style=display:flex><span>				<span style=color:#75715e>// 存储 锚View 的一些信息</span>
+</span></span><span style=display:flex><span>        mAnchor <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> WeakReference<span style=color:#f92672>&lt;&gt;</span>(anchor);
+</span></span><span style=display:flex><span>        mAnchorRoot <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> WeakReference<span style=color:#f92672>&lt;&gt;</span>(anchorRoot);
+</span></span><span style=display:flex><span>        mIsAnchorRootAttached <span style=color:#f92672>=</span> anchorRoot.<span style=color:#a6e22e>isAttachedToWindow</span>();
+</span></span><span style=display:flex><span>        mParentRootView <span style=color:#f92672>=</span> mAnchorRoot;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        mAnchorXoff <span style=color:#f92672>=</span> xoff;
+</span></span><span style=display:flex><span>        mAnchorYoff <span style=color:#f92672>=</span> yoff;
+</span></span><span style=display:flex><span>        mAnchoredGravity <span style=color:#f92672>=</span> gravity;
+</span></span><span style=display:flex><span>    }
+</span></span></code></pre></div><p>从这里得到如下信息：</p><ul><li><code>mAnchor</code>： 锚View （弱引用）</li><li><code>mAnchorRoot</code>： 锚View的顶层View (弱引用)</li><li><code>mParentRootView</code> ： mAnchorRoot （强引用）</li></ul><h3 id=createpopuplayoutparams>createPopupLayoutParams<a hidden class=anchor aria-hidden=true href=#createpopuplayoutparams>#</a></h3><p>就是 LayoutParams 设置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>final</span> WindowManager.<span style=color:#a6e22e>LayoutParams</span> <span style=color:#a6e22e>createPopupLayoutParams</span>(IBinder token) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> WindowManager.<span style=color:#a6e22e>LayoutParams</span> p <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> WindowManager.<span style=color:#a6e22e>LayoutParams</span>();
+</span></span><span style=display:flex><span>        p.<span style=color:#a6e22e>gravity</span> <span style=color:#f92672>=</span> computeGravity();
+</span></span><span style=display:flex><span>        p.<span style=color:#a6e22e>flags</span> <span style=color:#f92672>=</span> computeFlags(p.<span style=color:#a6e22e>flags</span>);
+</span></span><span style=display:flex><span>        p.<span style=color:#a6e22e>type</span> <span style=color:#f92672>=</span> mWindowLayoutType;
+</span></span><span style=display:flex><span>        p.<span style=color:#a6e22e>token</span> <span style=color:#f92672>=</span> token;
+</span></span><span style=display:flex><span>        p.<span style=color:#a6e22e>softInputMode</span> <span style=color:#f92672>=</span> mSoftInputMode;
+</span></span><span style=display:flex><span>        p.<span style=color:#a6e22e>windowAnimations</span> <span style=color:#f92672>=</span> computeAnimationResource();
+</span></span><span style=display:flex><span>				<span style=color:#75715e>// 设置了背景时，从背景Drawable取像素格式</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (mBackground <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>            p.<span style=color:#a6e22e>format</span> <span style=color:#f92672>=</span> mBackground.<span style=color:#a6e22e>getOpacity</span>();
+</span></span><span style=display:flex><span>        } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>            p.<span style=color:#a6e22e>format</span> <span style=color:#f92672>=</span> PixelFormat.<span style=color:#a6e22e>TRANSLUCENT</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>				
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (mHeightMode <span style=color:#f92672>&lt;</span> 0) {
+</span></span><span style=display:flex><span>            p.<span style=color:#a6e22e>height</span> <span style=color:#f92672>=</span> mLastHeight <span style=color:#f92672>=</span> mHeightMode;
+</span></span><span style=display:flex><span>        } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>            p.<span style=color:#a6e22e>height</span> <span style=color:#f92672>=</span> mLastHeight <span style=color:#f92672>=</span> mHeight;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (mWidthMode <span style=color:#f92672>&lt;</span> 0) {
+</span></span><span style=display:flex><span>            p.<span style=color:#a6e22e>width</span> <span style=color:#f92672>=</span> mLastWidth <span style=color:#f92672>=</span> mWidthMode;
+</span></span><span style=display:flex><span>        } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>            p.<span style=color:#a6e22e>width</span> <span style=color:#f92672>=</span> mLastWidth <span style=color:#f92672>=</span> mWidth;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        p.<span style=color:#a6e22e>privateFlags</span> <span style=color:#f92672>=</span> PRIVATE_FLAG_WILL_NOT_REPLACE_ON_RELAUNCH
+</span></span><span style=display:flex><span>                <span style=color:#f92672>|</span> PRIVATE_FLAG_LAYOUT_CHILD_WINDOW_IN_PARENT_FRAME;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// Used for debugging.</span>
+</span></span><span style=display:flex><span>        p.<span style=color:#a6e22e>setTitle</span>(<span style=color:#e6db74>&#34;PopupWindow:&#34;</span> <span style=color:#f92672>+</span> Integer.<span style=color:#a6e22e>toHexString</span>(hashCode()));
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> p;
+</span></span><span style=display:flex><span>    }
+</span></span></code></pre></div><h3 id=preparepopup>preparePopup<a hidden class=anchor aria-hidden=true href=#preparepopup>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>preparePopup</span>(WindowManager.<span style=color:#a6e22e>LayoutParams</span> p) {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// When a background is available, we embed the content view within</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// another view that owns the background drawable.</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (mBackground <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>            mBackgroundView <span style=color:#f92672>=</span> createBackgroundView(mContentView);
+</span></span><span style=display:flex><span>            mBackgroundView.<span style=color:#a6e22e>setBackground</span>(mBackground);
+</span></span><span style=display:flex><span>        } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>            mBackgroundView <span style=color:#f92672>=</span> mContentView;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        mDecorView <span style=color:#f92672>=</span> createDecorView(mBackgroundView);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>总体就是为了创建如下层次的 View：</p><p>不过， DecorView 上有附加效果，主要是事件和动画相关的。后面具体进行分析。</p><h3 id=finddropdownposition>findDropDownPosition<a hidden class=anchor aria-hidden=true href=#finddropdownposition>#</a></h3><p>就像其注释说的，计算PopupWindow 在屏幕上面的位置：</p><ul><li>如果PopupWindow太高，无法放置到anchor的下方，则会检测上层是否有可滚动的视图，并向上滚动以获取可用空间。</li><li>如果父布局无法滚动，<strong>popupWindow会放置到anchor的上方</strong>。</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>    <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>findDropDownPosition</span>(View anchor, WindowManager.<span style=color:#a6e22e>LayoutParams</span> outParams,
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>int</span> xOffset, <span style=color:#66d9ef>int</span> yOffset, <span style=color:#66d9ef>int</span> width, <span style=color:#66d9ef>int</span> height, <span style=color:#66d9ef>int</span> gravity, <span style=color:#66d9ef>boolean</span> allowScroll) {
+</span></span><span style=display:flex><span>      <span style=color:#75715e>// 获取 anchor宽高</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> anchorHeight <span style=color:#f92672>=</span> anchor.<span style=color:#a6e22e>getHeight</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> anchorWidth <span style=color:#f92672>=</span> anchor.<span style=color:#a6e22e>getWidth</span>();
+</span></span><span style=display:flex><span>      <span style=color:#75715e>// 允许重叠时，会先上移动 anchor 的高度</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (mOverlapAnchor) {
+</span></span><span style=display:flex><span>            yOffset <span style=color:#f92672>-=</span> anchorHeight;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 先尝试将位置放置在anchor的左下角并加上偏移量</span>
+</span></span><span style=display:flex><span>      <span style=color:#75715e>// 获取anchor的rootView在屏幕上的位置 appScreenLocation </span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> appScreenLocation <span style=color:#f92672>=</span> mTmpAppLocation;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> View appRootView <span style=color:#f92672>=</span> getAppRootView(anchor);
+</span></span><span style=display:flex><span>        appRootView.<span style=color:#a6e22e>getLocationOnScreen</span>(appScreenLocation);
+</span></span><span style=display:flex><span>			<span style=color:#75715e>// 获取 anchor 在屏幕上的位置 screenLocation</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> screenLocation <span style=color:#f92672>=</span> mTmpScreenLocation;
+</span></span><span style=display:flex><span>        anchor.<span style=color:#a6e22e>getLocationOnScreen</span>(screenLocation);
+</span></span><span style=display:flex><span>			
+</span></span><span style=display:flex><span>      <span style=color:#75715e>// 计算初步的绘制位置</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> drawingLocation <span style=color:#f92672>=</span> mTmpDrawingLocation;
+</span></span><span style=display:flex><span>        drawingLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> screenLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span> <span style=color:#f92672>-</span> appScreenLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span>;
+</span></span><span style=display:flex><span>        drawingLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> screenLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span> <span style=color:#f92672>-</span> appScreenLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span>;
+</span></span><span style=display:flex><span>        outParams.<span style=color:#a6e22e>x</span> <span style=color:#f92672>=</span> drawingLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span> <span style=color:#f92672>+</span> xOffset;
+</span></span><span style=display:flex><span>        outParams.<span style=color:#a6e22e>y</span> <span style=color:#f92672>=</span> drawingLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span> <span style=color:#f92672>+</span> anchorHeight <span style=color:#f92672>+</span> yOffset;
+</span></span><span style=display:flex><span>			
+</span></span><span style=display:flex><span>      <span style=color:#75715e>// 如果宽高参数为 MATCH_PARENT 时，根据外层可用空间计算真正的具体宽高数值</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> Rect displayFrame <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> Rect();
+</span></span><span style=display:flex><span>        appRootView.<span style=color:#a6e22e>getWindowVisibleDisplayFrame</span>(displayFrame);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (width <span style=color:#f92672>==</span> MATCH_PARENT) {
+</span></span><span style=display:flex><span>            width <span style=color:#f92672>=</span> displayFrame.<span style=color:#a6e22e>right</span> <span style=color:#f92672>-</span> displayFrame.<span style=color:#a6e22e>left</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (height <span style=color:#f92672>==</span> MATCH_PARENT) {
+</span></span><span style=display:flex><span>            height <span style=color:#f92672>=</span> displayFrame.<span style=color:#a6e22e>bottom</span> <span style=color:#f92672>-</span> displayFrame.<span style=color:#a6e22e>top</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// Let the window manager know to align the top to y.</span>
+</span></span><span style=display:flex><span>        outParams.<span style=color:#a6e22e>gravity</span> <span style=color:#f92672>=</span> computeGravity();
+</span></span><span style=display:flex><span>        outParams.<span style=color:#a6e22e>width</span> <span style=color:#f92672>=</span> width;
+</span></span><span style=display:flex><span>        outParams.<span style=color:#a6e22e>height</span> <span style=color:#f92672>=</span> height;
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 第一阶段完成</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 第二阶段：尝试（在不调整大小的情况下）调整Popup的垂直方向，通过返回值可以判断垂直方向上是否够用</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> fitsVertical <span style=color:#f92672>=</span> tryFitVertical(outParams, yOffset, height,
+</span></span><span style=display:flex><span>                anchorHeight, drawingLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span>, screenLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span>, displayFrame.<span style=color:#a6e22e>top</span>,
+</span></span><span style=display:flex><span>                displayFrame.<span style=color:#a6e22e>bottom</span>, <span style=color:#66d9ef>false</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 第三阶段：接下来,尝试（在不调整大小的情况下）调整Popup的水平方向，通过返回值可以判断水平方向上是否够用</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> fitsHorizontal <span style=color:#f92672>=</span> tryFitHorizontal(outParams, xOffset, width,
+</span></span><span style=display:flex><span>                anchorWidth, drawingLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span>, screenLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span>, displayFrame.<span style=color:#a6e22e>left</span>,
+</span></span><span style=display:flex><span>                displayFrame.<span style=color:#a6e22e>right</span>, <span style=color:#66d9ef>false</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 第四阶段：如果无法满足Popup的显示，则尝试滚动父View</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>fitsVertical <span style=color:#f92672>||</span> <span style=color:#f92672>!</span>fitsHorizontal) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> scrollX <span style=color:#f92672>=</span> anchor.<span style=color:#a6e22e>getScrollX</span>();
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> scrollY <span style=color:#f92672>=</span> anchor.<span style=color:#a6e22e>getScrollY</span>();
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>final</span> Rect r <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> Rect(scrollX, scrollY, scrollX <span style=color:#f92672>+</span> width <span style=color:#f92672>+</span> xOffset,
+</span></span><span style=display:flex><span>                    scrollY <span style=color:#f92672>+</span> height <span style=color:#f92672>+</span> anchorHeight <span style=color:#f92672>+</span> yOffset);
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (allowScroll <span style=color:#f92672>&amp;&amp;</span> anchor.<span style=color:#a6e22e>requestRectangleOnScreen</span>(r, <span style=color:#66d9ef>true</span>)) {
+</span></span><span style=display:flex><span>                <span style=color:#75715e>// Reset for the new anchor position.</span>
+</span></span><span style=display:flex><span>                anchor.<span style=color:#a6e22e>getLocationOnScreen</span>(screenLocation);
+</span></span><span style=display:flex><span>                drawingLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> screenLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span> <span style=color:#f92672>-</span> appScreenLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span>;
+</span></span><span style=display:flex><span>                drawingLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> screenLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span> <span style=color:#f92672>-</span> appScreenLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span>;
+</span></span><span style=display:flex><span>                outParams.<span style=color:#a6e22e>x</span> <span style=color:#f92672>=</span> drawingLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span> <span style=color:#f92672>+</span> xOffset;
+</span></span><span style=display:flex><span>                outParams.<span style=color:#a6e22e>y</span> <span style=color:#f92672>=</span> drawingLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span> <span style=color:#f92672>+</span> anchorHeight <span style=color:#f92672>+</span> yOffset;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                <span style=color:#75715e>// Preserve the gravity adjustment.</span>
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>if</span> (hgrav <span style=color:#f92672>==</span> Gravity.<span style=color:#a6e22e>RIGHT</span>) {
+</span></span><span style=display:flex><span>                    outParams.<span style=color:#a6e22e>x</span> <span style=color:#f92672>-=</span> width <span style=color:#f92672>-</span> anchorWidth;
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            <span style=color:#75715e>// Try to fit the popup again and allowing resizing.</span>
+</span></span><span style=display:flex><span>            tryFitVertical(outParams, yOffset, height, anchorHeight, drawingLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span>,
+</span></span><span style=display:flex><span>                    screenLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span>, displayFrame.<span style=color:#a6e22e>top</span>, displayFrame.<span style=color:#a6e22e>bottom</span>, mClipToScreen);
+</span></span><span style=display:flex><span>            tryFitHorizontal(outParams, xOffset, width, anchorWidth, drawingLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span>,
+</span></span><span style=display:flex><span>                    screenLocation<span style=color:#f92672>[</span>0<span style=color:#f92672>]</span>, displayFrame.<span style=color:#a6e22e>left</span>, displayFrame.<span style=color:#a6e22e>right</span>, mClipToScreen);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// Return whether the popup&#39;s top edge is above the anchor&#39;s top edge.</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> outParams.<span style=color:#a6e22e>y</span> <span style=color:#f92672>&lt;</span> drawingLocation<span style=color:#f92672>[</span>1<span style=color:#f92672>]</span>;
+</span></span><span style=display:flex><span>    }
+</span></span></code></pre></div><p>第一阶段的计算过程如下，得到最后的x，y值：</p><h4 id=tryfitvertical>tryFitVertical<a hidden class=anchor aria-hidden=true href=#tryfitvertical>#</a></h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>tryFitVertical</span>(<span style=color:#a6e22e>@NonNull</span> LayoutParams outParams, <span style=color:#66d9ef>int</span> yOffset, <span style=color:#66d9ef>int</span> height,
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>int</span> anchorHeight, <span style=color:#66d9ef>int</span> drawingLocationY, <span style=color:#66d9ef>int</span> screenLocationY, <span style=color:#66d9ef>int</span> displayFrameTop,
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>int</span> displayFrameBottom, <span style=color:#66d9ef>boolean</span> allowResize) {
+</span></span><span style=display:flex><span>      <span style=color:#75715e>// 计算Y方向上的 offset，screenLocationY为anchorView的Y，drawingLocationY为popup的Y</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> winOffsetY <span style=color:#f92672>=</span> screenLocationY <span style=color:#f92672>-</span> drawingLocationY;
+</span></span><span style=display:flex><span>      <span style=color:#75715e>// anchor </span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> anchorTopInScreen <span style=color:#f92672>=</span> outParams.<span style=color:#a6e22e>y</span> <span style=color:#f92672>+</span> winOffsetY;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> spaceBelow <span style=color:#f92672>=</span> displayFrameBottom <span style=color:#f92672>-</span> anchorTopInScreen;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (anchorTopInScreen <span style=color:#f92672>&gt;=</span> displayFrameTop <span style=color:#f92672>&amp;&amp;</span> height <span style=color:#f92672>&lt;=</span> spaceBelow) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> spaceAbove <span style=color:#f92672>=</span> anchorTopInScreen <span style=color:#f92672>-</span> anchorHeight <span style=color:#f92672>-</span> displayFrameTop;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (height <span style=color:#f92672>&lt;=</span> spaceAbove) {
+</span></span><span style=display:flex><span>            <span style=color:#75715e>// Move everything up.</span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (mOverlapAnchor) {
+</span></span><span style=display:flex><span>                yOffset <span style=color:#f92672>+=</span> anchorHeight;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            outParams.<span style=color:#a6e22e>y</span> <span style=color:#f92672>=</span> drawingLocationY <span style=color:#f92672>-</span> height <span style=color:#f92672>+</span> yOffset;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (positionInDisplayVertical(outParams, height, drawingLocationY, screenLocationY,
+</span></span><span style=display:flex><span>                displayFrameTop, displayFrameBottom, allowResize)) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>    }
+</span></span></code></pre></div><h4 id=tryfithorizontal>tryFitHorizontal<a hidden class=anchor aria-hidden=true href=#tryfithorizontal>#</a></h4></div><footer class=post-footer><ul class=post-tags></ul></footer></article></main><footer class=footer><span>&copy; 2025 <a href=https://anlyjiang.github.io/>清水池塘</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+<a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentColor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");if(menu){const e=localStorage.getItem("menu-scroll-position");e&&(menu.scrollLeft=parseInt(e,10)),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}}document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{const e=document.querySelector("html");e.dataset.theme==="dark"?(e.dataset.theme="light",localStorage.setItem("pref-theme","light")):(e.dataset.theme="dark",localStorage.setItem("pref-theme","dark"))})</script></body></html>
