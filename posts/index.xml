@@ -6,8 +6,38 @@
     <description>Recent content in Posts on 清水池塘</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 16 Apr 2022 22:57:53 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 01 Nov 2025 22:39:13 +0800</lastBuildDate>
     <atom:link href="https://hanlyjiang.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Hugo博客配置</title>
+      <link>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</link>
+      <pubDate>Sat, 01 Nov 2025 22:39:13 +0800</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</guid>
+      <description>&lt;h2 id=&#34;安装&#34;&gt;安装&lt;/h2&gt;
+&lt;p&gt;此部分省略，可直接使用 AI 提供；&lt;/p&gt;
+&lt;h2 id=&#34;配置中文&#34;&gt;配置中文&lt;/h2&gt;
+&lt;h3 id=&#34;基础配置&#34;&gt;基础配置&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 配置语言&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;languageCode&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;zh-cn&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;defaultContentLanguage&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;zh-cn&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 所有语言都放入独立子目录 false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;defaultContentLanguageInSubdir&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;注意: 这里的语言是 zh-cn，但是 PaperMod 主题的多语言配置中对应的是 zh.yaml 文件&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;多语言翻译文件&#34;&gt;多语言翻译文件&lt;/h3&gt;
+&lt;p&gt;经过基础配置，部分界面已经是中文了，但是像阅读时间这种还是英文的，这里将 PaperMod 的主题中的文件拷贝过来；&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-SHELL&#34; data-lang=&#34;SHELL&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cp themes/PaperMod/i18n/zh.yaml i18n/zh-cn.yaml
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hugo server -D
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;参考&#34;&gt;参考&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.rzlnb.top/&#34;&gt;https://blog.rzlnb.top/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.yuweihung.com/posts/2021/papermod-lang-zh/&#34;&gt;https://www.yuweihung.com/posts/2021/papermod-lang-zh/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/adityatelange/hugo-PaperMod?tab=readme-ov-file&#34;&gt;https://github.com/adityatelange/hugo-PaperMod?tab=readme-ov-file&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/adityatelange/hugo-PaperMod/wiki/Features&#34;&gt;https://github.com/adityatelange/hugo-PaperMod/wiki/Features&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
     <item>
       <title> PopupWindow 顶部多行显示</title>
       <link>https://hanlyjiang.github.io/posts/popupwindow-ding-bu-duo-xing-xian-shi/</link>
@@ -66,18 +96,6 @@
       <link>https://hanlyjiang.github.io/posts/android-jacoco-fu-gai-lu-tong-ji-pei-zhi/</link>
       <pubDate>Sat, 19 Mar 2022 22:29:12 +0000</pubDate>
       <guid>https://hanlyjiang.github.io/posts/android-jacoco-fu-gai-lu-tong-ji-pei-zhi/</guid>
-      <description>&lt;p&gt;Android Jacoco 覆盖率统计Gradle配置，包括生成本地单元测试报告，仪器单元测试报告，合并两种测试的报告，合并两种测试的执行数据并在AndroidStudio的编辑器中查看每一行的覆盖率情况。&lt;/p&gt;
-&lt;!-- more --&gt;
-&lt;h2 id=&#34;如何让测试任务生成-jacoco-覆盖率统计数据&#34;&gt;如何让测试任务生成 Jacoco 覆盖率统计数据？&lt;/h2&gt;
-&lt;p&gt;这里我们仅仅从Gradle任务来说，不考虑 AndroidStudio/IDEA。&lt;/p&gt;
-&lt;h3 id=&#34;本地单元测试test&#34;&gt;本地单元测试（Test）&lt;/h3&gt;
-&lt;p&gt;对于本地单元测试来说，原先有一个 &lt;code&gt;testDebugUnitTest&lt;/code&gt; 的测试任务，如果不做配置，该任务只会生成测试通过情况的报告。只要应用 jacoco 插件，然后运行 &lt;code&gt;testDebugUnitTest&lt;/code&gt; 任务时，就会同时生成jacoco覆盖率统计&lt;strong&gt;执行数据文件&lt;/strong&gt;。&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Android Jacoco覆盖率统计配置</title>
-      <link>https://hanlyjiang.github.io/posts/android-jacoco-gradle-config/</link>
-      <pubDate>Sat, 19 Mar 2022 22:29:12 +0000</pubDate>
-      <guid>https://hanlyjiang.github.io/posts/android-jacoco-gradle-config/</guid>
       <description>&lt;p&gt;Android Jacoco 覆盖率统计Gradle配置，包括生成本地单元测试报告，仪器单元测试报告，合并两种测试的报告，合并两种测试的执行数据并在AndroidStudio的编辑器中查看每一行的覆盖率情况。&lt;/p&gt;
 &lt;!-- more --&gt;
 &lt;h2 id=&#34;如何让测试任务生成-jacoco-覆盖率统计数据&#34;&gt;如何让测试任务生成 Jacoco 覆盖率统计数据？&lt;/h2&gt;
@@ -356,174 +374,6 @@ mkdir -p /data/docker/lib
       <description>&lt;p&gt;本文分析bindService的流程，首先我们通过阅读源码获取一个主线的调用地图，然后提出若干问题，包括：APP进程中如何获取AMS，AMS如何启动APP-service的进程，AMS中如何获取ApplicationThread并与之通讯，Service的启动及绑定流程；然后再通过源码一一解答。最后再整体总结梳理一下整体流程；&lt;/p&gt;</description>
     </item>
     <item>
-      <title>工作交接-Gitlab相关</title>
-      <link>https://hanlyjiang.github.io/posts/%E5%B7%A5%E4%BD%9C%E4%BA%A4%E6%8E%A5-gitlab%E7%9B%B8%E5%85%B3/</link>
-      <pubDate>Thu, 08 Apr 2021 16:48:23 +0000</pubDate>
-      <guid>https://hanlyjiang.github.io/posts/%E5%B7%A5%E4%BD%9C%E4%BA%A4%E6%8E%A5-gitlab%E7%9B%B8%E5%85%B3/</guid>
-      <description>&lt;h1 id=&#34;gitlab持续集成效率工具&#34;&gt;Gitlab&amp;amp;持续集成&amp;amp;效率工具&lt;/h1&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-mermaid&#34; data-lang=&#34;mermaid&#34;&gt;graph 
-Gitlab[Gitlab&amp;amp;持续集成&amp;amp;效率工具]
-Gitlab --&amp;gt; 服务维护
-Gitlab --&amp;gt; Gitlab&amp;amp;Sonar使用问题解答与解决
-Gitlab --&amp;gt; CI[基于Gitlab CI的自动化流程]
-&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;服务维护&#34;&gt;服务维护&lt;/h2&gt;
-&lt;p&gt;目前有3个服务器需要维护，上面有部署若干服务：&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-mermaid&#34; data-lang=&#34;mermaid&#34;&gt;graph 
-205[172.17.0.205]
-206[172.17.0.206]
-208[172.17.0.208]
-
-205 --&amp;gt; gitlab
-206 --&amp;gt; sonarqube
-206 --&amp;gt; mattermost
-208 --&amp;gt; yapi
-208 --&amp;gt; confluence
-208 --&amp;gt; gitlab-runner
-208 --&amp;gt; 移动中心H5站点
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;服务的连接方式及部署的服务可以参考文档： &lt;a href=&#34;https://shimo.im/docs/REkKVZppmPcjFQqx/&#34;&gt;《Gitlab-SonarQube服务信息汇总》&lt;/a&gt;， 该文档记录了服务器的ssh远程的方式，各服务的部署启动方式，部署的目录；&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>移动中心交接</title>
-      <link>https://hanlyjiang.github.io/posts/%E7%A7%BB%E5%8A%A8%E4%B8%AD%E5%BF%83%E4%BA%A4%E6%8E%A5/</link>
-      <pubDate>Thu, 08 Apr 2021 16:46:15 +0000</pubDate>
-      <guid>https://hanlyjiang.github.io/posts/%E7%A7%BB%E5%8A%A8%E4%B8%AD%E5%BF%83%E4%BA%A4%E6%8E%A5/</guid>
-      <description>&lt;h1 id=&#34;geopanel-移动中心-代码同步&#34;&gt;GeoPanel-移动中心-代码同步&lt;/h1&gt;
-&lt;h2 id=&#34;一般步骤&#34;&gt;一般步骤&lt;/h2&gt;
-&lt;ol&gt;
-&lt;li&gt;克隆gitlab代码到本地&lt;/li&gt;
-&lt;/ol&gt;
-&lt;!DOCTYPE svg PUBLIC &#34;-//W3C//DTD SVG 1.1//EN&#34; &#34;http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd&#34;&gt;
-&lt;svg version=&#34;1.1&#34; xmlns:dc=&#34;http://purl.org/dc/elements/1.1/&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34; xmlns:xl=&#34;http://www.w3.org/1999/xlink&#34; viewBox=&#34;586.5 -80 601.5 198.46154&#34; width=&#34;601.5&#34; height=&#34;198.46154&#34;&gt;
-  &lt;defs&gt;
-    &lt;font-face font-family=&#34;Helvetica&#34; font-size=&#34;16&#34; units-per-em=&#34;1000&#34; underline-position=&#34;-75.68359&#34; underline-thickness=&#34;49.316406&#34; slope=&#34;0&#34; x-height=&#34;522.9492&#34; cap-height=&#34;717.28516&#34; ascent=&#34;770.0195&#34; descent=&#34;-229.98047&#34; font-weight=&#34;400&#34;&gt;
-      &lt;font-face-src&gt;
-        &lt;font-face-name name=&#34;Helvetica&#34;/&gt;
-      &lt;/font-face-src&gt;
-    &lt;/font-face&gt;
-    &lt;font-face font-family=&#34;PingFang SC&#34; font-size=&#34;16&#34; panose-1=&#34;2 11 4 0 0 0 0 0 0 0&#34; units-per-em=&#34;1000&#34; underline-position=&#34;-150&#34; underline-thickness=&#34;58&#34; slope=&#34;0&#34; x-height=&#34;600&#34; cap-height=&#34;860&#34; ascent=&#34;1060.0021&#34; descent=&#34;-340.0007&#34; font-weight=&#34;400&#34;&gt;
-      &lt;font-face-src&gt;
-        &lt;font-face-name name=&#34;PingFangSC-Regular&#34;/&gt;
-      &lt;/font-face-src&gt;
-    &lt;/font-face&gt;
-    &lt;font-face font-family=&#34;Helvetica Neue&#34; font-size=&#34;16&#34; panose-1=&#34;2 0 5 3 0 0 0 2 0 4&#34; units-per-em=&#34;1000&#34; underline-position=&#34;-100&#34; underline-thickness=&#34;50&#34; slope=&#34;0&#34; x-height=&#34;517&#34; cap-height=&#34;714&#34; ascent=&#34;951.9958&#34; descent=&#34;-212.99744&#34; font-weight=&#34;400&#34;&gt;
-      &lt;font-face-src&gt;
-        &lt;font-face-name name=&#34;HelveticaNeue&#34;/&gt;
-      &lt;/font-face-src&gt;
-    &lt;/font-face&gt;
-    &lt;font-face font-family=&#34;Courier New&#34; font-size=&#34;16&#34; panose-1=&#34;2 7 3 9 2 2 5 2 4 4&#34; units-per-em=&#34;1000&#34; underline-position=&#34;-232.91016&#34; underline-thickness=&#34;41.015625&#34; slope=&#34;0&#34; x-height=&#34;422.85156&#34; cap-height=&#34;571.28906&#34; ascent=&#34;832.5195&#34; descent=&#34;-300.29297&#34; font-weight=&#34;400&#34;&gt;
-      &lt;font-face-src&gt;
-        &lt;font-face-name name=&#34;CourierNewPSMT&#34;/&gt;
-      &lt;/font-face-src&gt;
-    &lt;/font-face&gt;
-  &lt;/defs&gt;
-  &lt;metadata&gt; Produced by OmniGraffle 7.18.4\n2021-03-23 05:56:46 +0000&lt;/metadata&gt;
-  &lt;g id=&#34;Canvas_1&#34; stroke=&#34;none&#34; fill-opacity=&#34;1&#34; fill=&#34;none&#34; stroke-opacity=&#34;1&#34; stroke-dasharray=&#34;none&#34;&gt;
-    &lt;title&gt;Canvas 1&lt;/title&gt;
-    &lt;g id=&#34;Canvas_1_Layer_1&#34;&gt;
-      &lt;title&gt;Layer 1&lt;/title&gt;
-      &lt;g id=&#34;Group_33&#34;&gt;
-        &lt;title&gt;General - Internet&lt;/title&gt;
-        &lt;g id=&#34;Group_35&#34;&gt;
-          &lt;g id=&#34;Graphic_37&#34;&gt;
-            &lt;path d=&#34;M 1188 27.79753 L 1188 34.97935 C 1188 47.996394 1173.6364 61.4623 1156.1307 61.4623 L 1061.8693 61.4623 C 1044.1392 61.4623 1030 48.220826 1030 34.97935 L 1030 27.79753 Z&#34; fill=&#34;#7d7c7c&#34;/&gt;
-          &lt;/g&gt;
-          &lt;g id=&#34;Graphic_36&#34;&gt;
-            &lt;path d=&#34;M 1090.821 -42.000765 C 1107.2045 -42.000765 1121.3438 -32.350197 1127.6278 -18.210992 C 1130.9943 -20.45531 1134.8097 -21.8019 1139.2983 -21.8019 C 1150.5199 -21.8019 1159.4972 -13.04906 1159.7216 -2.0519012 C 1175.6562 -.7053103 1188 14.556053 1188 26.899803 L 1188 29.592985 C 1188 42.83446 1173.6364 56.07594 1155.9062 56.07594 L 1061.8693 56.07594 C 1044.1392 56.07594 1030 42.83446 1030 29.592985 L 1030 26.899803 C 1030 16.800372 1038.5284 2.8855988 1050.4233 -.4808785 C 1050.4233 -.9297421 1050.4233 -1.154174 1050.4233 -1.6030376 C 1050.4233 -24.04622 1068.3778 -42.000765 1090.821 -42.000765 Z&#34; fill=&#34;#d2d3d3&#34;/&gt;
-          &lt;/g&gt;
-        &lt;/g&gt;
-        &lt;g id=&#34;Graphic_34&#34;&gt;
-          &lt;text transform=&#34;translate(1085.4865 63.4623)&#34; fill=&#34;black&#34;&gt;
-            &lt;tspan font-family=&#34;Helvetica&#34; font-size=&#34;16&#34; font-weight=&#34;400&#34; fill=&#34;black&#34; x=&#34;0&#34; y=&#34;15&#34;&gt;Gitlab&lt;/tspan&gt;
-          &lt;/text&gt;
-        &lt;/g&gt;
-      &lt;/g&gt;
-      &lt;g id=&#34;Group_38&#34;&gt;
-        &lt;title&gt;Mobile Services - SNS - Topic&lt;/title&gt;
-        &lt;g id=&#34;Group_40&#34;&gt;
-          &lt;title&gt;Layer_1&lt;/title&gt;
-          &lt;g id=&#34;Group_53&#34;&gt;
-            &lt;g id=&#34;Graphic_54&#34;&gt;
-              &lt;rect x=&#34;586.5&#34; y=&#34;48.76923&#34; width=&#34;279&#34; height=&#34;47.69231&#34; fill=&#34;#692f56&#34;/&gt;
-            &lt;/g&gt;
-          &lt;/g&gt;
-          &lt;g id=&#34;Group_51&#34;&gt;
-            &lt;g id=&#34;Graphic_52&#34;&gt;
-              &lt;rect x=&#34;586.5&#34; y=&#34;-5.736264&#34; width=&#34;279&#34; height=&#34;43.263736&#34; fill=&#34;#692f56&#34;/&gt;
-            &lt;/g&gt;
-          &lt;/g&gt;
-          &lt;g id=&#34;Group_49&#34;&gt;
-            &lt;g id=&#34;Graphic_50&#34;&gt;
-              &lt;path d=&#34;M 865.1593 -28.9011 L 865.1593 -20.384615 L 586.5 -20.384615 L 586.5 -28.9011 L 746.95055 -75.23077 Z&#34; fill=&#34;#692f56&#34;/&gt;
-            &lt;/g&gt;
-          &lt;/g&gt;
-          &lt;g id=&#34;Group_47&#34;&gt;
-            &lt;g id=&#34;Graphic_48&#34;&gt;
-              &lt;rect x=&#34;586.5&#34; y=&#34;-80&#34; width=&#34;279&#34; height=&#34;51.0989&#34; fill=&#34;#ad688b&#34;/&gt;
-              &lt;text transform=&#34;translate(591.5 -65.45055)&#34; fill=&#34;white&#34;&gt;
-                &lt;tspan font-family=&#34;PingFang SC&#34; font-size=&#34;16&#34; font-weight=&#34;400&#34; fill=&#34;white&#34; x=&#34;102.5&#34; y=&#34;17&#34;&gt;本地仓库&lt;/tspan&gt;
-              &lt;/text&gt;
-            &lt;/g&gt;
-          &lt;/g&gt;
-          &lt;g id=&#34;Group_45&#34;&gt;
-            &lt;g id=&#34;Graphic_46&#34;&gt;
-              &lt;rect x=&#34;586.5&#34; y=&#34;-13.571429&#34; width=&#34;279&#34; height=&#34;42.58242&#34; fill=&#34;#ad688b&#34;/&gt;
-            &lt;/g&gt;
-          &lt;/g&gt;
-          &lt;g id=&#34;Group_43&#34;&gt;
-            &lt;g id=&#34;Graphic_44&#34;&gt;
-              &lt;rect x=&#34;586.5&#34; y=&#34;45.36264&#34; width=&#34;279&#34; height=&#34;42.58242&#34; fill=&#34;#ad688b&#34;/&gt;
-            &lt;/g&gt;
-          &lt;/g&gt;
-          &lt;g id=&#34;Graphic_42&#34;&gt;
-            &lt;rect x=&#34;595.35714&#34; y=&#34;-4.7142857&#34; width=&#34;260.94505&#34; height=&#34;24.527473&#34; fill=&#34;white&#34;/&gt;
-            &lt;text transform=&#34;translate(600.35714 -1.6745485)&#34; fill=&#34;black&#34;&gt;
-              &lt;tspan font-family=&#34;Helvetica Neue&#34; font-size=&#34;16&#34; font-weight=&#34;400&#34; fill=&#34;black&#34; x=&#34;73.91253&#34; y=&#34;15&#34;&gt;remotes/origin&lt;/tspan&gt;
-            &lt;/text&gt;
-          &lt;/g&gt;
-          &lt;g id=&#34;Graphic_41&#34;&gt;
-            &lt;rect x=&#34;595.35714&#34; y=&#34;54.56044&#34; width=&#34;260.94505&#34; height=&#34;24.527473&#34; fill=&#34;white&#34;/&gt;
-          &lt;/g&gt;
-        &lt;/g&gt;
-        &lt;g id=&#34;Graphic_39&#34;&gt;
-          &lt;text transform=&#34;translate(677.9922 98.46154)&#34; fill=&#34;black&#34;&gt;
-            &lt;tspan font-family=&#34;Courier New&#34; font-size=&#34;16&#34; font-weight=&#34;400&#34; fill=&#34;black&#34; x=&#34;4.800781&#34; y=&#34;13&#34;&gt;git clone &lt;/tspan&gt;
-          &lt;/text&gt;
-        &lt;/g&gt;
-      &lt;/g&gt;
-      &lt;g id=&#34;Line_55&#34;&gt;
-        &lt;line x1=&#34;865.5&#34; y1=&#34;19.23077&#34; x2=&#34;1030&#34; y2=&#34;21.23077&#34; stroke=&#34;black&#34; stroke-linecap=&#34;round&#34; stroke-linejoin=&#34;round&#34; stroke-dasharray=&#34;8.0,8.0&#34; stroke-width=&#34;2&#34;/&gt;
-      &lt;/g&gt;
-    &lt;/g&gt;
-  &lt;/g&gt;
-&lt;/svg&gt;
-&lt;ol start=&#34;2&#34;&gt;
-&lt;li&gt;
-&lt;p&gt;添加github远程仓库到本地仓库（下面取名为github）&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>GeoPanel容器化</title>
-      <link>https://hanlyjiang.github.io/posts/geopanel-rong-qi-hua/</link>
-      <pubDate>Thu, 08 Apr 2021 15:10:06 +0000</pubDate>
-      <guid>https://hanlyjiang.github.io/posts/geopanel-rong-qi-hua/</guid>
-      <description>&lt;h1 id=&#34;geopanel容器化概览&#34;&gt;GeoPanel容器化概览&lt;/h1&gt;
-&lt;p&gt;此部分主要工作是对GeoPanel中的各服务进行容器化改造，即制作docker镜像，然后对服务进行容器化编排，简化部署步骤，适应更加智能化的部署需求。&lt;/p&gt;
-&lt;p&gt;主要包括如下部分：&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-mermaid&#34; data-lang=&#34;mermaid&#34;&gt;graph 
-
-GeoPanel[GeoPanel容器化]
-GeoPanel --&amp;gt; pgspider打包
-GeoPanel --&amp;gt; hasura-块数据API引擎
-GeoPanel --&amp;gt; 公司自研镜像打包
-GeoPanel --&amp;gt; 服务编排
-&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
-&lt;li&gt;由于pgspider和hasura的打包过程比较复杂，所以需要这里单独列出；&lt;/li&gt;
-&lt;li&gt;公司自研服务的镜像打包主要是springboot的镜像打包，流程比较简单，所以合并起来说；&lt;/li&gt;
-&lt;li&gt;服务编排中描述当前已经容器化的服务及使用swarm编排的情况；&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h1 id=&#34;geopanel容器化-arm镜像构建-通用步骤&#34;&gt;GeoPanel容器化-ARM镜像构建-通用步骤&lt;/h1&gt;
-&lt;p&gt;这里的国产化主要指：制作arm版本的镜像&lt;/p&gt;</description>
-    </item>
-    <item>
       <title>搭建Android源码工作环境</title>
       <link>https://hanlyjiang.github.io/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/</link>
       <pubDate>Thu, 08 Apr 2021 10:18:50 +0000</pubDate>
@@ -765,16 +615,6 @@ GeoPanel --&amp;gt; 服务编排
 &lt;p&gt;View类的包含一个回调方法的接口，通过setXXXListener来定义事件处理程序；&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;事件监听器是 &lt;code&gt;View&lt;/code&gt; 类中包含一个回调方法的接口。当用户与界面项目之间的互动触发已注册监听器的 View 对象时，Android 框架将调用这些方法。&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title></title>
-      <link>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</guid>
-      <description>&lt;h1 id=&#34;hugo-博客配置&#34;&gt;HUGO 博客配置&lt;/h1&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;/li&gt;
-&lt;/ol&gt;</description>
     </item>
   </channel>
 </rss>

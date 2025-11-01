@@ -2,31 +2,28 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://hanlyjiang.github.io/posts/popupwindow-ding-bu-duo-xing-xian-shi/</loc>
-    <lastmod>2022-04-16T22:57:53+00:00</lastmod>
+    <loc>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</loc>
+    <lastmod>2025-11-01T22:39:13+08:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/posts/</loc>
-    <lastmod>2022-04-16T22:57:53+00:00</lastmod>
+    <lastmod>2025-11-01T22:39:13+08:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/</loc>
-    <lastmod>2022-04-16T22:57:53+00:00</lastmod>
+    <lastmod>2025-11-01T22:39:13+08:00</lastmod>
   </url><url>
-    <loc>https://hanlyjiang.github.io/tags/android/</loc>
-    <lastmod>2022-03-19T22:29:12+00:00</lastmod>
+    <loc>https://hanlyjiang.github.io/posts/popupwindow-ding-bu-duo-xing-xian-shi/</loc>
+    <lastmod>2022-04-16T22:57:53+00:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/posts/android-jacoco-fu-gai-lu-tong-ji-pei-zhi/</loc>
     <lastmod>2022-03-19T22:29:12+00:00</lastmod>
   </url><url>
-    <loc>https://hanlyjiang.github.io/posts/android-jacoco-gradle-config/</loc>
-    <lastmod>2022-03-19T22:29:12+00:00</lastmod>
+    <loc>https://hanlyjiang.github.io/posts/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/</loc>
+    <lastmod>2022-03-13T23:18:16+00:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/tags/android/</loc>
+    <lastmod>2022-03-13T23:18:16+00:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/tags/</loc>
-    <lastmod>2022-03-19T22:29:12+00:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/tags/%E6%B5%8B%E8%AF%95/</loc>
-    <lastmod>2022-03-19T22:29:12+00:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/posts/aar-java8-jie-kou-nosuchmethoderror-cuo-wu-jie-jue-ji-lu/</loc>
     <lastmod>2022-03-13T23:18:16+00:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/tags/%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/</loc>
@@ -92,18 +89,6 @@
     <loc>https://hanlyjiang.github.io/posts/androidbindservice-liu-cheng-fen-xi/</loc>
     <lastmod>2021-04-12T10:18:50+00:00</lastmod>
   </url><url>
-    <loc>https://hanlyjiang.github.io/tags/%E5%B7%A5%E4%BD%9C/</loc>
-    <lastmod>2021-04-08T16:48:23+00:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/posts/%E5%B7%A5%E4%BD%9C%E4%BA%A4%E6%8E%A5-gitlab%E7%9B%B8%E5%85%B3/</loc>
-    <lastmod>2021-04-08T16:48:23+00:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/posts/%E7%A7%BB%E5%8A%A8%E4%B8%AD%E5%BF%83%E4%BA%A4%E6%8E%A5/</loc>
-    <lastmod>2021-04-08T16:46:15+00:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/posts/geopanel-rong-qi-hua/</loc>
-    <lastmod>2021-04-08T15:10:06+00:00</lastmod>
-  </url><url>
     <loc>https://hanlyjiang.github.io/posts/%E6%90%AD%E5%BB%BAandroid%E6%BA%90%E7%A0%81%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83/</loc>
     <lastmod>2021-04-08T10:18:50+00:00</lastmod>
   </url><url>
@@ -148,8 +133,6 @@
   </url><url>
     <loc>https://hanlyjiang.github.io/posts/android-shi-jian-ji-shou-shi/</loc>
     <lastmod>2018-02-20T10:13:24+00:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</loc>
   </url><url>
     <loc>https://hanlyjiang.github.io/series/</loc>
   </url><url>
