@@ -23,9 +23,9 @@
 &lt;h1 id=&#34;基础配置&#34;&gt;基础配置&lt;/h1&gt;
 &lt;h2 id=&#34;系统升级&#34;&gt;系统升级&lt;/h2&gt;
 &lt;p&gt;到手后内置系统是 4.7.13 版本，可先升级到最新版本 4.8.1 ：&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;image-20251116104528933&#34; loading=&#34;lazy&#34; src=&#34;https://hanlyjiang.github.io/posts/glinet-mt3000%E9%85%8D%E7%BD%AE/pics/image-20251116104528933.png&#34;&gt;&lt;/p&gt;
+&lt;img src=&#34;./pics/image-20251116104528933.png&#34; alt=&#34;image-20251116104528933&#34; style=&#34;zoom:50%;&#34; /&gt;
 &lt;p&gt;升级系统后：&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;image-20251116103205645&#34; loading=&#34;lazy&#34; src=&#34;https://hanlyjiang.github.io/posts/glinet-mt3000%E9%85%8D%E7%BD%AE/pics/image-20251116103205645.png&#34;&gt;&lt;/p&gt;
+&lt;img src=&#34;./pics/image-20251116103205645.png&#34; alt=&#34;image-20251116103205645&#34; style=&#34;zoom:50%;&#34; /&gt;
 &lt;h2 id=&#34;换区&#34;&gt;换区&lt;/h2&gt;
 &lt;p&gt;国内买的默认是国区，部分功能用不了，所以需要换区成US，按如下方式进行换区处理：&lt;/p&gt;</description>
     </item>
