@@ -135,3 +135,16 @@ GLiNet 的魔法网络配置还是挺方便的，将相关配置及证书文件�
 
 
 
+## DNS 配置
+
+配置完之后，域名解析还是有问题，需要切换DNS服务器，直接在 GLiNet 的配置中选择 google 的DNS 即可：
+
+![image-20251116205826086](./pics/image-20251116205826086-1763297907980-10.png)
+
+# 更多参考：
+
+-  https://raw.githubusercontent.com/ruijzhan/chnroute/refs/heads/master/gfwlist.txt
+-  https://github.com/ruijzhan/chnroute?tab=readme-ov-file
+
+
+
