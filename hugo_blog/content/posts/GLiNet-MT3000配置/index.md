@@ -28,11 +28,11 @@ series = ["WRT系列"]
 
 
 
-![image-20251116104528933](./pics/image-20251116104528933.png)
+<img src="./pics/image-20251116104528933.png" alt="image-20251116104528933" style="zoom:50%;" />
 
 升级系统后：
 
-![image-20251116103205645](./pics/image-20251116103205645.png)
+<img src="./pics/image-20251116103205645.png" alt="image-20251116103205645" style="zoom:50%;" />
 
 
 
@@ -88,6 +88,50 @@ for f in *zh-tw*; do mv "$f" "${f//zh-tw/zh-bak}"; done && \
 for f in *zh-cn*; do cp "$f" "${f//zh-cn/zh-tw}"; done
 
 ```
+
+
+
+
+
+# 网络配置
+
+网络配置包含两个部分：
+
+1. 带 Scramble 的插件安装
+2. 连接末法网络
+3. 配置策略规则
+
+## Scramble 插件安装
+
+自带的open 虚拟专用网络插件是不带 Scramble 的，所以需要安装成带 Scrameble 的版本，可通过 LuCI 软件包管理界面进行覆盖安装即可；
+
+> 注意：此版本需要自行编译 ipk 插件
+
+<img src="./pics/image-20251116203929147.png" alt="image-20251116203929147" style="zoom:50%;" />
+
+通过 `系统-高级设置` 即可进入 luCI 中手动安装 ipk 软件包，安装过程不再赘述；编译插件的过程此处也略去；
+
+## 连接魔法网络
+
+
+
+GLiNet 的魔法网络配置还是挺方便的，将相关配置及证书文件等打包成一个 压缩包上传即可添加，具体配置过程不再赘述；
+
+添加成功之后就可以连接了；
+
+## 配置策略规则
+
+
+
+连接魔法网络之后，需要能根据国内和国外域名来区分走的路径，GLiNet 也有相关配置支持，直接导入对应的地址列表即可；
+
+
+
+<img src="./pics/image-20251116204446425-1763297089063-7.png" alt="image-20251116204446425" style="zoom:50%;" />
+
+地址来源于：[chnroute/CN.rsc at master · ruijzhan/chnroute · GitHub](https://github.com/ruijzhan/chnroute/blob/master/CN.rsc)
+
+通过文本替换提取的方式，提取出符合格式的IP列表即可；
 
 
 
