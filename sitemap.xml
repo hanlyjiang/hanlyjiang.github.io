@@ -2,6 +2,39 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://hanlyjiang.github.io/posts/glinet-mt3000%E9%85%8D%E7%BD%AE/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/tags/mt3000/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/tags/openwrt/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/posts/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/series/wrt%E7%B3%BB%E5%88%97/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/tags/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/categories/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/tags/%E6%95%99%E7%A8%8B/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/categories/%E8%9C%BB%E8%9C%93%E7%82%B9%E6%B0%B4/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
+    <loc>https://hanlyjiang.github.io/series/</loc>
+    <lastmod>2025-11-16T09:32:13+08:00</lastmod>
+  </url><url>
     <loc>https://hanlyjiang.github.io/series/blog%E9%85%8D%E7%BD%AE%E7%B3%BB%E5%88%97/</loc>
     <lastmod>2025-11-01T23:15:13+08:00</lastmod>
   </url><url>
@@ -9,27 +42,6 @@
     <lastmod>2025-11-01T23:15:13+08:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/posts/hugo%E4%BD%BF%E7%94%A8%E6%A8%A1%E5%BC%8F/</loc>
-    <lastmod>2025-11-01T23:15:13+08:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/posts/</loc>
-    <lastmod>2025-11-01T23:15:13+08:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/tags/</loc>
-    <lastmod>2025-11-01T23:15:13+08:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/categories/</loc>
-    <lastmod>2025-11-01T23:15:13+08:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/tags/%E6%95%99%E7%A8%8B/</loc>
-    <lastmod>2025-11-01T23:15:13+08:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/</loc>
-    <lastmod>2025-11-01T23:15:13+08:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/categories/%E8%9C%BB%E8%9C%93%E7%82%B9%E6%B0%B4/</loc>
-    <lastmod>2025-11-01T23:15:13+08:00</lastmod>
-  </url><url>
-    <loc>https://hanlyjiang.github.io/series/</loc>
     <lastmod>2025-11-01T23:15:13+08:00</lastmod>
   </url><url>
     <loc>https://hanlyjiang.github.io/posts/hugo%E5%8D%9A%E5%AE%A2%E9%85%8D%E7%BD%AE/</loc>

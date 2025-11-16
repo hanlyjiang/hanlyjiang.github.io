@@ -6,8 +6,29 @@
     <description>Recent content in 蜻蜓点水 on 清水池塘</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 01 Nov 2025 23:15:13 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 16 Nov 2025 09:32:13 +0800</lastBuildDate>
     <atom:link href="https://hanlyjiang.github.io/categories/%E8%9C%BB%E8%9C%93%E7%82%B9%E6%B0%B4/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>GLiNet-MT3000配置</title>
+      <link>https://hanlyjiang.github.io/posts/glinet-mt3000%E9%85%8D%E7%BD%AE/</link>
+      <pubDate>Sun, 16 Nov 2025 09:32:13 +0800</pubDate>
+      <guid>https://hanlyjiang.github.io/posts/glinet-mt3000%E9%85%8D%E7%BD%AE/</guid>
+      <description>&lt;h1 id=&#34;前言&#34;&gt;前言&lt;/h1&gt;
+&lt;p&gt;最近入手了 MT3000，使用过后发现是当前最省心的🧙‍♀️路由器了；故此记录下相关的配置过程；&lt;/p&gt;
+&lt;p&gt;主要分为两个部分：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;基础配置部分，包括改区，中继上网配置等操作；&lt;/li&gt;
+&lt;li&gt;🧙‍♀️上网配置部分；&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h1 id=&#34;基础配置&#34;&gt;基础配置&lt;/h1&gt;
+&lt;h2 id=&#34;系统升级&#34;&gt;系统升级&lt;/h2&gt;
+&lt;p&gt;到手后内置系统是 4.7.13 版本，可先升级到最新版本 4.8.1 ：&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;image-20251116104528933&#34; loading=&#34;lazy&#34; src=&#34;https://hanlyjiang.github.io/posts/glinet-mt3000%E9%85%8D%E7%BD%AE/pics/image-20251116104528933.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;升级系统后：&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;image-20251116103205645&#34; loading=&#34;lazy&#34; src=&#34;https://hanlyjiang.github.io/posts/glinet-mt3000%E9%85%8D%E7%BD%AE/pics/image-20251116103205645.png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;换区&#34;&gt;换区&lt;/h2&gt;
+&lt;p&gt;国内买的默认是国区，部分功能用不了，所以需要换区成US，按如下方式进行换区处理：&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Hugo使用规则</title>
       <link>https://hanlyjiang.github.io/posts/hugo%E4%BD%BF%E7%94%A8%E6%A8%A1%E5%BC%8F/</link>
@@ -21,10 +42,9 @@
 &lt;li&gt;专题（series）：用于将一个主题相关的内容连接起来；&lt;/li&gt;
 &lt;li&gt;分类（categories）：主要用于区分文章的类别，当前划分如下几种：
 &lt;ol&gt;
-&lt;li&gt;坐岸观水：个人感想，日记等等；&lt;/li&gt;
-&lt;li&gt;蜻蜓点水：主要是一些轻度技术内容，如博客配置，网络配置，玩机配置等；&lt;/li&gt;
-&lt;li&gt;浮游水面：技术相关的想法，但是不涉及具体技术细节的；&lt;/li&gt;
-&lt;li&gt;深入水底：纯技术相关的内容，如技术学习教程，技术总结等；&lt;/li&gt;
+&lt;li&gt;日游所思：个人感想，日记等等；&lt;/li&gt;
+&lt;li&gt;蜻蜓点水：主要是一些轻度技术内容，如博客配置，网络配置，玩机配置等，技术相关的想法，但是不涉及具体技术细节的；&lt;/li&gt;
+&lt;li&gt;水漫金山：纯技术相关的内容，如技术学习教程，技术总结等；&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/li&gt;
 &lt;li&gt;标签（tags）：标识文章所涉及的一些关键词，热点，关键技术等等，可以尽量多添加；&lt;/li&gt;
